@@ -202,6 +202,11 @@
                  "point":true,
                  "properties":[
                         {
+                         "name":"EnemyType",
+                         "type":"string",
+                         "value":"RANGED"
+                        }, 
+                        {
                          "name":"Room",
                          "type":"string",
                          "value":"1"
@@ -220,6 +225,11 @@
                  "point":true,
                  "properties":[
                         {
+                         "name":"EnemyType",
+                         "type":"string",
+                         "value":"RANGED"
+                        }, 
+                        {
                          "name":"Room",
                          "type":"string",
                          "value":"1"
@@ -237,6 +247,11 @@
                  "name":"",
                  "point":true,
                  "properties":[
+                        {
+                         "name":"EnemyType",
+                         "type":"string",
+                         "value":"Ranged"
+                        }, 
                         {
                          "name":"Room",
                          "type":"string",

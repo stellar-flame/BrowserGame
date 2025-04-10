@@ -800,18 +800,21 @@
  <objectgroup id="8" name="Enemies">
   <object id="10" x="401.235" y="97.7366">
    <properties>
+    <property name="EnemyType" value="RANGED"/>
     <property name="Room" value="1"/>
    </properties>
    <point/>
   </object>
   <object id="17" x="403.439" y="265.285">
    <properties>
+    <property name="EnemyType" value="RANGED"/>
     <property name="Room" value="1"/>
    </properties>
    <point/>
   </object>
   <object id="18" x="403.439" y="446.061">
    <properties>
+    <property name="EnemyType" value="Ranged"/>
     <property name="Room" value="1"/>
    </properties>
    <point/>

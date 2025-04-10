@@ -1,37 +1,65 @@
 import { Scene, Physics } from 'phaser';
 import { Enemy } from './Enemy';
-import { Bullet } from './Bullet';
 
 export class RangedEnemy extends Enemy {
-  private bullets: Physics.Arcade.Group;
-  private lastFired: number = 0;
-  private fireRate: number = 2000; // Fire every 2 seconds
-
+  // Static flag to track if animations have been created
+  private static animationsCreated: boolean = false;
+  
   constructor(scene: Scene, x: number, y: number, id: string) {
     super(scene, x, y, id);
     this.setTexture('ranged-enemy-sprite'); // Use a specific sprite for this enemy type
-    this.setTint(0xff00ff); // Optional: Set a specific tint
-
-    // Initialize bullets group
-    this.bullets = scene.physics.add.group({ classType: Bullet, maxSize: 10 });
+    this.setScale(2);
+    
+    // Ranged enemies have a shorter fire rate
+    this.fireRate = 1500; // Fire every 1.5 seconds
+    
+    // Ranged enemies prefer to keep more distance
+    this.minDistance = 200; // Increased minimum distance
+    this.maxDistance = 400; // Increased maximum distance
+    this.moveSpeed = 80; // Slightly slower movement
+    
+    // Initialize animations after the object is fully constructed
+    this.initializeAnimations();
   }
 
   preUpdate(time: number, delta: number) {
     super.preUpdate(time, delta);
-
-    // Check if it's time to fire
-    if (time - this.lastFired > this.fireRate) {
-      this.fire();
-      this.lastFired = time;
+    if (!this.body) return;
+    
+    // Play the walk animation
+    this.play('ranged-walk', true);
+    
+    // Flip the sprite based on movement direction
+    if (this.body.velocity.x < 0) {
+      this.flipX = true;
+    } else if (this.body.velocity.x > 0) {
+      this.flipX = false;
     }
   }
 
-  private fire() {
-    const bullet = this.bullets.get() as Bullet;
-    if (bullet) {
-      // Calculate angle to player (assuming player is at a fixed position for simplicity)
-      const angle = Phaser.Math.Angle.Between(this.x, this.y, 400, 300); // Example player position
-      bullet.fire(this.x, this.y, angle);
+  // Override the updateShootingCapability method to customize shooting behavior
+  protected canFire() {
+    const distance = Phaser.Math.Distance.Between(this.x, this.y, this.playerX, this.playerY);
+    // Ranged enemies can shoot from further away
+    return distance > this.minDistance && distance < this.maxDistance * 1.2;
+  }
+  
+  // Override the createAnimations method to create ranged enemy animations
+  protected createAnimations(scene: Scene): void {
+    // Only create animations once for all instances of this class
+    if (RangedEnemy.animationsCreated) return;
+    
+    // Create a single animation for ranged enemies
+    if (!scene.anims.exists('ranged-walk')) {
+      scene.anims.create({
+        key: 'ranged-walk',
+        frames: scene.anims.generateFrameNumbers('ranged-enemy-sprite', { start: 0, end: 7 }),
+        frameRate: 10,
+        repeat: -1
+      });
     }
+    
+    // Mark animations as created
+    RangedEnemy.animationsCreated = true;
   }
 } 

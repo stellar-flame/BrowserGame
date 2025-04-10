@@ -10,8 +10,6 @@ export class MainScene extends Scene {
   private player!: Player;
   private cursors!: Types.Input.Keyboard.CursorKeys;
   private enemies!: Physics.Arcade.Group;
-  private bullets!: Physics.Arcade.Group;
-  private enemyLastFired: { [key: string]: number } = {};
   private playerHit: boolean = false;
   private wallsLayer!: Phaser.Tilemaps.TilemapLayer | null;
   
@@ -33,10 +31,9 @@ export class MainScene extends Scene {
 
   // In MainScene.ts preload method
   preload() {
-    this.load.spritesheet('player-sprite', 'assets/sprites/player.png', {
-      frameWidth: 16,
-      frameHeight: 32 
-    });
+    this.loadSprite('player-sprite', 'assets/sprites/player.png', 16, 32);
+    this.loadSprite('ranged-enemy-sprite', 'assets/sprites/enemy-ranged.png', 16, 32);
+    
     // Load your tileset image
     this.load.image('dungeon-tiles', 'assets/tiles/0x72_DungeonTilesetII_v1.7/0x72_DungeonTilesetII_v1.7.png');
     this.load.image('atlas_walls_high-16x32', 'assets/tiles/0x72_DungeonTilesetII_v1.7/atlas_walls_high-16x32.png');
@@ -44,6 +41,13 @@ export class MainScene extends Scene {
     // Load your TMJ tilemap - same method as for JSON
     this.load.tilemapTiledJSON('dungeon-map', 'assets/dungeon.tmj');  // Updated to use the correct file name
   }
+
+  loadSprite(name: string, path: string, frameWidth: number, frameHeight: number) {  
+    this.load.spritesheet(name, path, {
+      frameWidth: frameWidth,
+      frameHeight: frameHeight
+    });
+  } 
 
   create() {
     console.log('Game started!');
@@ -108,7 +112,6 @@ export class MainScene extends Scene {
    // this.createRooms();
     
     // Setup physics groups
-    this.bullets = this.physics.add.group({ classType: Bullet, maxSize: 30, runChildUpdate: true });
     this.enemies = this.physics.add.group({ classType: Enemy });
     
     // Setup collisions
@@ -196,16 +199,20 @@ export class MainScene extends Scene {
     // Teleport the player to the new position
     this.player.teleport(newX, newY);
   }
+  
   setupCollisions() {
-    // Add collisions between bullets and walls
+    // Add collisions between player bullets and walls
     if (this.wallsLayer) {
-      this.physics.add.collider(this.bullets, this.wallsLayer, this.handleBulletPlatformCollision, undefined, this);
+      this.physics.add.collider(this.player.bullets, this.wallsLayer, this.handleBulletPlatformCollision, undefined, this);
       this.physics.add.collider(this.enemies, this.wallsLayer);
-
     }
     
     // Add collisions between bullets and player
-    this.physics.add.collider(this.player, this.bullets, this.handlePlayerBulletCollision, undefined, this);
+    this.physics.add.collider(this.player, this.player.bullets, this.handlePlayerBulletCollision, undefined, this);
+    
+    // Add collisions between player bullets and enemies
+    this.physics.add.collider(this.enemies, this.player.bullets, this.handleEnemyBulletCollision, undefined, this);
+    
   }
 
   setupRoomsFromTilemap(map: Phaser.Tilemaps.Tilemap) {
@@ -319,12 +326,21 @@ export class MainScene extends Scene {
     // Spawn new enemies at each spawn point
     spawnPoints.forEach((point, index) => {
       // Use the enemy type from the spawn point
+      console.log('Spawning enemy:', point.type);
       const enemy = this.enemyFactory.createEnemy(point.type, point.x, point.y, `enemy_${roomId}_${index}`);
       this.enemies.add(enemy);
       
       // Add collision with walls
       if (this.wallsLayer) {
         this.physics.add.collider(enemy, this.wallsLayer);
+      }
+      
+      // Set up collisions for enemy bullets
+      if (enemy.bullets) {
+        this.physics.add.collider(this.player, enemy.bullets, this.handlePlayerBulletCollision, undefined, this);
+        if (this.wallsLayer) {
+          this.physics.add.collider(this.wallsLayer, enemy.bullets, this.handleBulletPlatformCollision, undefined, this);
+        }
       }
     });
     
@@ -340,38 +356,11 @@ export class MainScene extends Scene {
     if (!this.playerHit) {
       this.enemies.getChildren().forEach((enemy) => {
         const enemyInstance = enemy as Enemy;
-        const enemyBody = enemyInstance.body as Physics.Arcade.Body;
-        if (!enemyInstance.active || !enemyBody) return;
+        if (!enemyInstance.active) return;
 
-        const distance = Phaser.Math.Distance.Between(enemyInstance.x, enemyInstance.y, this.player.x, this.player.y);
-        const angleToPlayer = Phaser.Math.Angle.Between(enemyInstance.x, enemyInstance.y, this.player.x, this.player.y);
-        const minDistance = 150;
-        const maxDistance = 350;
-
-        if (distance < minDistance) {
-          enemyBody.setVelocity(-Math.cos(angleToPlayer) * 100, -Math.sin(angleToPlayer) * 100);
-        } else if (distance > maxDistance) {
-          enemyBody.setVelocity(Math.cos(angleToPlayer) * 100, Math.sin(angleToPlayer) * 100);
-        } else {
-          enemyBody.setVelocity(0);
-        }
-        
-        if (distance > minDistance && distance < maxDistance) {
-          const enemyId = enemyInstance.id;
-          const now = time;
-          if (!this.enemyLastFired[enemyId] || now - this.enemyLastFired[enemyId] > 2000) {
-            this.enemyShoot(enemyInstance, angleToPlayer);
-            this.enemyLastFired[enemyId] = now;
-          }
-        }
+        // Update enemy with player position
+        enemyInstance.updatePlayerPosition(this.player.x, this.player.y);
       });
-    }
-  }
-
-  enemyShoot(enemy: Enemy, angle: number) {
-    const bullet = this.bullets.get() as Bullet;
-    if (bullet) {
-      bullet.fire(enemy.x, enemy.y, angle);
     }
   }
 
@@ -417,6 +406,21 @@ export class MainScene extends Scene {
     this.time.delayedCall(2000, () => {
       this.playerHit = false;
     });
+  }
+
+  handleEnemyBulletCollision(enemy: any, bullet: any) {
+    const enemyInstance = enemy as Enemy;
+    const bulletInstance = bullet as Bullet;
+    
+    if (!enemyInstance.active || !bulletInstance.active) {
+      return;
+    }
+    
+    // Deactivate the bullet
+    bulletInstance.deactivate();
+    
+    // Apply damage to the enemy
+    enemyInstance.takeDamage();
   }
 
   checkRoomCleared() {
