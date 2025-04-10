@@ -8,22 +8,52 @@ export class Player extends Physics.Arcade.Sprite {
   private isTeleporting: boolean = false;
 
   constructor(scene: Scene, x: number, y: number, cursors: Types.Input.Keyboard.CursorKeys) {
-    // Call Sprite constructor (use __WHITE texture key for tinting)
-    super(scene, x, y, '__WHITE');
+    super(scene, x, y, 'player-sprite'); // Use the sprite sheet
 
     this.currentCursors = cursors;
+
+    // Set a larger display size for the sprite
+    this.setScale(1.5);
 
     // Add to scene and enable physics
     scene.add.existing(this);
     scene.physics.world.enable(this); // Enable physics
 
-    // Make it look like the old rectangle
-    this.setDisplaySize(32, 32);
-    this.setTint(0x00ff00); // Green tint
-    this.setOrigin(0.5, 0.5); // Center the origin like a Rectangle
-
     // Setup physics properties (cast body to Arcade.Body)
-    (this.body as Physics.Arcade.Body).setCollideWorldBounds(false);
+    (this.body as Physics.Arcade.Body).setCollideWorldBounds(true);
+
+    // Create animations
+    this.createAnimations(scene);
+  }
+
+  private createAnimations(scene: Scene) {
+    scene.anims.create({
+      key: 'walk-left',
+      frames: scene.anims.generateFrameNumbers('player-sprite', { start: 0, end: 7 }),
+      frameRate: 10,
+      repeat: -1
+    });
+
+    scene.anims.create({
+      key: 'walk-right',
+      frames: scene.anims.generateFrameNumbers('player-sprite', { start: 0, end: 7 }),
+      frameRate: 10,
+      repeat: -1
+    });
+
+    scene.anims.create({
+      key: 'walk-up',
+      frames: scene.anims.generateFrameNumbers('player-sprite', { start: 0, end: 7 }),
+      frameRate: 10,
+      repeat: -1
+    });
+
+    scene.anims.create({
+      key: 'walk-down',
+      frames: scene.anims.generateFrameNumbers('player-sprite', { start: 0, end: 7 }),
+      frameRate: 10,
+      repeat: -1
+    });
   }
 
   // Pre-update is valid for Sprites
@@ -32,7 +62,6 @@ export class Player extends Physics.Arcade.Sprite {
     
     // Skip movement if teleporting
     if (this.isTeleporting) {
-      console.log('Player is teleporting, movement disabled', this.body?.x, this.body?.y);
       return;
     }
 
@@ -43,14 +72,20 @@ export class Player extends Physics.Arcade.Sprite {
 
     if (this.currentCursors.left.isDown) {
       body.setVelocityX(-160);
+      this.anims.play('walk-left', true);
+      this.flipX = true; // Flip the sprite horizontally
     } else if (this.currentCursors.right.isDown) {
       body.setVelocityX(160);
-    }
-
-    if (this.currentCursors.up.isDown) {
+      this.anims.play('walk-right', true);
+      this.flipX = false; // Flip the sprite horizontally
+    } else if (this.currentCursors.up.isDown) {
       body.setVelocityY(-160);
+      this.anims.play('walk-up', true);
     } else if (this.currentCursors.down.isDown) {
       body.setVelocityY(160);
+      this.anims.play('walk-down', true);
+    } else {
+      this.anims.stop();
     }
   }
 
