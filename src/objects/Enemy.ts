@@ -16,6 +16,13 @@ export class Enemy extends Physics.Arcade.Sprite {
   protected moveSpeed: number = 100;
   protected playerX: number = 0;
   protected playerY: number = 0;
+  
+  // Health properties
+  protected health: number = 3;
+  protected maxHealth: number = 3;
+  protected isDead: boolean = false;
+  protected lastDamageTime: number = 0;
+  protected damageCooldown: number = 500; // Time in ms before taking damage again
 
   constructor(scene: Scene, x: number, y: number, id: string) {
     // Call Sprite constructor (use __WHITE texture key for tinting)
@@ -34,8 +41,16 @@ export class Enemy extends Physics.Arcade.Sprite {
     (this.body as Physics.Arcade.Body).setSize(16, 16); // Match player's hitbox size
     (this.body as Physics.Arcade.Body).setOffset(8, 8); // Center the hitbox
     
-    // Initialize bullets group
-    this.bullets = scene.physics.add.group({ classType: Bullet, maxSize: 10 });
+    // Initialize bullets group using the protected method
+    this.bullets = this.createBulletGroup(scene);
+  }
+  
+  // Protected method to create the bullet group - can be overridden by subclasses
+  protected createBulletGroup(scene: Scene): Physics.Arcade.Group {
+    return scene.physics.add.group({ 
+      classType: Bullet, 
+      maxSize: 10 
+    });
   }
   
   // Method to initialize animations - call this after the constructor
@@ -146,9 +161,70 @@ export class Enemy extends Physics.Arcade.Sprite {
   }
   
 
-  // Example method (not used yet, but shows potential)
-  public takeDamage() {
-    // Logic for when the enemy is hit
-    console.log(`Enemy ${this.id} took damage`);
+  // Method to take damage
+  public takeDamage(): void {
+    // Check if enough time has passed since last damage
+    const currentTime = this.scene.time.now;
+    if (currentTime - this.lastDamageTime < this.damageCooldown) {
+      return; // Still on cooldown
+    }
+    
+    // Update last damage time
+    this.lastDamageTime = currentTime;
+    
+    // Reduce health
+    this.health--;
+    
+    // Visual feedback - flash red
+    this.setTint(0xff0000);
+    this.scene.time.delayedCall(100, () => {
+      this.clearTint();
+    });
+    
+    // Check if dead
+    if (this.health <= 0) {
+      this.die();
+    }
+  }
+  
+  // Method to handle enemy death
+  protected die(): void {
+    if (this.isDead) return;
+    
+    this.isDead = true;
+    
+    // Visual feedback - fade out
+    this.scene.tweens.add({
+      targets: this,
+      alpha: 0,
+      duration: 300,
+      onComplete: () => {
+        // Deactivate the enemy
+        this.setActive(false);
+        this.setVisible(false);
+        
+        // Check if all enemies in the room are dead
+        this.checkRoomCleared();
+      }
+    });
+  }
+  
+  // Method to check if the room is cleared
+  protected checkRoomCleared(): void {
+    // Get the current room from the scene
+    const scene = this.scene as any;
+    if (!scene || !scene.enemies) return;
+    
+    // Check if any enemies are still active
+    const hasActiveEnemies = scene.enemies.getChildren().some((enemy: any) => enemy.active);
+    
+    // If no active enemies, mark the room as cleared
+    if (!hasActiveEnemies) {
+      const currentRoomId = scene.currentRoomId;
+      if (currentRoomId) {
+        scene.roomCleared.set(currentRoomId, true);
+        console.log(`Room ${currentRoomId} cleared!`);
+      }
+    }
   }
 }

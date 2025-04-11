@@ -1,5 +1,6 @@
 import { Scene, Physics } from 'phaser';
 import { Enemy } from './Enemy';
+import { Bullet } from './Bullet';
 
 export class RangedEnemy extends Enemy {
   // Static flag to track if animations have been created
@@ -20,6 +21,21 @@ export class RangedEnemy extends Enemy {
     
     // Initialize animations after the object is fully constructed
     this.initializeAnimations();
+  }
+
+  // Override the createBulletGroup method to customize bullet appearance
+  protected createBulletGroup(scene: Scene): Physics.Arcade.Group {
+    return scene.physics.add.group({ 
+      classType: Bullet, 
+      maxSize: 10,
+      createCallback: (item: Phaser.GameObjects.GameObject) => {
+        const bullet = item as Bullet;
+        // Set the arrow texture and configure its properties
+        bullet.setTexture('arrow');
+        bullet.setDisplaySize(32, 16); // Match the actual sprite dimensions
+        bullet.setOrigin(0.5, 0.5); // Center the origin point
+      }
+    });
   }
 
   preUpdate(time: number, delta: number) {
@@ -43,7 +59,7 @@ export class RangedEnemy extends Enemy {
     // Ranged enemies can shoot from further away
     return distance > this.minDistance && distance < this.maxDistance * 1.2;
   }
-  
+
   // Override the createAnimations method to create ranged enemy animations
   protected createAnimations(scene: Scene): void {
     // Only create animations once for all instances of this class

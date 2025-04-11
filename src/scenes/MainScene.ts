@@ -12,6 +12,7 @@ export class MainScene extends Scene {
   private enemies!: Physics.Arcade.Group;
   private playerHit: boolean = false;
   private wallsLayer!: Phaser.Tilemaps.TilemapLayer | null;
+  private mousePointer!: Phaser.Input.Pointer;
   
   // Room system
   private rooms: Map<string, Room> = new Map();
@@ -23,7 +24,7 @@ export class MainScene extends Scene {
   private roomCleared: Map<string, boolean> = new Map();
   private roomEnemiesSpawned: Map<string, boolean> = new Map();  // Track if enemies were spawned
   private enemyFactory: EnemyFactory;
-
+  
   constructor() {
     super({ key: 'MainScene' });
     this.enemyFactory = new EnemyFactory(this);
@@ -31,13 +32,11 @@ export class MainScene extends Scene {
 
   // In MainScene.ts preload method
   preload() {
-    this.loadSprite('player-sprite', 'assets/sprites/player-64.png', 64, 64);
+    this.loadSprite('player-sprite', 'assets/sprites/shooter-sprite.png', 64 , 64 );
     this.loadSprite('ranged-enemy-sprite', 'assets/sprites/enemy-ranged.png', 16, 32);
-    
+    this.loadSprite('arrow', 'assets/sprites/arrow.png', 32, 16);
+
     // Load your tileset image
-    // this.load.image('dungeon-tiles', 'assets/tiles/0x72_DungeonTilesetII_v1.7/0x72_DungeonTilesetII_v1.7.png');
-    // this.load.image('atlas_walls_high-16x32', 'assets/tiles/0x72_DungeonTilesetII_v1.7/atlas_walls_high-16x32.png');
-    
     this.load.image('tiles-32', 'assets/tiles.png');
     
     // Load your TMJ tilemap - same method as for JSON
@@ -55,10 +54,7 @@ export class MainScene extends Scene {
     console.log('Game started!');
     
     const map = this.make.tilemap({ key: 'dungeon-map' });
-    
-    // const tileset = map.addTilesetImage('dungeon-tiles', 'dungeon-tiles');
-    // const wallsTileset = map.addTilesetImage('atlas_walls_high-16x32', 'atlas_walls_high-16x32');
-    
+
     const tileset = map.addTilesetImage('tiles-32', 'tiles-32');
     
     
@@ -81,7 +77,6 @@ export class MainScene extends Scene {
     
     const floorLayer = map.createLayer('Floor', tileset, 0, 0);
     this.wallsLayer = map.createLayer('Walls', tileset, 0, 0);
-   // const wallEdgesLayer = map.createLayer('WallEdges', wallsTileset, 0, 0);
    
    
     // Set collision properties for walls
@@ -96,12 +91,12 @@ export class MainScene extends Scene {
 
     // Create player and setup input
     if (this.input && this.input.keyboard) {
-      // Create cursor keys
-      this.cursors = this.input.keyboard.createCursorKeys();
+      // Setup mouse input for targeting
+      this.mousePointer = this.input.activePointer;
+      this.input.on('pointerdown', this.handlePointerDown, this);
+      this.input.on('pointerup', this.handlePointerUp, this);
       
-    
-      
-      this.player = new Player(this, 100, 300, this.cursors);
+      this.player = new Player(this, 100, 300);
       console.log('Player created:', this.player);
       
       // Add collision between player and walls
@@ -219,12 +214,8 @@ export class MainScene extends Scene {
       this.physics.add.collider(this.enemies, this.wallsLayer);
     }
     
-    // Add collisions between bullets and player
-    this.physics.add.collider(this.player, this.player.bullets, this.handlePlayerBulletCollision, undefined, this);
-    
     // Add collisions between player bullets and enemies
     this.physics.add.collider(this.enemies, this.player.bullets, this.handleEnemyBulletCollision, undefined, this);
-    
   }
 
   setupRoomsFromTilemap(map: Phaser.Tilemaps.Tilemap) {
@@ -361,6 +352,29 @@ export class MainScene extends Scene {
     console.log(`Spawned ${spawnPoints.length} enemies in room ${roomId}`);
   }
 
+  // Handle mouse pointer down for targeting
+  private handlePointerDown(pointer: Phaser.Input.Pointer): void {
+    if (pointer.leftButtonDown()) {
+      // Convert pointer position to world position
+      const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+      this.player.startTargeting(worldPoint.x, worldPoint.y);
+      
+      // Check fire rate before firing
+      const currentTime = this.time.now;
+      if (currentTime - this.player.lastFired > this.player.fireRate) {
+        this.player.fire();
+        this.player.lastFired = currentTime;
+      }
+    }
+  }
+  
+  // Handle mouse pointer up to stop targeting
+  private handlePointerUp(pointer: Phaser.Input.Pointer): void {
+    if (pointer.leftButtonReleased()) {
+      this.player.stopTargeting();
+    }
+  }
+  
   update(time: number, delta: number) {
     // Check if current room is cleared
     this.checkRoomCleared();

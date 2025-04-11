@@ -3,20 +3,17 @@ import { Scene, Physics } from 'phaser';
 // Extend Physics.Arcade.Sprite for physics and automatic updates
 export class Bullet extends Physics.Arcade.Sprite {
     // Removed redundant body declaration, it's inherited
-    private speed: number = 150; // Bullet speed
+    private speed: number = 300; // Increased bullet speed to be faster than player movement
 
-    constructor(scene: Scene, x: number, y: number) {
-        // Call Sprite constructor (use __WHITE texture key for tinting)
-        super(scene, x, y, '__WHITE');
+    constructor(scene: Scene, x: number, y: number, textureKey: string = '__WHITE') {
+        // Call Sprite constructor with the provided texture
+        super(scene, x, y, textureKey);
 
-        // Add to scene's display list but NOT update list initially
+        // Add to scene's display list and update list
         scene.add.existing(this);
-        // Enable physics but keep it inactive initially
-        scene.physics.world.enable(this);
+        scene.physics.add.existing(this);
 
         // Initial visual setup (will be confirmed in fire method)
-        this.setDisplaySize(10, 10);
-        this.setTint(0xff0000); // Red tint
         this.setOrigin(0.5, 0.5); // Center the origin
 
         // Initial physics setup (cast to Arcade.Body)
@@ -56,9 +53,8 @@ export class Bullet extends Physics.Arcade.Sprite {
         const vy = Math.sin(angle) * this.speed;
         body.setVelocity(vx, vy);
         
-        // 6. Ensure visual properties
-        this.setDisplaySize(10, 10);
-        this.setTint(0xff0000);
+        // 6. Set rotation to match the angle
+        this.setRotation(angle);
     }
 
     // Method to deactivate the bullet (return to pool)

@@ -1,20 +1,47 @@
-import { Scene, GameObjects, Physics, Types } from 'phaser';
+import { Scene, GameObjects, Physics, Types, Input } from 'phaser';
 import { Bullet } from './Bullet';
 
 // Extend Physics.Arcade.Sprite for physics and preUpdate
 export class Player extends Physics.Arcade.Sprite {
   // Removed redundant body declaration, it's inherited
 
-  private currentCursors: Types.Input.Keyboard.CursorKeys;
+  private wasdKeys: {
+    up: Input.Keyboard.Key;
+    down: Input.Keyboard.Key;
+    left: Input.Keyboard.Key;
+    right: Input.Keyboard.Key;
+  };
   private isTeleporting: boolean = false;
   public bullets: Physics.Arcade.Group;
-  private lastFired: number = 0;
-  private fireRate: number = 500; // Fire every 0.5 seconds
+  public lastFired: number = 0;
+  public fireRate: number = 500; // Fire every 0.5 seconds
+  
+  // Targeting system
+  private targetPoint: Phaser.GameObjects.Graphics;
+  private targetX: number = 0;
+  private targetY: number = 0;
+  private isTargeting: boolean = false;
+  private targetRadius: number = 30; // Radius of the target area
 
-  constructor(scene: Scene, x: number, y: number, cursors: Types.Input.Keyboard.CursorKeys) {
+  constructor(scene: Scene, x: number, y: number) {
     super(scene, x, y, 'player-sprite'); // Use the sprite sheet
 
-    this.currentCursors = cursors;
+    // Create WASD keys
+    if (scene.input && scene.input.keyboard) {
+      this.wasdKeys = scene.input.keyboard.addKeys({
+        up: 'W',
+        down: 'S',
+        left: 'A',
+        right: 'D'
+      }) as {
+        up: Input.Keyboard.Key;
+        down: Input.Keyboard.Key;
+        left: Input.Keyboard.Key;
+        right: Input.Keyboard.Key;
+      };
+    } else {
+      throw new Error('Keyboard input not available');
+    }
 
     // Set a larger display size for the sprite
     this.setScale(1);
@@ -26,11 +53,28 @@ export class Player extends Physics.Arcade.Sprite {
     // Setup physics properties (cast body to Arcade.Body)
     (this.body as Physics.Arcade.Body).setCollideWorldBounds(true);
     
-    // Initialize bullets group
-    this.bullets = scene.physics.add.group({ classType: Bullet, maxSize: 30, runChildUpdate: true });
+    // Initialize bullets group with custom appearance
+    this.bullets = scene.physics.add.group({ 
+      classType: Bullet, 
+      maxSize: 30, 
+      runChildUpdate: true,
+      createCallback: (item: Phaser.GameObjects.GameObject) => {
+        const bullet = item as Bullet;
+        // Set the bullet texture and appearance
+        bullet.setTexture('__WHITE'); // Use the default white texture
+        bullet.setTint(0x00ffff); // Light blue tint for player bullets
+        bullet.setDisplaySize(3, 6); // Make it a small circle
+        bullet.setAlpha(1); // Ensure full opacity
+        bullet.setDepth(1); // Ensure bullets are drawn above the background
+      }
+    });
 
     // Create animations
     this.createAnimations(scene);
+    
+    // Initialize targeting system
+    this.targetPoint = scene.add.graphics();
+    this.targetPoint.setDepth(10); // Ensure it's drawn above other elements
   }
 
   private createAnimations(scene: Scene) {
@@ -66,18 +110,18 @@ export class Player extends Physics.Arcade.Sprite {
     // Track if the player is moving
     let isMoving = false;
 
-    if (this.currentCursors.left.isDown) {
+    if (this.wasdKeys.left.isDown) {
       body.setVelocityX(-160);
       this.flipX = true; // Flip the sprite horizontally
       isMoving = true;
-    } else if (this.currentCursors.right.isDown) {
+    } else if (this.wasdKeys.right.isDown) {
       body.setVelocityX(160);
       this.flipX = false; // Flip the sprite horizontally
       isMoving = true;
-    } else if (this.currentCursors.up.isDown) {
+    } else if (this.wasdKeys.up.isDown) {
       body.setVelocityY(-160);
       isMoving = true;
-    } else if (this.currentCursors.down.isDown) {
+    } else if (this.wasdKeys.down.isDown) {
       body.setVelocityY(160);
       isMoving = true;
     }
@@ -89,29 +133,79 @@ export class Player extends Physics.Arcade.Sprite {
       this.anims.play('player-idle', true);
     }
     
-    // Check for firing
-    if (this.currentCursors.space.isDown && time - this.lastFired > this.fireRate) {
-      this.fire();
-      this.lastFired = time;
+    // Handle targeting
+    this.updateTargeting();
+  }
+  
+  // Update the targeting system
+  private updateTargeting(): void {
+    // Clear previous target graphics
+    this.targetPoint.clear();
+    
+    // If not targeting, don't show anything
+    if (!this.isTargeting) {
+      return;
     }
+    
+    // Draw target circle
+    this.targetPoint.lineStyle(2, 0xff0000, 0.8);
+    this.targetPoint.strokeCircle(this.targetX, this.targetY, this.targetRadius);
+    
+    // Draw crosshair
+    this.targetPoint.lineStyle(1, 0xff0000, 0.8);
+    this.targetPoint.moveTo(this.targetX - 10, this.targetY);
+    this.targetPoint.lineTo(this.targetX + 10, this.targetY);
+    this.targetPoint.moveTo(this.targetX, this.targetY - 10);
+    this.targetPoint.lineTo(this.targetX, this.targetY + 10);
+  }
+  
+  // Start targeting at a specific point
+  public startTargeting(x: number, y: number): void {
+    this.targetX = x;
+    this.targetY = y;
+    this.isTargeting = true;
+  }
+  
+  // Stop targeting
+  public stopTargeting(): void {
+    this.isTargeting = false;
+  }
+  
+  // Get the current target position
+  public getTargetPosition(): { x: number, y: number } {
+    return { x: this.targetX, y: this.targetY };
+  }
+  
+  // Check if targeting is active
+  public isCurrentlyTargeting(): boolean {
+    return this.isTargeting;
   }
 
   // Method to fire a bullet
-  private fire() {
+  public fire() {
     const bullet = this.bullets.get() as Bullet;
     if (bullet) {
-      // Determine firing direction based on player's facing direction
-      let angle = 0;
+      // Calculate the center position of the player
+      // Add a small offset to make it look like it's coming from the center of the sprite
+      const centerX = this.x;
+      const centerY = this.y - 5; // Slight upward offset to make it look like it's coming from the center
       
-      if (this.flipX) {
-        angle = Math.PI; // Left
-      } else if (this.anims.currentAnim?.key === 'walk-up') {
-        angle = -Math.PI / 2; // Up
-      } else if (this.anims.currentAnim?.key === 'walk-down') {
-        angle = Math.PI / 2; // Down
+      if (this.isTargeting) {
+        // Fire at the target point
+        const angle = Phaser.Math.Angle.Between(centerX, centerY, this.targetX, this.targetY);
+        bullet.fire(centerX, centerY, angle);
+      } else {
+        // Default firing direction based on player's facing direction
+        let angle = 0;
+        
+        if (this.flipX) {
+          angle = Math.PI; // Left
+        } else {
+          angle = 0; // Right
+        }
+        
+        bullet.fire(centerX, centerY, angle);
       }
-      
-      bullet.fire(this.x, this.y, angle);
     }
   }
 
