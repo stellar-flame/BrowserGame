@@ -31,15 +31,17 @@ export class MainScene extends Scene {
 
   // In MainScene.ts preload method
   preload() {
-    this.loadSprite('player-sprite', 'assets/sprites/player.png', 16, 32);
+    this.loadSprite('player-sprite', 'assets/sprites/player-64.png', 64, 64);
     this.loadSprite('ranged-enemy-sprite', 'assets/sprites/enemy-ranged.png', 16, 32);
     
     // Load your tileset image
-    this.load.image('dungeon-tiles', 'assets/tiles/0x72_DungeonTilesetII_v1.7/0x72_DungeonTilesetII_v1.7.png');
-    this.load.image('atlas_walls_high-16x32', 'assets/tiles/0x72_DungeonTilesetII_v1.7/atlas_walls_high-16x32.png');
+    // this.load.image('dungeon-tiles', 'assets/tiles/0x72_DungeonTilesetII_v1.7/0x72_DungeonTilesetII_v1.7.png');
+    // this.load.image('atlas_walls_high-16x32', 'assets/tiles/0x72_DungeonTilesetII_v1.7/atlas_walls_high-16x32.png');
+    
+    this.load.image('tiles-32', 'assets/tiles.png');
     
     // Load your TMJ tilemap - same method as for JSON
-    this.load.tilemapTiledJSON('dungeon-map', 'assets/dungeon.tmj');  // Updated to use the correct file name
+    this.load.tilemapTiledJSON('dungeon-map', 'assets/dungeon-32.tmj');  // Updated to use the correct file name
   }
 
   loadSprite(name: string, path: string, frameWidth: number, frameHeight: number) {  
@@ -54,22 +56,32 @@ export class MainScene extends Scene {
     
     const map = this.make.tilemap({ key: 'dungeon-map' });
     
-    const tileset = map.addTilesetImage('dungeon-tiles', 'dungeon-tiles');
-    const wallsTileset = map.addTilesetImage('atlas_walls_high-16x32', 'atlas_walls_high-16x32');
+    // const tileset = map.addTilesetImage('dungeon-tiles', 'dungeon-tiles');
+    // const wallsTileset = map.addTilesetImage('atlas_walls_high-16x32', 'atlas_walls_high-16x32');
+    
+    const tileset = map.addTilesetImage('tiles-32', 'tiles-32');
     
     
     // Add null checks before creating layers
-    if (!tileset || !wallsTileset) {
+    if (!tileset) {
       console.error('Failed to load tilesets');
       return;
     }
 
+    // Add fullscreen toggle key
+    if (this.input && this.input.keyboard) {
+      this.input.keyboard.on('keydown-F', () => {
+        if (this.scale.isFullscreen) {
+          this.scale.stopFullscreen();
+        } else {
+          this.scale.startFullscreen();
+        }
+      });
+    }
     
     const floorLayer = map.createLayer('Floor', tileset, 0, 0);
-    this.wallsLayer = map.createLayer('Walls', wallsTileset, 0, 0);
-    const wallEdgesLayer = map.createLayer('WallEdges', wallsTileset, 0, 0);
-    console.log('Wall edges layer created:', wallEdgesLayer);
-    const doorsLayer = map.createLayer('Doors', tileset, 0, 0);
+    this.wallsLayer = map.createLayer('Walls', tileset, 0, 0);
+   // const wallEdgesLayer = map.createLayer('WallEdges', wallsTileset, 0, 0);
    
    
     // Set collision properties for walls
@@ -391,17 +403,17 @@ export class MainScene extends Scene {
     (playerInstance.body as Physics.Arcade.Body).setVelocity(0);
 
     this.playerHit = true;
-    playerInstance.setAlpha(0.5);
-    this.tweens.add({
-        targets: playerInstance,
-        alpha: 1,
-        duration: 100,
-        yoyo: true,
-        repeat: 9,
-        onComplete: () => {
-          playerInstance.setAlpha(1);
-        }
-    });
+    // playerInstance.setAlpha(0.5);
+    // this.tweens.add({
+    //     targets: playerInstance,
+    //     alpha: 1,
+    //     duration: 100,
+    //     yoyo: true,
+    //     repeat: 9,
+    //     onComplete: () => {
+    //       playerInstance.setAlpha(1);
+    //     }
+    // });
     
     this.time.delayedCall(2000, () => {
       this.playerHit = false;

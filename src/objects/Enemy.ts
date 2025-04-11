@@ -30,7 +30,9 @@ export class Enemy extends Physics.Arcade.Sprite {
     // Setup physics properties
     (this.body as Physics.Arcade.Body).setCollideWorldBounds(true);
     (this.body as Physics.Arcade.Body).setImmovable(false); // Enemies should be movable
-    (this.body as Physics.Arcade.Body).setBounce(1); // Optional: Make them bounce off each other/walls slightly
+    (this.body as Physics.Arcade.Body).setBounce(0); // No bounce
+    (this.body as Physics.Arcade.Body).setSize(16, 16); // Match player's hitbox size
+    (this.body as Physics.Arcade.Body).setOffset(8, 8); // Center the hitbox
     
     // Initialize bullets group
     this.bullets = scene.physics.add.group({ classType: Bullet, maxSize: 10 });
@@ -69,14 +71,57 @@ export class Enemy extends Physics.Arcade.Sprite {
     const distance = Phaser.Math.Distance.Between(this.x, this.y, this.playerX, this.playerY);
     const angleToPlayer = Phaser.Math.Angle.Between(this.x, this.y, this.playerX, this.playerY);
     
-
+    // Calculate velocities
+    let vx = 0;
+    let vy = 0;
+    
     if (distance < this.minDistance) {
-      this.setVelocity(-Math.cos(angleToPlayer) * this.moveSpeed, -Math.sin(angleToPlayer) * this.moveSpeed);
+      vx = -Math.cos(angleToPlayer) * this.moveSpeed;
+      vy = -Math.sin(angleToPlayer) * this.moveSpeed;
     } else if (distance > this.maxDistance) {
-      this.setVelocity(Math.cos(angleToPlayer) * this.moveSpeed, Math.sin(angleToPlayer) * this.moveSpeed);
-    } else {
-      this.setVelocity(0, 0);
+      vx = Math.cos(angleToPlayer) * this.moveSpeed;
+      vy = Math.sin(angleToPlayer) * this.moveSpeed;
     }
+    
+    // Set velocity directly instead of using setVelocity
+    enemyBody.setVelocity(vx, vy);
+  }
+  
+  // Helper method to check if enemy is near a wall
+  private isNearWall(): boolean {
+    const wallDistance = 16; // Distance to check for walls
+    
+    // Get the tilemap layer from the scene
+    const wallsLayer = (this.scene as any).wallsLayer;
+    if (!wallsLayer) return false;
+    
+    // Convert world position to tile position
+    const tileX = Math.floor(this.x / 32);
+    const tileY = Math.floor(this.y / 32);
+    
+    // Check surrounding tiles for walls
+    for (let x = -1; x <= 1; x++) {
+      for (let y = -1; y <= 1; y++) {
+        if (x === 0 && y === 0) continue; // Skip center tile
+        
+        const checkX = tileX + x;
+        const checkY = tileY + y;
+        
+        // Check if the tile exists and is a wall
+        if (wallsLayer.hasTileAt(checkX, checkY)) {
+          // Calculate distance to wall tile
+          const wallCenterX = (checkX * 32) + 16;
+          const wallCenterY = (checkY * 32) + 16;
+          const distance = Phaser.Math.Distance.Between(this.x, this.y, wallCenterX, wallCenterY);
+          
+          if (distance < wallDistance) {
+            return true;
+          }
+        }
+      }
+    }
+    
+    return false;
   }
   
   protected canFire() {

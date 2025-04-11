@@ -1,4 +1,8 @@
 {
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
     "activeFile": "",
     "expandedProjectPaths": [
     ],
@@ -15,29 +19,53 @@
             "scaleInDock": 1,
             "scaleInEditor": 1.77
         },
+        "dungeon-32.tmx": {
+            "expandedObjectLayers": [
+                4
+            ],
+            "scale": 1.02,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 399.5098039215686,
+                "y": 319.6078431372549
+            }
+        },
+        "dungeon-32.tmx#tiles-32": {
+            "scaleInDock": 1
+        },
         "dungeon-tiles.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1.77
         },
         "dungeon.tmx": {
-            "scale": 1.25,
-            "selectedLayer": 0,
+            "expandedObjectLayers": [
+                9,
+                8
+            ],
+            "scale": 1.36,
+            "selectedLayer": 4,
             "viewCenter": {
-                "x": 334.00000000000006,
-                "y": 324
+                "x": 428.30882352941177,
+                "y": 233.08823529411762
             }
         },
         "dungeon.tmx#atlas_walls_high-16x32": {
-            "scaleInDock": 1,
+            "scaleInDock": 2.2901,
             "scaleInEditor": 1
         },
         "dungeon.tmx#dungeon-tiles": {
-            "scaleInDock": 1
+            "scaleInDock": 2.6429
+        },
+        "tiles-32.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         }
     },
     "last.exportedFilePath": "/Volumes/source-code/browser-game/assets",
+    "last.imagePath": "/Volumes/source-code/browser-game/assets",
     "map.lastUsedExportFilter": "JSON map files (*.tmj *.json)",
     "map.lastUsedFormat": "tmx",
+    "map.width": 25,
     "openFiles": [
         "dungeon.tmx",
         "dungeon-tiles.tsx",
@@ -45,6 +73,7 @@
     ],
     "project": "DungeonMap.tiled-project",
     "recentFiles": [
+        "tiles-32.tsx",
         "atlas_walls_high-16x32.tsx",
         "dungeon-tiles.tsx",
         "dungeon.tmx",

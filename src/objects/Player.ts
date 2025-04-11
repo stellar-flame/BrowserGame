@@ -17,7 +17,7 @@ export class Player extends Physics.Arcade.Sprite {
     this.currentCursors = cursors;
 
     // Set a larger display size for the sprite
-    this.setScale(2);
+    this.setScale(1);
 
     // Add to scene and enable physics
     scene.add.existing(this);
@@ -43,7 +43,7 @@ export class Player extends Physics.Arcade.Sprite {
 
     scene.anims.create({
       key: 'player-walk',
-      frames: scene.anims.generateFrameNumbers('player-sprite', { start: 1, end: 4 }),
+      frames: scene.anims.generateFrameNumbers('player-sprite', { start: 1, end: 6 }),
       frameRate: 10,
       repeat: -1
     });
@@ -63,23 +63,30 @@ export class Player extends Physics.Arcade.Sprite {
 
     body.setVelocity(0);
 
+    // Track if the player is moving
+    let isMoving = false;
+
     if (this.currentCursors.left.isDown) {
       body.setVelocityX(-160);
-      this.anims.play('player-walk', true);
       this.flipX = true; // Flip the sprite horizontally
+      isMoving = true;
     } else if (this.currentCursors.right.isDown) {
       body.setVelocityX(160);
-      this.anims.play('player-walk', true);
       this.flipX = false; // Flip the sprite horizontally
+      isMoving = true;
     } else if (this.currentCursors.up.isDown) {
       body.setVelocityY(-160);
-      this.anims.play('player-walk', true);
+      isMoving = true;
     } else if (this.currentCursors.down.isDown) {
       body.setVelocityY(160);
+      isMoving = true;
+    }
+    
+    // Play the appropriate animation based on movement
+    if (isMoving) {
       this.anims.play('player-walk', true);
     } else {
       this.anims.play('player-idle', true);
-      this.anims.stop();
     }
     
     // Check for firing

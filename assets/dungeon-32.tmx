@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="25" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="6" nextobjectid="6">
+ <editorsettings>
+  <export target="dungeon-32.tmj" format="json"/>
+ </editorsettings>
+ <tileset firstgid="1" name="tiles-32" tilewidth="32" tileheight="32" tilecount="442" columns="17">
+  <image source="tiles.png" width="544" height="832"/>
+  <tile id="0">
+   <objectgroup draworder="index" id="2">
+    <object id="1" x="0" y="0" width="32" height="32"/>
+   </objectgroup>
+  </tile>
+  <tile id="1">
+   <objectgroup draworder="index" id="2">
+    <object id="1" x="0" y="0" width="32" height="32"/>
+   </objectgroup>
+  </tile>
+  <tile id="17">
+   <objectgroup draworder="index" id="2">
+    <object id="2" x="0" y="0" width="32" height="32"/>
+   </objectgroup>
+  </tile>
+  <tile id="18">
+   <objectgroup draworder="index" id="2">
+    <object id="1" x="0" y="0" width="32" height="32"/>
+   </objectgroup>
+  </tile>
+  <tile id="34">
+   <objectgroup draworder="index" id="2">
+    <object id="1" x="0" y="0" width="32" height="32"/>
+   </objectgroup>
+  </tile>
+  <tile id="35">
+   <objectgroup draworder="index" id="2">
+    <object id="1" x="0" y="0" width="32" height="32"/>
+   </objectgroup>
+  </tile>
+  <tile id="36">
+   <objectgroup draworder="index" id="2">
+    <object id="1" x="0" y="0" width="32" height="32"/>
+   </objectgroup>
+  </tile>
+  <tile id="51">
+   <objectgroup draworder="index" id="2">
+    <object id="1" x="0" y="0" width="32" height="32"/>
+   </objectgroup>
+  </tile>
+  <tile id="52">
+   <objectgroup draworder="index" id="2">
+    <object id="1" x="0" y="0" width="32" height="32"/>
+   </objectgroup>
+  </tile>
+  <tile id="68">
+   <objectgroup draworder="index" id="2">
+    <object id="1" x="0" y="0" width="32" height="32"/>
+   </objectgroup>
+  </tile>
+  <tile id="69">
+   <objectgroup draworder="index" id="2">
+    <object id="1" x="0" y="0" width="32" height="32"/>
+   </objectgroup>
+  </tile>
+  <tile id="85">
+   <objectgroup draworder="index" id="2">
+    <object id="1" x="0" y="0" width="32" height="32"/>
+   </objectgroup>
+  </tile>
+  <tile id="86">
+   <objectgroup draworder="index" id="2">
+    <object id="1" x="0" y="0" width="32" height="32"/>
+   </objectgroup>
+  </tile>
+ </tileset>
+ <layer id="2" name="Floor" width="25" height="20">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,205,205,205,205,205,205,205,205,205,205,205,205,205,205,205,0,0,0,0,0,0,
+0,0,0,0,205,205,205,205,205,205,205,205,205,205,205,205,205,205,205,0,0,0,0,0,0,
+0,0,0,0,205,205,205,205,207,206,205,205,205,205,205,205,205,207,205,0,0,0,0,0,0,
+0,0,205,205,205,205,206,205,205,205,205,205,205,205,205,205,205,205,205,19,0,0,0,0,0,
+0,0,205,205,205,205,205,205,205,205,205,205,205,205,205,205,205,205,205,19,0,0,0,0,0,
+0,0,205,205,205,205,205,205,205,205,205,205,205,205,205,205,205,205,205,205,205,205,205,205,0,
+0,0,205,205,205,205,205,205,205,205,206,205,205,205,205,205,205,205,205,205,205,205,205,205,0,
+0,0,205,205,205,205,207,205,205,205,205,205,205,205,205,205,205,208,205,205,205,205,205,205,0,
+0,0,205,205,205,205,205,205,205,205,205,205,205,205,205,205,205,205,205,0,0,0,0,0,0,
+0,0,0,0,205,205,205,205,205,205,205,205,205,205,206,205,205,205,205,0,0,0,0,0,0,
+0,0,0,0,205,205,205,205,205,205,205,205,205,205,205,205,205,205,205,0,0,0,0,0,0,
+0,0,0,0,205,205,206,205,205,205,205,205,205,205,205,205,205,205,205,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="1" name="Walls" width="25" height="20">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,18,19,19,19,19,19,19,19,19,19,19,19,19,19,18,0,0,0,0,0,0,
+0,0,0,0,18,205,205,205,205,205,205,205,205,205,205,205,205,205,18,0,0,0,0,0,0,
+0,0,0,18,19,205,205,205,205,205,205,205,205,205,205,205,205,205,19,18,0,0,0,0,0,
+0,0,0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,0,0,0,0,0,
+0,0,0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,0,0,0,0,0,
+0,18,19,19,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,0,0,0,0,0,
+0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,19,19,19,19,19,0,
+0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,205,205,205,205,205,0,
+0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,19,19,19,19,0,
+0,19,19,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,0,0,0,0,0,
+0,0,0,18,0,205,0,0,0,0,0,0,0,0,0,0,0,0,0,18,0,0,0,0,0,
+0,0,0,18,205,205,0,205,205,205,0,0,0,205,0,0,0,0,0,18,0,0,0,0,0,
+0,0,0,19,18,205,205,205,205,205,205,205,205,205,205,205,205,205,18,19,0,0,0,0,0,
+0,0,0,0,18,205,205,205,205,205,205,205,205,205,205,205,205,205,18,0,0,0,0,0,0,
+0,0,0,0,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <objectgroup id="4" name="RoomTriggers">
+  <properties>
+   <property name="Room" value="1"/>
+  </properties>
+  <object id="1" x="173.529" y="78.4314" width="395.098" height="488.235">
+   <properties>
+    <property name="Room" value="1"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <objectgroup id="5" name="Enemies">
+  <properties>
+   <property name="EnemyType" value="Ranged"/>
+   <property name="Room" value="1"/>
+  </properties>
+  <object id="2" x="465.686" y="140.196">
+   <properties>
+    <property name="EnemyType" value="RANGED"/>
+    <property name="Room" value="1"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="3" x="478.431" y="494.118">
+   <properties>
+    <property name="EnemyType" value="RANGED"/>
+    <property name="Room" value="1"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="4" x="474.51" y="318.627">
+   <properties>
+    <property name="EnemyType" value="RANGED"/>
+    <property name="Room" value="1"/>
+   </properties>
+   <point/>
+  </object>
+ </objectgroup>
+</map>
