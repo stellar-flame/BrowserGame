@@ -10,12 +10,14 @@ export class HealthBar {
   private currentHealth: number;
   private maxHealth: number;
   private visible: boolean = true;
+  private isPlayerBar: boolean = false;
 
   constructor(
     scene: Scene, 
     parent: Phaser.GameObjects.GameObject, 
     width: number = 150, 
-    height: number = 10
+    height: number = 10,
+    isPlayerBar: boolean = false
   ) {
     this.scene = scene;
     this.parent = parent;
@@ -23,12 +25,13 @@ export class HealthBar {
     this.height = height;
     this.currentHealth = 100;
     this.maxHealth = 100;
+    this.isPlayerBar = isPlayerBar;
 
     // Create the health bar graphics
     this.bar = scene.add.graphics();
     this.bar.setDepth(100); // Ensure it's drawn above other objects
     
-    // Position the health bar in the top left corner
+    // Position the health bar based on whether it's a player bar or enemy bar
     this.updatePosition();
   }
 
@@ -44,8 +47,15 @@ export class HealthBar {
   }
 
   private updatePosition(): void {
-    // Position the health bar in the top left corner with padding
-    this.bar.setPosition(this.padding, this.padding);
+    if (this.isPlayerBar) {
+      // Position the player health bar in the top left corner with padding
+      this.bar.setPosition(this.padding, this.padding);
+    } else {
+      // Position enemy health bars above the enemy
+      const parentSprite = this.parent as Phaser.GameObjects.Sprite;
+      const offsetY = -20; // Offset above the enemy
+      this.bar.setPosition(parentSprite.x - this.width / 2, parentSprite.y + offsetY);
+    }
     this.draw();
   }
 
@@ -66,6 +76,15 @@ export class HealthBar {
     // Border
     this.bar.lineStyle(1, 0xffffff);
     this.bar.strokeRect(0, 0, this.width, this.height);
+  }
+
+  public update(): void {
+    if (!this.isPlayerBar) {
+      // Update enemy health bar position to follow the enemy
+      const parentSprite = this.parent as Phaser.GameObjects.Sprite;
+      const offsetY = -20; // Offset above the enemy
+      this.bar.setPosition(parentSprite.x - this.width / 2, parentSprite.y + offsetY);
+    }
   }
 
   public destroy(): void {

@@ -97,8 +97,6 @@ export class MainScene extends Scene {
     if (this.input && this.input.keyboard) {
       // Setup mouse input for targeting
       this.mousePointer = this.input.activePointer;
-      this.input.on('pointerdown', this.handlePointerDown, this);
-      this.input.on('pointerup', this.handlePointerUp, this);
       
       this.player = new Player(this, 100, 300);
       console.log('Player created:', this.player);
@@ -390,25 +388,12 @@ export class MainScene extends Scene {
 
   // Handle mouse pointer down for targeting
   private handlePointerDown(pointer: Phaser.Input.Pointer): void {
-    if (pointer.leftButtonDown()) {
-      // Convert pointer position to world position
-      const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-      this.player.startTargeting(worldPoint.x, worldPoint.y);
-      
-      // Check fire rate before firing
-      const currentTime = this.time.now;
-      if (currentTime - this.player.lastFired > this.player.fireRate) {
-        this.player.fire();
-        this.player.lastFired = currentTime;
-      }
-    }
+    // We no longer need this method since we have auto-targeting
   }
   
   // Handle mouse pointer up to stop targeting
   private handlePointerUp(pointer: Phaser.Input.Pointer): void {
-    if (pointer.leftButtonReleased()) {
-      this.player.stopTargeting();
-    }
+    // We no longer need this method since we have auto-targeting
   }
   
   update(time: number, delta: number) {
@@ -419,10 +404,12 @@ export class MainScene extends Scene {
     // Update player
     this.player.update();
     
-    // Update enemies and their player position tracking
+    // Update enemies and their health bars
     this.enemies.getChildren().forEach((enemy) => {
       const enemyInstance = enemy as Enemy;
+      // Update player position for targeting
       enemyInstance.updatePlayerPosition(this.player.x, this.player.y);
+      // Update enemy behavior
       enemyInstance.update();
     });
   }
@@ -460,8 +447,13 @@ export class MainScene extends Scene {
     // Deactivate the bullet
     bulletInstance.deactivate();
     
-    // Apply damage to the enemy
-    enemyInstance.takeDamage();
+    // Apply damage to enemy
+    enemyInstance.takeDamage(1);
+    
+    // If enemy is dead, remove it from the group
+    if (enemyInstance.isEnemyDead()) {
+      this.enemies.remove(enemyInstance, true, true);
+    }
   }
 
   checkRoomCleared() {

@@ -1,5 +1,6 @@
-import { Scene, Physics } from 'phaser';
+import { Scene, Physics, GameObjects } from 'phaser';
 import { Bullet } from './Bullet';
+import { HealthBar } from './HealthBar';
 
 // Extend Physics.Arcade.Sprite for physics and preUpdate/update capabilities
 export class Enemy extends Physics.Arcade.Sprite {
@@ -23,6 +24,7 @@ export class Enemy extends Physics.Arcade.Sprite {
   protected isDead: boolean = false;
   protected lastDamageTime: number = 0;
   protected damageCooldown: number = 500; // Time in ms before taking damage again
+  protected healthBar: HealthBar;
 
   constructor(scene: Scene, x: number, y: number, id: string) {
     // Call Sprite constructor (use __WHITE texture key for tinting)
@@ -41,6 +43,10 @@ export class Enemy extends Physics.Arcade.Sprite {
     
     // Initialize bullets group using the protected method
     this.bullets = this.createBulletGroup(scene);
+
+    // Create health bar
+    this.healthBar = new HealthBar(scene, this, 15 , 2, false);
+    this.healthBar.setHealth(this.health, 3);
   }
   
   // Protected method to create the bullet group - can be overridden by subclasses
@@ -146,11 +152,19 @@ export class Enemy extends Physics.Arcade.Sprite {
   protected fire() {
     const bullet = this.bullets.get() as Bullet;
     if (bullet) {
+      // Calculate angle to player
       const angle = Phaser.Math.Angle.Between(this.x, this.y, this.playerX, this.playerY);
+      
+      // Fire the bullet at the player
       bullet.fire(this.x, this.y, angle);
+      
+      // Visual feedback - flash when firing
+      this.setTint(0x00ff00);
+      this.scene.time.delayedCall(100, () => {
+        this.clearTint();
+      });
     }
   }
-  
   
   // Method to update player position
   public updatePlayerPosition(x: number, y: number) {
@@ -160,18 +174,11 @@ export class Enemy extends Physics.Arcade.Sprite {
   
 
   // Method to take damage
-  public takeDamage(): void {
-    // Check if enough time has passed since last damage
-    const currentTime = this.scene.time.now;
-    if (currentTime - this.lastDamageTime < this.damageCooldown) {
-      return; // Still on cooldown
-    }
+  public takeDamage(amount: number): void {
+    if (this.isDead) return;
     
-    // Update last damage time
-    this.lastDamageTime = currentTime;
-    
-    // Reduce health
-    this.health--;
+    this.health = Math.max(0, this.health - amount);
+    this.healthBar.setHealth(this.health, 3);
     
     // Visual feedback - flash red
     this.setTint(0xff0000);
@@ -179,33 +186,45 @@ export class Enemy extends Physics.Arcade.Sprite {
       this.clearTint();
     });
     
-    // Check if dead
     if (this.health <= 0) {
       this.die();
     }
   }
   
   // Method to handle enemy death
-  protected die(): void {
-    if (this.isDead) return;
-    
-    this.isDead = true;
-    
+  public die(): void {
     // Deactivate all bullets
-    this.bullets.getChildren().forEach((bullet) => {
-      (bullet as Bullet).deactivate();
-    });
+    if (this.bullets) {
+      this.bullets.getChildren().forEach((bullet) => {
+        (bullet as Bullet).deactivate();
+      });
+    }
     
-    // Visual feedback - fade out
-    this.scene.tweens.add({
-      targets: this,
-      alpha: 0,
-      duration: 300,
-      onComplete: () => {
-        // Deactivate the enemy
-        this.setActive(false);
-        this.setVisible(false);
-      }
-    });
+    // Destroy the health bar if it exists
+    if (this.healthBar) {
+      this.healthBar.destroy();
+    }
+    
+    // Destroy the enemy sprite
+    this.destroy();
+  }
+
+  public isEnemyDead(): boolean {
+    return this.health <= 0;
+  }
+
+  // Update method to keep health bar positioned above the enemy
+  public update(): void {
+    // Update health bar position
+    if (this.healthBar) {
+      this.healthBar.update();
+    }
+    
+    // Check if we can fire at the player
+    const currentTime = this.scene.time.now;
+    if (this.canFire() && currentTime - this.lastFired > this.fireRate) {
+      this.fire();
+      this.lastFired = currentTime;
+    }
   }
 }

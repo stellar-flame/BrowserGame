@@ -34,6 +34,7 @@ export class RangedEnemy extends Enemy {
         bullet.setTexture('arrow');
         bullet.setDisplaySize(32, 16); // Match the actual sprite dimensions
         bullet.setOrigin(0.5, 0.5); // Center the origin point
+
       }
     });
   }

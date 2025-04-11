@@ -23,12 +23,12 @@ export class Player extends Physics.Arcade.Sprite {
   private isInvulnerable: boolean = false;
   private invulnerabilityDuration: number = 1000; // 1 second of invulnerability after being hit
   
-  // Targeting system
-  private targetPoint: Phaser.GameObjects.Graphics;
+  // Auto-targeting system
   private targetX: number = 0;
   private targetY: number = 0;
   private isTargeting: boolean = false;
-  private targetRadius: number = 30; // Radius of the target area
+  private targetCircle: GameObjects.Graphics;
+  private targetRadius: number = 20;
 
   private healthBar: HealthBar;
 
@@ -71,8 +71,8 @@ export class Player extends Physics.Arcade.Sprite {
         const bullet = item as Bullet;
         // Set the bullet texture and appearance
         bullet.setTexture('__WHITE'); // Use the default white texture
-        bullet.setTint(0x00ffff); // Light blue tint for player bullets
-        bullet.setDisplaySize(3, 6); // Make it a small circle
+        bullet.setTint(0xff0000); // Red tint for player bullets
+        bullet.setDisplaySize(6, 6); // Make it a small circle
         bullet.setAlpha(1); // Ensure full opacity
         bullet.setDepth(1); // Ensure bullets are drawn above the background
       }
@@ -80,13 +80,13 @@ export class Player extends Physics.Arcade.Sprite {
 
     // Create animations
     this.createAnimations(scene);
-    
-    // Initialize targeting system
-    this.targetPoint = scene.add.graphics();
-    this.targetPoint.setDepth(10); // Ensure it's drawn above other elements
+
+    // Create target circle
+    this.targetCircle = scene.add.graphics();
+    this.targetCircle.setDepth(10); // Ensure it's drawn above other elements
 
     // Initialize health bar
-    this.healthBar = new HealthBar(scene, this);
+    this.healthBar = new HealthBar(scene, this, 150, 10, true);
     this.healthBar.setHealth(this.currentHealth, this.maxHealth);
   }
 
@@ -100,8 +100,8 @@ export class Player extends Physics.Arcade.Sprite {
 
     scene.anims.create({
       key: 'player-walk',
-      frames: scene.anims.generateFrameNumbers('player-sprite', { start: 1, end: 6 }),
-      frameRate: 10,
+      frames: scene.anims.generateFrameNumbers('player-sprite', { start: 1, end: 2 }),
+      frameRate: 15,
       repeat: -1
     });
   }
@@ -146,54 +146,34 @@ export class Player extends Physics.Arcade.Sprite {
       this.anims.play('player-idle', true);
     }
     
-    // Handle targeting
-    this.updateTargeting();
+    // Update target circle position
+    this.updateTargetCircle();
+    
+    // Handle auto-targeting
+    this.handleAutoTargeting();
   }
   
-  // Update the targeting system
-  private updateTargeting(): void {
+  // Update the target circle position
+  private updateTargetCircle(): void {
     // Clear previous target graphics
-    this.targetPoint.clear();
+    this.targetCircle.clear();
     
-    // If not targeting, don't show anything
-    if (!this.isTargeting) {
-      return;
-    }
+    // Get mouse position in world coordinates
+    const mouseX = this.scene.input.activePointer.worldX;
+    const mouseY = this.scene.input.activePointer.worldY;
     
     // Draw target circle
-    this.targetPoint.lineStyle(2, 0xff0000, 0.8);
-    this.targetPoint.strokeCircle(this.targetX, this.targetY, this.targetRadius);
+    this.targetCircle.lineStyle(2, 0xff0000, 0.8);
+    this.targetCircle.strokeCircle(mouseX, mouseY, this.targetRadius);
     
     // Draw crosshair
-    this.targetPoint.lineStyle(1, 0xff0000, 0.8);
-    this.targetPoint.moveTo(this.targetX - 10, this.targetY);
-    this.targetPoint.lineTo(this.targetX + 10, this.targetY);
-    this.targetPoint.moveTo(this.targetX, this.targetY - 10);
-    this.targetPoint.lineTo(this.targetX, this.targetY + 10);
+    this.targetCircle.lineStyle(1, 0xff0000, 0.8);
+    this.targetCircle.moveTo(mouseX - 10, mouseY);
+    this.targetCircle.lineTo(mouseX + 10, mouseY);
+    this.targetCircle.moveTo(mouseX, mouseY - 10);
+    this.targetCircle.lineTo(mouseX, mouseY + 10);
   }
   
-  // Start targeting at a specific point
-  public startTargeting(x: number, y: number): void {
-    this.targetX = x;
-    this.targetY = y;
-    this.isTargeting = true;
-  }
-  
-  // Stop targeting
-  public stopTargeting(): void {
-    this.isTargeting = false;
-  }
-  
-  // Get the current target position
-  public getTargetPosition(): { x: number, y: number } {
-    return { x: this.targetX, y: this.targetY };
-  }
-  
-  // Check if targeting is active
-  public isCurrentlyTargeting(): boolean {
-    return this.isTargeting;
-  }
-
   // Method to fire a bullet
   public fire() {
     const bullet = this.bullets.get() as Bullet;
@@ -281,6 +261,9 @@ export class Player extends Physics.Arcade.Sprite {
     // Hide health bar
     this.healthBar.setVisible(false);
     
+    // Hide target circle
+    this.targetCircle.setVisible(false);
+    
     // Emit an event that the scene can listen for
     this.scene.events.emit('playerDied');
   }
@@ -307,6 +290,61 @@ export class Player extends Physics.Arcade.Sprite {
 
   public destroy(): void {
     this.healthBar.destroy();
+    this.targetCircle.destroy();
     super.destroy();
+  }
+
+  private handleAutoTargeting(): void {
+    // Get all enemies in the scene
+    // The enemies group is a property of the scene, not a named child
+    const enemies = (this.scene as any).enemies;
+    if (!enemies) {
+      console.log('No enemies group found in scene');
+      return;
+    }
+    
+    // Check if mouse is over any enemy
+    const mouseX = this.scene.input.activePointer.worldX;
+    const mouseY = this.scene.input.activePointer.worldY;
+    
+    let isOverEnemy = false;
+    let targetEnemy: any = null;
+    
+    // Check if mouse is over any enemy
+    enemies.getChildren().forEach((enemy: any) => {
+      if (enemy.active && this.isPointerOverSprite(mouseX, mouseY, enemy)) {
+        isOverEnemy = true;
+        targetEnemy = enemy;
+      }
+    });
+    
+    // If over an enemy, target and shoot
+    if (isOverEnemy && targetEnemy) {
+      // Target the enemy under the cursor
+      this.targetX = targetEnemy.x;
+      this.targetY = targetEnemy.y;
+      this.isTargeting = true;
+      
+      // Check fire rate before firing
+      const currentTime = this.scene.time.now;
+      if (currentTime - this.lastFired > this.fireRate) {
+        this.fire();
+        this.lastFired = currentTime;
+      }
+    } else {
+      // If not over an enemy, stop targeting
+      this.isTargeting = false;
+    }
+  }
+  
+  private isPointerOverSprite(pointerX: number, pointerY: number, sprite: Phaser.GameObjects.Sprite): boolean {
+    const bounds = sprite.getBounds();
+    console.log('Pointer X:', pointerX, 'Pointer Y:', pointerY);
+    return (
+      pointerX >= bounds.x &&
+      pointerX <= bounds.x + bounds.width &&
+      pointerY >= bounds.y &&
+      pointerY <= bounds.y + bounds.height
+    );
   }
 }
