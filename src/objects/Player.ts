@@ -1,5 +1,6 @@
 import { Scene, GameObjects, Physics, Types, Input } from 'phaser';
 import { Bullet } from './Bullet';
+import { HealthBar } from './HealthBar';
 
 // Extend Physics.Arcade.Sprite for physics and preUpdate
 export class Player extends Physics.Arcade.Sprite {
@@ -28,6 +29,8 @@ export class Player extends Physics.Arcade.Sprite {
   private targetY: number = 0;
   private isTargeting: boolean = false;
   private targetRadius: number = 30; // Radius of the target area
+
+  private healthBar: HealthBar;
 
   constructor(scene: Scene, x: number, y: number) {
     super(scene, x, y, 'player-sprite'); // Use the sprite sheet
@@ -81,6 +84,10 @@ export class Player extends Physics.Arcade.Sprite {
     // Initialize targeting system
     this.targetPoint = scene.add.graphics();
     this.targetPoint.setDepth(10); // Ensure it's drawn above other elements
+
+    // Initialize health bar
+    this.healthBar = new HealthBar(scene, this);
+    this.healthBar.setHealth(this.currentHealth, this.maxHealth);
   }
 
   private createAnimations(scene: Scene) {
@@ -236,26 +243,23 @@ export class Player extends Physics.Arcade.Sprite {
 
   // Method to take damage
   public takeDamage(amount: number = 10): void {
-    // If invulnerable, don't take damage
-    if (this.isInvulnerable) {
-      return;
-    }
+    if (this.isInvulnerable) return;
     
-    // Reduce health
     this.currentHealth = Math.max(0, this.currentHealth - amount);
+    this.healthBar.setHealth(this.currentHealth, this.maxHealth);
     
-    // Make player invulnerable for a short time
-    this.isInvulnerable = true;
-    
-    // Visual feedback - flash the player
+    // Visual feedback - flash red
     this.setTint(0xff0000);
-    
-    // Reset tint and invulnerability after delay
-    this.scene.time.delayedCall(this.invulnerabilityDuration, () => {
+    this.scene.time.delayedCall(100, () => {
       this.clearTint();
+    });
+    
+    // Set invulnerability
+    this.isInvulnerable = true;
+    this.scene.time.delayedCall(this.invulnerabilityDuration, () => {
       this.isInvulnerable = false;
     });
-    console.log(this.currentHealth);
+    
     // Check if player is dead
     if (this.currentHealth <= 0) {
       this.die();
@@ -265,6 +269,7 @@ export class Player extends Physics.Arcade.Sprite {
   // Method to heal the player
   public heal(amount: number = 10): void {
     this.currentHealth = Math.min(this.maxHealth, this.currentHealth + amount);
+    this.healthBar.setHealth(this.currentHealth, this.maxHealth);
   }
   
   // Method to handle player death
@@ -272,6 +277,9 @@ export class Player extends Physics.Arcade.Sprite {
     // Disable player controls
     this.setActive(false);
     this.setVisible(false);
+    
+    // Hide health bar
+    this.healthBar.setVisible(false);
     
     // Emit an event that the scene can listen for
     this.scene.events.emit('playerDied');
@@ -295,5 +303,10 @@ export class Player extends Physics.Arcade.Sprite {
   // Method to check if player is invulnerable
   public isCurrentlyInvulnerable(): boolean {
     return this.isInvulnerable;
+  }
+
+  public destroy(): void {
+    this.healthBar.destroy();
+    super.destroy();
   }
 }
