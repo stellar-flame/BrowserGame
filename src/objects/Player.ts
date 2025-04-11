@@ -16,6 +16,12 @@ export class Player extends Physics.Arcade.Sprite {
   public lastFired: number = 0;
   public fireRate: number = 500; // Fire every 0.5 seconds
   
+  // Health system
+  private maxHealth: number = 100;
+  private currentHealth: number = 100;
+  private isInvulnerable: boolean = false;
+  private invulnerabilityDuration: number = 1000; // 1 second of invulnerability after being hit
+  
   // Targeting system
   private targetPoint: Phaser.GameObjects.Graphics;
   private targetX: number = 0;
@@ -226,5 +232,68 @@ export class Player extends Physics.Arcade.Sprite {
   
   public isCurrentlyTeleporting(): boolean {
     return this.isTeleporting;
+  }
+
+  // Method to take damage
+  public takeDamage(amount: number = 10): void {
+    // If invulnerable, don't take damage
+    if (this.isInvulnerable) {
+      return;
+    }
+    
+    // Reduce health
+    this.currentHealth = Math.max(0, this.currentHealth - amount);
+    
+    // Make player invulnerable for a short time
+    this.isInvulnerable = true;
+    
+    // Visual feedback - flash the player
+    this.setTint(0xff0000);
+    
+    // Reset tint and invulnerability after delay
+    this.scene.time.delayedCall(this.invulnerabilityDuration, () => {
+      this.clearTint();
+      this.isInvulnerable = false;
+    });
+    console.log(this.currentHealth);
+    // Check if player is dead
+    if (this.currentHealth <= 0) {
+      this.die();
+    }
+  }
+  
+  // Method to heal the player
+  public heal(amount: number = 10): void {
+    this.currentHealth = Math.min(this.maxHealth, this.currentHealth + amount);
+  }
+  
+  // Method to handle player death
+  private die(): void {
+    // Disable player controls
+    this.setActive(false);
+    this.setVisible(false);
+    
+    // Emit an event that the scene can listen for
+    this.scene.events.emit('playerDied');
+  }
+  
+  // Method to check if player is dead
+  public isDead(): boolean {
+    return this.currentHealth <= 0;
+  }
+  
+  // Method to get current health
+  public getHealth(): number {
+    return this.currentHealth;
+  }
+  
+  // Method to get max health
+  public getMaxHealth(): number {
+    return this.maxHealth;
+  }
+  
+  // Method to check if player is invulnerable
+  public isCurrentlyInvulnerable(): boolean {
+    return this.isInvulnerable;
   }
 }

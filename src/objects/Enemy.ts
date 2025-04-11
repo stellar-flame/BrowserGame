@@ -34,12 +34,10 @@ export class Enemy extends Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.world.enable(this); // Enable physics
 
-    // Setup physics properties
-    (this.body as Physics.Arcade.Body).setCollideWorldBounds(true);
-    (this.body as Physics.Arcade.Body).setImmovable(false); // Enemies should be movable
-    (this.body as Physics.Arcade.Body).setBounce(0); // No bounce
-    (this.body as Physics.Arcade.Body).setSize(16, 16); // Match player's hitbox size
-    (this.body as Physics.Arcade.Body).setOffset(8, 8); // Center the hitbox
+    // Set a smaller hitbox for the enemy
+    const enemyBody = this.body as Phaser.Physics.Arcade.Body;
+    enemyBody.setSize(32, 32); // Make hitbox smaller than sprite
+    enemyBody.setOffset(16, 16); // Center the hitbox
     
     // Initialize bullets group using the protected method
     this.bullets = this.createBulletGroup(scene);
@@ -193,6 +191,11 @@ export class Enemy extends Physics.Arcade.Sprite {
     
     this.isDead = true;
     
+    // Deactivate all bullets
+    this.bullets.getChildren().forEach((bullet) => {
+      (bullet as Bullet).deactivate();
+    });
+    
     // Visual feedback - fade out
     this.scene.tweens.add({
       targets: this,
@@ -202,29 +205,7 @@ export class Enemy extends Physics.Arcade.Sprite {
         // Deactivate the enemy
         this.setActive(false);
         this.setVisible(false);
-        
-        // Check if all enemies in the room are dead
-        this.checkRoomCleared();
       }
     });
-  }
-  
-  // Method to check if the room is cleared
-  protected checkRoomCleared(): void {
-    // Get the current room from the scene
-    const scene = this.scene as any;
-    if (!scene || !scene.enemies) return;
-    
-    // Check if any enemies are still active
-    const hasActiveEnemies = scene.enemies.getChildren().some((enemy: any) => enemy.active);
-    
-    // If no active enemies, mark the room as cleared
-    if (!hasActiveEnemies) {
-      const currentRoomId = scene.currentRoomId;
-      if (currentRoomId) {
-        scene.roomCleared.set(currentRoomId, true);
-        console.log(`Room ${currentRoomId} cleared!`);
-      }
-    }
   }
 }

@@ -7,12 +7,16 @@ import { Room } from '../objects/Room';
 import { EnemyFactory, EnemyType } from '../objects/EnemyFactory';
 
 export class MainScene extends Scene {
+  private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private player!: Player;
-  private cursors!: Types.Input.Keyboard.CursorKeys;
-  private enemies!: Physics.Arcade.Group;
-  private playerHit: boolean = false;
-  private wallsLayer!: Phaser.Tilemaps.TilemapLayer | null;
-  private mousePointer!: Phaser.Input.Pointer;
+  private enemies!: Phaser.Physics.Arcade.Group;
+  private currentRoom: string = 'room1';
+  private gameOver: boolean = false;
+  private gameOverText: Phaser.GameObjects.Text | null = null;
+  private restartText: Phaser.GameObjects.Text | null = null;
+  private healthText: Phaser.GameObjects.Text | null = null;
+  private wallsLayer: Phaser.Tilemaps.TilemapLayer | null = null;
+  private mousePointer: Phaser.Input.Pointer | null = null;
   
   // Room system
   private rooms: Map<string, Room> = new Map();
@@ -99,11 +103,19 @@ export class MainScene extends Scene {
       this.player = new Player(this, 100, 300);
       console.log('Player created:', this.player);
       
+      // Set a smaller hitbox for the player
+      const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
+      playerBody.setSize(32, 32); // Make hitbox smaller than sprite
+      playerBody.setOffset(16, 16); // Center the hitbox
+      
       // Add collision between player and walls
       if (this.wallsLayer) {
         this.physics.add.collider(this.player, this.wallsLayer);
         console.log('Added collision between player and walls');
       }
+      
+      // Listen for player death event
+      this.events.on('playerDied', this.handlePlayerDeath, this);
     } else {
       console.error('Keyboard input not available');
       return;
@@ -216,6 +228,30 @@ export class MainScene extends Scene {
     
     // Add collisions between player bullets and enemies
     this.physics.add.collider(this.enemies, this.player.bullets, this.handleEnemyBulletCollision, undefined, this);
+    
+    // Add collisions between player and enemies
+    this.physics.add.collider(this.player, this.enemies, (player, enemy) => {
+      // Cast to Player and Enemy types
+      const playerInstance = player as Player;
+      
+      // Apply damage to player
+      playerInstance.takeDamage(10);
+    });
+    
+    // Add collisions between player and enemy bullets
+    this.enemies.getChildren().forEach((enemy) => {
+      const enemyInstance = enemy as Enemy;
+      if (enemyInstance.bullets) {
+        this.physics.add.collider(this.player, enemyInstance.bullets, this.handlePlayerBulletCollision, undefined, this);
+        
+        // Add collision between player bullets and enemy bullets
+        this.physics.add.collider(this.player.bullets, enemyInstance.bullets, (playerBullet, enemyBullet) => {
+          // Deactivate both bullets
+          (playerBullet as Bullet).deactivate();
+          (enemyBullet as Bullet).deactivate();
+        });
+      }
+    });
   }
 
   setupRoomsFromTilemap(map: Phaser.Tilemaps.Tilemap) {
@@ -376,18 +412,19 @@ export class MainScene extends Scene {
   }
   
   update(time: number, delta: number) {
-    // Check if current room is cleared
-    this.checkRoomCleared();
-    
-    if (!this.playerHit) {
-      this.enemies.getChildren().forEach((enemy) => {
-        const enemyInstance = enemy as Enemy;
-        if (!enemyInstance.active) return;
-
-        // Update enemy with player position
-        enemyInstance.updatePlayerPosition(this.player.x, this.player.y);
-      });
+    if (this.gameOver) {
+      return;
     }
+
+    // Update player
+    this.player.update();
+    
+    // Update enemies and their player position tracking
+    this.enemies.getChildren().forEach((enemy) => {
+      const enemyInstance = enemy as Enemy;
+      enemyInstance.updatePlayerPosition(this.player.x, this.player.y);
+      enemyInstance.update();
+    });
   }
 
   handleBulletPlatformCollision(bullet: any, platform: any) {
@@ -408,30 +445,8 @@ export class MainScene extends Scene {
     // Always deactivate the bullet
     bulletInstance.deactivate();
 
-    // If player is already hit, just return (bullet is already deactivated)
-    if (this.playerHit) {
-      return;
-    }
-
-    playerInstance.setPosition(100, 300);
-    (playerInstance.body as Physics.Arcade.Body).setVelocity(0);
-
-    this.playerHit = true;
-    // playerInstance.setAlpha(0.5);
-    // this.tweens.add({
-    //     targets: playerInstance,
-    //     alpha: 1,
-    //     duration: 100,
-    //     yoyo: true,
-    //     repeat: 9,
-    //     onComplete: () => {
-    //       playerInstance.setAlpha(1);
-    //     }
-    // });
-    
-    this.time.delayedCall(2000, () => {
-      this.playerHit = false;
-    });
+    // Apply damage to player
+    playerInstance.takeDamage(5);
   }
 
   handleEnemyBulletCollision(enemy: any, bullet: any) {
@@ -477,6 +492,39 @@ export class MainScene extends Scene {
       default:
         console.warn(`Unknown enemy type: ${typeValue}, defaulting to BASIC`);
         return EnemyType.BASIC;
+    }
+  }
+
+  // Handle player death
+  private handlePlayerDeath(): void {
+    console.log('Player died!');
+    
+    // Stop all enemies
+    this.enemies.getChildren().forEach((enemy) => {
+      const enemyInstance = enemy as Enemy;
+      enemyInstance.setActive(false);
+      enemyInstance.setVisible(false);
+    });
+    
+    // Show game over text
+    this.gameOverText = this.add.text(400, 300, 'GAME OVER', { 
+      fontSize: '64px', 
+      color: '#ff0000',
+      fontFamily: 'Arial'
+    }).setOrigin(0.5);
+    
+    // Add restart instruction
+    this.restartText = this.add.text(400, 400, 'Press R to restart', { 
+      fontSize: '32px', 
+      color: '#ffffff',
+      fontFamily: 'Arial'
+    }).setOrigin(0.5);
+    
+    // Add restart key
+    if (this.input && this.input.keyboard) {
+      this.input.keyboard.on('keydown-R', () => {
+        this.scene.restart();
+      });
     }
   }
 }
