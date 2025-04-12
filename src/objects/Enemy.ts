@@ -4,12 +4,10 @@ import { HealthBar } from './HealthBar';
 
 // Extend Physics.Arcade.Sprite for physics and preUpdate/update capabilities
 export class Enemy extends Physics.Arcade.Sprite {
-  // Removed redundant body declaration, it's inherited
   id: string; // Store the unique ID
   public bullets: Physics.Arcade.Group;
   protected lastFired: number = 0;
   protected fireRate: number = 2000; // Fire every 2 seconds
-  protected canShoot: boolean = false;
   
   // Movement properties
   protected minDistance: number = 150;
@@ -22,8 +20,6 @@ export class Enemy extends Physics.Arcade.Sprite {
   protected health: number = 3;
   protected maxHealth: number = 3;
   protected isDead: boolean = false;
-  protected lastDamageTime: number = 0;
-  protected damageCooldown: number = 500; // Time in ms before taking damage again
   protected healthBar: HealthBar;
 
   constructor(scene: Scene, x: number, y: number, id: string) {
@@ -106,42 +102,6 @@ export class Enemy extends Physics.Arcade.Sprite {
     enemyBody.setVelocity(vx, vy);
   }
   
-  // Helper method to check if enemy is near a wall
-  private isNearWall(): boolean {
-    const wallDistance = 16; // Distance to check for walls
-    
-    // Get the tilemap layer from the scene
-    const wallsLayer = (this.scene as any).wallsLayer;
-    if (!wallsLayer) return false;
-    
-    // Convert world position to tile position
-    const tileX = Math.floor(this.x / 32);
-    const tileY = Math.floor(this.y / 32);
-    
-    // Check surrounding tiles for walls
-    for (let x = -1; x <= 1; x++) {
-      for (let y = -1; y <= 1; y++) {
-        if (x === 0 && y === 0) continue; // Skip center tile
-        
-        const checkX = tileX + x;
-        const checkY = tileY + y;
-        
-        // Check if the tile exists and is a wall
-        if (wallsLayer.hasTileAt(checkX, checkY)) {
-          // Calculate distance to wall tile
-          const wallCenterX = (checkX * 32) + 16;
-          const wallCenterY = (checkY * 32) + 16;
-          const distance = Phaser.Math.Distance.Between(this.x, this.y, wallCenterX, wallCenterY);
-          
-          if (distance < wallDistance) {
-            return true;
-          }
-        }
-      }
-    }
-    
-    return false;
-  }
   
   protected canFire() {
     const distance = Phaser.Math.Distance.Between(this.x, this.y, this.playerX, this.playerY);
@@ -172,7 +132,6 @@ export class Enemy extends Physics.Arcade.Sprite {
     this.playerY = y;
   }
   
-
   // Method to take damage
   public takeDamage(amount: number): void {
     if (this.isDead) return;

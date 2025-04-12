@@ -174,34 +174,6 @@ export class Player extends Physics.Arcade.Sprite {
     this.targetCircle.lineTo(mouseX, mouseY + 10);
   }
   
-  // Method to fire a bullet
-  public fire() {
-    const bullet = this.bullets.get() as Bullet;
-    if (bullet) {
-      // Calculate the center position of the player
-      // Add a small offset to make it look like it's coming from the center of the sprite
-      const centerX = this.x;
-      const centerY = this.y - 5; // Slight upward offset to make it look like it's coming from the center
-      
-      if (this.isTargeting) {
-        // Fire at the target point
-        const angle = Phaser.Math.Angle.Between(centerX, centerY, this.targetX, this.targetY);
-        bullet.fire(centerX, centerY, angle);
-      } else {
-        // Default firing direction based on player's facing direction
-        let angle = 0;
-        
-        if (this.flipX) {
-          angle = Math.PI; // Left
-        } else {
-          angle = 0; // Right
-        }
-        
-        bullet.fire(centerX, centerY, angle);
-      }
-    }
-  }
-
   public teleport(x: number, y: number) {
     const body = this.body as Physics.Arcade.Body;
     body.stop(); // Stop any velocity
@@ -295,56 +267,35 @@ export class Player extends Physics.Arcade.Sprite {
   }
 
   private handleAutoTargeting(): void {
-    // Get all enemies in the scene
-    // The enemies group is a property of the scene, not a named child
-    const enemies = (this.scene as any).enemies;
-    if (!enemies) {
-      console.log('No enemies group found in scene');
-      return;
-    }
-    
-    // Check if mouse is over any enemy
+    // Get mouse position
     const mouseX = this.scene.input.activePointer.worldX;
     const mouseY = this.scene.input.activePointer.worldY;
     
-    let isOverEnemy = false;
-    let targetEnemy: any = null;
+    // Get all enemies in the scene
+    const enemies = (this.scene as any).enemies;
+    if (!enemies || enemies.getLength() === 0) {
+      // No enemies, don't fire
+      return;
+    }
     
-    // Check if mouse is over any enemy
-    enemies.getChildren().forEach((enemy: any) => {
-      if (enemy.active && this.isPointerOverSprite(mouseX, mouseY, enemy)) {
-        isOverEnemy = true;
-        targetEnemy = enemy;
-      }
-    });
+    // Calculate angle to mouse position
+    const angle = Phaser.Math.Angle.Between(this.x, this.y, mouseX, mouseY);
     
-    // If over an enemy, target and shoot
-    if (isOverEnemy && targetEnemy) {
-      // Target the enemy under the cursor
-      this.targetX = targetEnemy.x;
-      this.targetY = targetEnemy.y;
-      this.isTargeting = true;
-      
-      // Check fire rate before firing
-      const currentTime = this.scene.time.now;
-      if (currentTime - this.lastFired > this.fireRate) {
-        this.fire();
-        this.lastFired = currentTime;
+    // Check fire rate before firing
+    const currentTime = this.scene.time.now;
+    if (currentTime - this.lastFired > this.fireRate) {
+      // Fire in the direction of the mouse
+      const bullet = this.bullets.get() as Bullet;
+      if (bullet) {
+        // Calculate the center position of the player
+        const centerX = this.x;
+        const centerY = this.y - 5; // Slight upward offset
+        
+        // Fire in the direction of the mouse
+        bullet.fire(centerX, centerY, angle);
       }
-    } else {
-      // If not over an enemy, stop targeting
-      this.isTargeting = false;
+      this.lastFired = currentTime;
     }
   }
   
-  private isPointerOverSprite(pointerX: number, pointerY: number, sprite: Phaser.GameObjects.Sprite): boolean {
-    const bounds = sprite.getBounds();
-    console.log('Pointer X:', pointerX, 'Pointer Y:', pointerY);
-    return (
-      pointerX >= bounds.x &&
-      pointerX <= bounds.x + bounds.width &&
-      pointerY >= bounds.y &&
-      pointerY <= bounds.y + bounds.height
-    );
-  }
 }

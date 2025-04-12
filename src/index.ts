@@ -28,6 +28,11 @@ const config: Phaser.Types.Core.GameConfig = {
       width: 1920,
       height: 1080
     }
+  },
+  pixelArt: true,
+  render: {
+    pixelArt: true,
+    antialias: false
   }
 };
 

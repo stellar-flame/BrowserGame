@@ -2,24 +2,18 @@ import { Scene, Physics, Types } from 'phaser';
 import { Player } from '../objects/Player';
 import { Enemy } from '../objects/Enemy';
 import { Bullet } from '../objects/Bullet';
-import { Door, DoorDirection } from '../objects/Door';
-import { Room } from '../objects/Room';
 import { EnemyFactory, EnemyType } from '../objects/EnemyFactory';
 
 export class MainScene extends Scene {
-  private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private player!: Player;
   private enemies!: Phaser.Physics.Arcade.Group;
-  private currentRoom: string = 'room1';
   private gameOver: boolean = false;
   private gameOverText: Phaser.GameObjects.Text | null = null;
   private restartText: Phaser.GameObjects.Text | null = null;
-  private healthText: Phaser.GameObjects.Text | null = null;
   private wallsLayer: Phaser.Tilemaps.TilemapLayer | null = null;
   private mousePointer: Phaser.Input.Pointer | null = null;
   
   // Room system
-  private rooms: Map<string, Room> = new Map();
   private currentRoomId: string = 'room1';
   
   // Room triggers and enemy spawn points
@@ -82,6 +76,11 @@ export class MainScene extends Scene {
     const floorLayer = map.createLayer('Floor', tileset, 0, 0);
     this.wallsLayer = map.createLayer('Walls', tileset, 0, 0);
    
+    // Disable grid lines on floor tiles
+    if (floorLayer) {
+      floorLayer.setAlpha(1);
+      floorLayer.setDepth(-1); // Put floor behind other elements
+    }
    
     // Set collision properties for walls
     if (this.wallsLayer) {
@@ -122,8 +121,11 @@ export class MainScene extends Scene {
   
 
     // Setup camera to follow player
-    this.cameras.main.setBounds(0, 0, 800, 600);
+    this.cameras.main.setBounds(0, 0, 1600, 1200);
     this.cameras.main.startFollow(this.player);
+    
+    // Set physics world bounds to match camera bounds
+    this.physics.world.setBounds(0, 0, 1600, 1200);
 
     // Create the two-room system
    // this.createRooms();
@@ -138,85 +140,7 @@ export class MainScene extends Scene {
     this.setupRoomsFromTilemap(map);
   }
 
-  
-  setupDoorInteractions() {
-    
-    this.rooms.forEach(room => {
-      room.doors.forEach(door => {
-        // Add overlap detection with player
-        this.physics.add.overlap(
-          this.player, 
-          door,
-          (_, doorObj) => {
-            // Cast doorObj to Door type to access its properties
-            const doorInstance = doorObj as Door;
-            // Only transition if door is open and it's been at least 1000ms since last transition
-            if (!this.player.isCurrentlyTeleporting() && doorInstance.isOpen ) {
-              this.changeRoom(doorInstance.targetRoomId, doorInstance.direction)  
-            }
-          },
-          undefined,
-          this
-        );
-      });
-    });
-  }
 
-  changeRoom(newRoomId: string, fromDirection: DoorDirection) {
-    console.log('Changing room to', newRoomId, 'from', fromDirection);
-    // Don't do anything if already in this room
-    if (newRoomId === this.currentRoomId) return;
-    
-    // Get the new room
-    const newRoom = this.rooms.get(newRoomId);
-    if (!newRoom) return;
-    
-    // Hide current room
-    const currentRoom = this.rooms.get(this.currentRoomId);
-    if (currentRoom) {
-      currentRoom.hide();
-    }
-    
-    // Show new room
-    newRoom.show();
-    
-    // Position player at entry point based on direction
-    // This positions player just inside the new room at the appropriate door
-    const bounds = newRoom.bounds;
-    let newX = this.player.x;
-    let newY = this.player.y;
-    
-    // Fix the player positioning based on the door direction
-    switch(fromDirection) {
-      case DoorDirection.NORTH:
-        newY = bounds.y + 40; // Just inside the top of the room
-        break;
-      case DoorDirection.SOUTH:
-        newY = bounds.y + bounds.height - 40; // Just inside the bottom of the room
-        break;
-      case DoorDirection.EAST:
-        newX = bounds.x + 100; // Move further into the room to avoid door overlap
-        break;
-      case DoorDirection.WEST:
-        newX = bounds.x + bounds.width - 40; // Just inside the right side of room
-        break;
-    }
-    
-    // Update camera bounds to new room
-    this.cameras.main.setBounds(
-      bounds.x, 
-      bounds.y, 
-      bounds.width, 
-      bounds.height
-    );
-    
-    // Update current room
-    this.currentRoomId = newRoomId;
-    
-    // Teleport the player to the new position
-    this.player.teleport(newX, newY);
-  }
-  
   setupCollisions() {
     // Add collisions between player bullets and walls
     if (this.wallsLayer) {
@@ -386,16 +310,6 @@ export class MainScene extends Scene {
     console.log(`Spawned ${spawnPoints.length} enemies in room ${roomId}`);
   }
 
-  // Handle mouse pointer down for targeting
-  private handlePointerDown(pointer: Phaser.Input.Pointer): void {
-    // We no longer need this method since we have auto-targeting
-  }
-  
-  // Handle mouse pointer up to stop targeting
-  private handlePointerUp(pointer: Phaser.Input.Pointer): void {
-    // We no longer need this method since we have auto-targeting
-  }
-  
   update(time: number, delta: number) {
     if (this.gameOver) {
       return;
