@@ -3,6 +3,7 @@ import { Player } from '../objects/Player';
 import { Enemy } from '../objects/Enemy';
 import { Bullet } from '../objects/Bullet';
 import { EnemyFactory, EnemyType } from '../objects/EnemyFactory';
+import { Door } from '../objects/Door';
 
 export class MainScene extends Scene {
   private player!: Player;
@@ -22,6 +23,7 @@ export class MainScene extends Scene {
   private roomCleared: Map<string, boolean> = new Map();
   private roomEnemiesSpawned: Map<string, boolean> = new Map();  // Track if enemies were spawned
   private enemyFactory: EnemyFactory;
+  private doors: Door[] = [];
   
   constructor() {
     super({ key: 'MainScene' });
@@ -39,6 +41,8 @@ export class MainScene extends Scene {
     
     // Load your TMJ tilemap - same method as for JSON
     this.load.tilemapTiledJSON('dungeon-map', 'assets/dungeon-32.tmj');  // Updated to use the correct file name
+    this.load.image('door-open', 'assets/sprites/door-open.png');
+    this.load.image('door-closed', 'assets/sprites/door-closed.png');
   }
 
   loadSprite(name: string, path: string, frameWidth: number, frameHeight: number) {  
@@ -138,6 +142,7 @@ export class MainScene extends Scene {
 
     // Setup room triggers and enemy spawn points from the map
     this.setupRoomsFromTilemap(map);
+    this.setupDoors();
   }
 
 
@@ -181,6 +186,11 @@ export class MainScene extends Scene {
     const roomTriggersLayer = map.getObjectLayer('RoomTriggers');
     if (roomTriggersLayer) {
       roomTriggersLayer.objects.forEach(triggerObj => {
+        // Only process objects with name "EnemyTrigger"
+        if (triggerObj.name !== "EnemyTrigger") {
+          return;
+        }
+        
         // Get room ID from properties
         const roomProperty = triggerObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
         if (!roomProperty) return;
@@ -326,6 +336,9 @@ export class MainScene extends Scene {
       // Update enemy behavior
       enemyInstance.update();
     });
+
+    // Check if room is cleared
+    this.checkRoomCleared();
   }
 
   handleBulletPlatformCollision(bullet: any, platform: any) {
@@ -367,6 +380,8 @@ export class MainScene extends Scene {
     // If enemy is dead, remove it from the group
     if (enemyInstance.isEnemyDead()) {
       this.enemies.remove(enemyInstance, true, true);
+      // Check if room is cleared after enemy is removed
+      this.checkRoomCleared();
     }
   }
 
@@ -376,9 +391,15 @@ export class MainScene extends Scene {
     // Only mark as cleared if enemies were spawned and then cleared
     if (this.roomEnemiesSpawned.get(this.currentRoomId) && this.enemies.getLength() === 0) {
       this.roomCleared.set(this.currentRoomId, true);
-      console.log(`Room ${this.currentRoomId} cleared!`);
       
-      // Here you could trigger door unlocking or other events
+      // Find and open all doors associated with this room
+      const roomDoors = this.findDoorsByRoomId(this.currentRoomId);
+      roomDoors.forEach(door => {
+        if (!door.isDoorOpen()) {
+          door.open();
+          console.log(`Opening door ${door.getDoorId()} in room ${this.currentRoomId}`);
+        }
+      });
     }
   }
 
@@ -432,5 +453,74 @@ export class MainScene extends Scene {
         this.scene.restart();
       });
     }
+  }
+
+  private setupDoors() {
+    // Get the RoomTriggers layer from the tilemap
+    const roomTriggersLayer = this.make.tilemap({ key: 'dungeon-map' }).getObjectLayer('RoomTriggers');
+    
+    if (!roomTriggersLayer) {
+      console.error('RoomTriggers layer not found in the tilemap');
+      return;
+    }
+    console.log('RoomTriggers layer:', roomTriggersLayer);
+    
+    // Find all Door objects in the RoomTriggers layer
+    const doorObjects = roomTriggersLayer.objects.filter((obj: Phaser.Types.Tilemaps.TiledObject) => obj.name === 'Door');
+    
+    // Create Door instances for each door object
+    doorObjects.forEach((doorObj: Phaser.Types.Tilemaps.TiledObject) => {
+      console.log('Door object:', doorObj);
+      // Get the door properties
+      const isOpen = doorObj.properties.find((prop: { name: string; value: any }) => prop.name === 'Open')?.value === 1;
+      const roomId = doorObj.properties.find((prop: { name: string; value: any }) => prop.name === 'Room')?.value || 'unknown';
+      const doorId = doorObj.properties.find((prop: { name: string; value: any }) => prop.name === 'id')?.value || 'unknown';
+      
+      // Create a new Door instance
+      const door = new Door(
+        this,
+        (doorObj.x || 0) + (doorObj.width || 0) / 2, // Center the door horizontally
+        (doorObj.y || 0) + (doorObj.height || 0) / 2, // Center the door vertically
+        isOpen,
+        roomId,
+        doorId
+      );
+      
+      console.log('Adding door:', door);
+      // Add the door to our doors array
+      this.doors.push(door);
+      
+      // If the door is closed, add physics body and collision with player
+      if (!isOpen) {
+        // Enable physics on the door
+        this.physics.world.enable(door);
+        
+        // Set up the physics body
+        const doorBody = door.body as Phaser.Physics.Arcade.Body;
+        doorBody.setImmovable(true);
+        doorBody.setSize(doorObj.width || 32, doorObj.height || 32);
+        
+        // Add collision between player and closed door
+        const collider = this.physics.add.collider(this.player, door);
+        door.setCollider(collider);
+      }
+      
+      console.log(`Created door: ${doorId} in room: ${roomId}, isOpen: ${isOpen}`);
+    });
+  }
+  
+  // Method to get all doors
+  public getDoors(): Door[] {
+    return this.doors;
+  }
+  
+  // Method to find a door by ID
+  public findDoorById(doorId: string): Door | undefined {
+    return this.doors.find(door => door.getDoorId() === doorId);
+  }
+  
+  // Method to find doors by room ID
+  public findDoorsByRoomId(roomId: string): Door[] {
+    return this.doors.filter(door => door.getRoomId() === roomId);
   }
 }
