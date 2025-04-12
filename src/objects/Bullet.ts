@@ -4,6 +4,7 @@ import { Scene, Physics } from 'phaser';
 export class Bullet extends Physics.Arcade.Sprite {
     // Removed redundant body declaration, it's inherited
     private speed: number = 300; // Increased bullet speed to be faster than player movement
+    private damage: number = 10; // Default damage amount
 
     constructor(scene: Scene, x: number, y: number, textureKey: string = '__WHITE') {
         // Call Sprite constructor with the provided texture
@@ -25,6 +26,16 @@ export class Bullet extends Physics.Arcade.Sprite {
 
         // Deactivate by default
         this.deactivate();
+    }
+
+    // Method to set the damage amount
+    setDamage(amount: number): void {
+        this.damage = amount;
+    }
+
+    // Method to get the damage amount
+    getDamage(): number {
+        return this.damage;
     }
 
     // Method to fire the bullet from a specific position towards an angle

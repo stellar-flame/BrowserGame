@@ -18,15 +18,12 @@ export class Player extends Physics.Arcade.Sprite {
   public fireRate: number = 500; // Fire every 0.5 seconds
   
   // Health system
-  private maxHealth: number = 100;
-  private currentHealth: number = 100;
+  private maxHealth: number = 50 ;
+  private currentHealth: number = 50  ;
   private isInvulnerable: boolean = false;
   private invulnerabilityDuration: number = 1000; // 1 second of invulnerability after being hit
   
   // Auto-targeting system
-  private targetX: number = 0;
-  private targetY: number = 0;
-  private isTargeting: boolean = false;
   private targetCircle: GameObjects.Graphics;
   private targetRadius: number = 20;
 
@@ -101,7 +98,7 @@ export class Player extends Physics.Arcade.Sprite {
     scene.anims.create({
       key: 'player-walk',
       frames: scene.anims.generateFrameNumbers('player-sprite', { start: 1, end: 2 }),
-      frameRate: 15,
+      frameRate: 5,
       repeat: -1
     });
   }
@@ -195,6 +192,7 @@ export class Player extends Physics.Arcade.Sprite {
 
   // Method to take damage
   public takeDamage(amount: number = 10): void {
+    console.log('Taking damage:', amount, 'Current health:', this.currentHealth, 'Max health:', this.maxHealth);
     if (this.isInvulnerable) return;
     
     this.currentHealth = Math.max(0, this.currentHealth - amount);

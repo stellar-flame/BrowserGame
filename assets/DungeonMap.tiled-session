@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "",
+    "activeFile": "dungeon-32.tmx",
     "expandedProjectPaths": [
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
@@ -28,11 +28,11 @@
                 4,
                 5
             ],
-            "scale": 1.02,
-            "selectedLayer": 3,
+            "scale": 1.1695,
+            "selectedLayer": 2,
             "viewCenter": {
-                "x": 399.5098039215686,
-                "y": 319.6078431372549
+                "x": 236.4258230012826,
+                "y": 149.20906370243694
             }
         },
         "dungeon-32.tmx#tiles-32": {
@@ -50,8 +50,8 @@
             "scale": 1.36,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 428.30882352941177,
-                "y": 233.08823529411762
+                "x": 423.1617647058823,
+                "y": 339.3382352941176
             }
         },
         "dungeon.tmx#atlas_walls_high-16x32": {
@@ -68,16 +68,16 @@
     },
     "last.exportedFilePath": "/Volumes/source-code/browser-game/assets",
     "last.imagePath": "/Volumes/source-code/browser-game/assets",
+    "last.objectTemplatePath": "/Volumes/source-code/browser-game/assets",
     "map.lastUsedExportFilter": "JSON map files (*.tmj *.json)",
     "map.lastUsedFormat": "tmx",
     "map.width": 25,
     "openFiles": [
-        "dungeon.tmx",
-        "dungeon-tiles.tsx",
-        "atlas_walls_high-16x32.tsx"
+        "dungeon-32.tmx"
     ],
     "project": "DungeonMap.tiled-project",
     "recentFiles": [
+        "dungeon-32.tmx",
         "dungeon.tmx",
         "tiles-32.tsx",
         "atlas_walls_high-16x32.tsx",

@@ -49,6 +49,8 @@ export class HealthBar {
   private updatePosition(): void {
     if (this.isPlayerBar) {
       // Position the player health bar in the top left corner with padding
+      // Use fixed screen coordinates instead of world coordinates
+      this.bar.setScrollFactor(0); // This makes it stay fixed on screen
       this.bar.setPosition(this.padding, this.padding);
     } else {
       // Position enemy health bars above the enemy
@@ -84,6 +86,8 @@ export class HealthBar {
       const parentSprite = this.parent as Phaser.GameObjects.Sprite;
       const offsetY = -20; // Offset above the enemy
       this.bar.setPosition(parentSprite.x - this.width / 2, parentSprite.y + offsetY);
+      // Redraw the health bar after updating position
+      this.draw();
     }
   }
 

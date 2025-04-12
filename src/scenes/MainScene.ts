@@ -1,8 +1,9 @@
 import { Scene, Physics, Types } from 'phaser';
 import { Player } from '../objects/Player';
-import { Enemy } from '../objects/Enemy';
+import { Enemy } from '../objects/enemy/Enemy';
+import { RangedEnemy } from '../objects/enemy/RangedEnemy';
 import { Bullet } from '../objects/Bullet';
-import { EnemyFactory, EnemyType } from '../objects/EnemyFactory';
+import { EnemyFactory, EnemyType } from '../objects/enemy/EnemyFactory';
 import { Door } from '../objects/Door';
 
 export class MainScene extends Scene {
@@ -19,23 +20,22 @@ export class MainScene extends Scene {
   
   // Room triggers and enemy spawn points
   private roomTriggers: Map<string, Phaser.GameObjects.Zone> = new Map();
-  private enemySpawnPoints: Map<string, Array<{x: number, y: number, type: EnemyType}>> = new Map();
+  private enemySpawnPoints: Map<string, Array<{x: number, y: number, type: EnemyType | undefined}>> = new Map();
   private roomCleared: Map<string, boolean> = new Map();
   private roomEnemiesSpawned: Map<string, boolean> = new Map();  // Track if enemies were spawned
-  private enemyFactory: EnemyFactory;
   private doors: Door[] = [];
   
   constructor() {
     super({ key: 'MainScene' });
-    this.enemyFactory = new EnemyFactory(this);
   }
 
   // In MainScene.ts preload method
   preload() {
     this.loadSprite('player-sprite', 'assets/sprites/shooter-sprite.png', 64 , 64 );
-    this.loadSprite('ranged-enemy-sprite', 'assets/sprites/enemy-ranged.png', 16, 32);
+    this.loadSprite('skeleton-sprite', 'assets/sprites/skeleton.png', 16, 32);
+    this.loadSprite('zombie-sprite', 'assets/sprites/zombie.png', 32, 32);
+    this.loadSprite('ninja-sprite', 'assets/sprites/ninja.png', 32, 16);
     this.loadSprite('arrow', 'assets/sprites/arrow.png', 32, 16);
-
     // Load your tileset image
     this.load.image('tiles-32', 'assets/tiles.png');
     
@@ -160,15 +160,19 @@ export class MainScene extends Scene {
     this.physics.add.collider(this.player, this.enemies, (player, enemy) => {
       // Cast to Player and Enemy types
       const playerInstance = player as Player;
+      const enemyInstance = enemy as Enemy;
       
-      // Apply damage to player
-      playerInstance.takeDamage(10);
+      // Only apply damage if the enemy is a MeleeEnemy and has a weapon
+      if (!(enemyInstance instanceof RangedEnemy) && enemyInstance.weapon) {
+        // Use the weapon's dealDamage method
+        enemyInstance.weapon.dealDamage(enemyInstance, playerInstance);
+      }
     });
     
     // Add collisions between player and enemy bullets
     this.enemies.getChildren().forEach((enemy) => {
       const enemyInstance = enemy as Enemy;
-      if (enemyInstance.bullets) {
+      if (enemyInstance instanceof RangedEnemy && enemyInstance.bullets) {
         this.physics.add.collider(this.player, enemyInstance.bullets, this.handlePlayerBulletCollision, undefined, this);
         
         // Add collision between player bullets and enemy bullets
@@ -196,7 +200,7 @@ export class MainScene extends Scene {
         if (!roomProperty) return;
         
         const roomId = roomProperty.value as string;
-        
+        console.log('Room ID:', roomId);
         // Ensure all required properties exist
         if (typeof triggerObj.x !== 'number' || 
             typeof triggerObj.y !== 'number' || 
@@ -237,6 +241,7 @@ export class MainScene extends Scene {
     // Get enemy spawn points from object layer
     const enemiesLayer = map.getObjectLayer('Enemies');
     if (enemiesLayer) {
+      console.log('Enemies layer:', enemiesLayer);
       // Initialize enemy spawn points map
       enemiesLayer.objects.forEach(enemyObj => {
         // Get room ID from properties
@@ -244,7 +249,8 @@ export class MainScene extends Scene {
         if (!roomProperty) return;
         
         const roomId = roomProperty.value as string;
-        
+        console.log('Room ID:', roomId);
+
         // Ensure position properties exist
         if (typeof enemyObj.x !== 'number' || typeof enemyObj.y !== 'number') {
           console.warn('Invalid enemy object position:', enemyObj);
@@ -263,8 +269,7 @@ export class MainScene extends Scene {
           type: this.getEnemyTypeFromProperties(enemyObj.properties)
         });
       });
-      
-      console.log("Enemy spawn points loaded:", this.enemySpawnPoints);
+      console.log('Enemy spawn points loaded:', this.enemySpawnPoints);
     } else {
       console.warn("No 'Enemies' layer found in map");
     }
@@ -296,9 +301,15 @@ export class MainScene extends Scene {
     
     // Spawn new enemies at each spawn point
     spawnPoints.forEach((point, index) => {
+      // Skip if no enemy type is specified
+      if (!point.type) {
+        console.log(`Skipping enemy spawn point ${index} in room ${roomId} - no type specified`);
+        return;
+      }
+
       // Use the enemy type from the spawn point
       console.log('Spawning enemy:', point.type);
-      const enemy = this.enemyFactory.createEnemy(point.type, point.x, point.y, `enemy_${roomId}_${index}`);
+      const enemy = EnemyFactory.createEnemy(this, point.type, point.x, point.y, `enemy_${roomId}_${index}`);
       this.enemies.add(enemy);
       
       // Add collision with walls
@@ -306,8 +317,8 @@ export class MainScene extends Scene {
         this.physics.add.collider(enemy, this.wallsLayer);
       }
       
-      // Set up collisions for enemy bullets
-      if (enemy.bullets) {
+      // Set up collisions for enemy bullets if it's a RangedEnemy
+      if (enemy instanceof RangedEnemy) {
         this.physics.add.collider(this.player, enemy.bullets, this.handlePlayerBulletCollision, undefined, this);
         if (this.wallsLayer) {
           this.physics.add.collider(this.wallsLayer, enemy.bullets, this.handleBulletPlatformCollision, undefined, this);
@@ -334,7 +345,7 @@ export class MainScene extends Scene {
       // Update player position for targeting
       enemyInstance.updatePlayerPosition(this.player.x, this.player.y);
       // Update enemy behavior
-      enemyInstance.update();
+      enemyInstance.preUpdate(time, delta);
     });
 
     // Check if room is cleared
@@ -359,8 +370,8 @@ export class MainScene extends Scene {
     // Always deactivate the bullet
     bulletInstance.deactivate();
 
-    // Apply damage to player
-    playerInstance.takeDamage(5);
+    // Apply damage from the bullet
+    playerInstance.takeDamage(bulletInstance.getDamage());
   }
 
   handleEnemyBulletCollision(enemy: any, bullet: any) {
@@ -374,8 +385,8 @@ export class MainScene extends Scene {
     // Deactivate the bullet
     bulletInstance.deactivate();
     
-    // Apply damage to enemy
-    enemyInstance.takeDamage(1);
+    // Apply damage from the bullet
+    enemyInstance.takeDamage(bulletInstance.getDamage());
     
     // If enemy is dead, remove it from the group
     if (enemyInstance.isEnemyDead()) {
@@ -404,22 +415,8 @@ export class MainScene extends Scene {
   }
 
   // Helper method to get enemy type from properties
-  private getEnemyTypeFromProperties(properties: any[] | undefined): EnemyType {
-    if (!properties) return EnemyType.BASIC;
-    
-    const typeProperty = properties.find(p => p.name === 'EnemyType');
-    if (!typeProperty) return EnemyType.BASIC;
-    
-    const typeValue = typeProperty.value as string;
-    switch (typeValue.toUpperCase()) {
-      case 'BASIC':
-        return EnemyType.BASIC;
-      case 'RANGED':
-        return EnemyType.RANGED;
-      default:
-        console.warn(`Unknown enemy type: ${typeValue}, defaulting to BASIC`);
-        return EnemyType.BASIC;
-    }
+  private getEnemyTypeFromProperties(properties: any[] | undefined): EnemyType | undefined {
+    return properties?.find(p => p.name === 'Type')?.value?.toUpperCase() as EnemyType | undefined;
   }
 
   // Handle player death
@@ -427,11 +424,7 @@ export class MainScene extends Scene {
     console.log('Player died!');
     
     // Stop all enemies
-    this.enemies.getChildren().forEach((enemy) => {
-      const enemyInstance = enemy as Enemy;
-      enemyInstance.setActive(false);
-      enemyInstance.setVisible(false);
-    });
+    this.enemies.clear(true, true);
     
     // Show game over text
     this.gameOverText = this.add.text(400, 300, 'GAME OVER', { 
@@ -523,4 +516,5 @@ export class MainScene extends Scene {
   public findDoorsByRoomId(roomId: string): Door[] {
     return this.doors.filter(door => door.getRoomId() === roomId);
   }
+
 }
