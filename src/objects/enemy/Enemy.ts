@@ -12,8 +12,7 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   protected minDistance: number = 150;
   protected maxDistance: number = 350;
   protected moveSpeed: number = 100;
-  protected playerX: number = 0;
-  protected playerY: number = 0;
+  protected playerPosition: Phaser.Math.Vector2 = new Phaser.Math.Vector2(0, 0);
   
   // Health properties
   protected health: number = 3;
@@ -79,12 +78,12 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   protected updateMovement() {
     if (!this.body) return;
     
-    const distance = Phaser.Math.Distance.Between(this.x, this.y, this.playerX, this.playerY);
+    const distance = Phaser.Math.Distance.Between(this.x, this.y, this.playerPosition.x, this.playerPosition.y);
     const body = this.body as Phaser.Physics.Arcade.Body;
     
     // If too far, move closer
     if (distance > this.maxDistance) {
-      const angle = Phaser.Math.Angle.Between(this.x, this.y, this.playerX, this.playerY);
+      const angle = Phaser.Math.Angle.Between(this.x, this.y, this.playerPosition.x, this.playerPosition.y);
       body.setVelocity(
         Math.cos(angle) * this.moveSpeed,
         Math.sin(angle) * this.moveSpeed
@@ -92,7 +91,7 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     }
     // If too close, move away
     else if (distance < this.minDistance) {
-      const angle = Phaser.Math.Angle.Between(this.playerX, this.playerY, this.x, this.y);
+      const angle = Phaser.Math.Angle.Between(this.playerPosition.x, this.playerPosition.y, this.x, this.y);
       body.setVelocity(
         Math.cos(angle) * this.moveSpeed,
         Math.sin(angle) * this.moveSpeed
@@ -106,8 +105,7 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
 
   // Method to update player position for targeting
   public updatePlayerPosition(x: number, y: number): void {
-    this.playerX = x;
-    this.playerY = y;
+    this.playerPosition.set(x, y);
   }
 
   // Method to take damage

@@ -7,10 +7,8 @@ import { WeaponFactory } from '../weapons/WeaponFactory';
 export class RangedEnemy extends Enemy {
   private static animationsCreated: Map<string, boolean> = new Map();
   private config: EnemyConfig;
-  public bullets: Physics.Arcade.Group;
   protected minDistance: number;
   protected maxDistance: number;
-  protected playerPosition: Phaser.Math.Vector2 | null = null;
 
   constructor(scene: Scene, x: number, y: number, id: string, config: EnemyConfig) {
     super(scene, x, y, id, config);
@@ -30,29 +28,8 @@ export class RangedEnemy extends Enemy {
       this.weapon = WeaponFactory.createWeapon(scene, config.weaponType);
     }
     
-    // Initialize bullets group
-    this.bullets = this.createBulletGroup(scene);
-    
     // Initialize animations
     this.createAnimations(scene);
-  }
-
-  private createBulletGroup(scene: Scene): Physics.Arcade.Group {
-    return scene.physics.add.group({ 
-      classType: Bullet, 
-      maxSize: 10,
-      createCallback: (item: Phaser.GameObjects.GameObject) => {
-        const bullet = item as Bullet;
-        bullet.setTexture(this.weapon?.bulletSprite || 'arrow');
-        bullet.setDisplaySize(32, 16);
-        bullet.setOrigin(0.5, 0.5);
-        bullet.setDamage(this.weapon?.damage || 10);
-      }
-    });
-  }
-
-  public updatePlayerPosition(x: number, y: number): void {
-    this.playerPosition = new Phaser.Math.Vector2(x, y);
   }
 
   protected isRangedEnemy(): this is RangedEnemy {
@@ -60,8 +37,7 @@ export class RangedEnemy extends Enemy {
   }
 
   protected isInAttackRange(): boolean {
-    if (!this.playerPosition) return false;
-    
+    // Use the base Enemy class's playerPosition
     const distance = Phaser.Math.Distance.Between(
       this.x, this.y,
       this.playerPosition.x, this.playerPosition.y
@@ -75,7 +51,7 @@ export class RangedEnemy extends Enemy {
   }
 
   protected performAttack(): void {
-    if (!this.weapon || !this.playerPosition) return;
+    if (!this.weapon) return;
     
     // Use the weapon's fire method
     this.weapon.fire(this, this.playerPosition);
@@ -103,11 +79,9 @@ export class RangedEnemy extends Enemy {
   }
 
   public die(): void {
-    // Deactivate all bullets
-    if (this.bullets) {
-      this.bullets.getChildren().forEach((bullet) => {
-        (bullet as Bullet).deactivate();
-      });
+    // Deactivate all bullets in the weapon
+    if (this.weapon) {
+      this.weapon.deactivateAllBullets();
     }
     
     super.die();

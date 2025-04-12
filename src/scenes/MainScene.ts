@@ -172,11 +172,11 @@ export class MainScene extends Scene {
     // Add collisions between player and enemy bullets
     this.enemies.getChildren().forEach((enemy) => {
       const enemyInstance = enemy as Enemy;
-      if (enemyInstance instanceof RangedEnemy && enemyInstance.bullets) {
-        this.physics.add.collider(this.player, enemyInstance.bullets, this.handlePlayerBulletCollision, undefined, this);
+      if (enemyInstance instanceof RangedEnemy && enemyInstance.weapon && enemyInstance.weapon.bullets) {
+        this.physics.add.collider(this.player, enemyInstance.weapon.bullets, this.handlePlayerBulletCollision, undefined, this);
         
         // Add collision between player bullets and enemy bullets
-        this.physics.add.collider(this.player.bullets, enemyInstance.bullets, (playerBullet, enemyBullet) => {
+        this.physics.add.collider(this.player.bullets, enemyInstance.weapon.bullets, (playerBullet, enemyBullet) => {
           // Deactivate both bullets
           (playerBullet as Bullet).deactivate();
           (enemyBullet as Bullet).deactivate();
@@ -318,10 +318,10 @@ export class MainScene extends Scene {
       }
       
       // Set up collisions for enemy bullets if it's a RangedEnemy
-      if (enemy instanceof RangedEnemy) {
-        this.physics.add.collider(this.player, enemy.bullets, this.handlePlayerBulletCollision, undefined, this);
+      if (enemy instanceof RangedEnemy && enemy.weapon && enemy.weapon.bullets) {
+        this.physics.add.collider(this.player, enemy.weapon.bullets, this.handlePlayerBulletCollision, undefined, this);
         if (this.wallsLayer) {
-          this.physics.add.collider(this.wallsLayer, enemy.bullets, this.handleBulletPlatformCollision, undefined, this);
+          this.physics.add.collider(this.wallsLayer, enemy.weapon.bullets, this.handleBulletPlatformCollision, undefined, this);
         }
       }
     });

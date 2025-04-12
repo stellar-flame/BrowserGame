@@ -12,6 +12,7 @@ export class Weapon {
   public bulletSpeed?: number;
   public bulletSprite?: string;
   public type: 'melee' | 'ranged';
+  public bullets?: Physics.Arcade.Group;
   
   private scene: Scene;
   private config: WeaponConfig;
@@ -31,7 +32,24 @@ export class Weapon {
     if (this.type === 'ranged') {
       this.bulletSpeed = config.bulletSpeed || 300;
       this.bulletSprite = config.bulletSprite || 'arrow';
+      
+      // Create bullet group for ranged weapons
+      this.bullets = this.createBulletGroup(scene);
     }
+  }
+  
+  private createBulletGroup(scene: Scene): Physics.Arcade.Group {
+    return scene.physics.add.group({ 
+      classType: Bullet, 
+      maxSize: 10,
+      createCallback: (item: Phaser.GameObjects.GameObject) => {
+        const bullet = item as Bullet;
+        bullet.setTexture(this.bulletSprite || 'arrow');
+        bullet.setDisplaySize(32, 16);
+        bullet.setOrigin(0.5, 0.5);
+        bullet.setDamage(this.damage);
+      }
+    });
   }
 
   // Deal damage method for melee weapons
@@ -58,7 +76,7 @@ export class Weapon {
 
   // Fire method for ranged weapons
   public fire(shooter: RangedEnemy, target: Player | Math.Vector2): void {
-    if (this.type !== 'ranged') return;
+    if (this.type !== 'ranged' || !this.bullets) return;
     
     // Check attack speed cooldown
     const currentTime = this.scene.time.now;
@@ -76,18 +94,21 @@ export class Weapon {
       targetY
     );
 
-    // Get a bullet from the enemy's bullet group
-    const bullet = shooter.bullets.get() as Bullet;
+    // Get a bullet from the weapon's bullet group
+    const bullet = this.bullets.get() as Bullet;
     if (bullet) {
-      // Set the bullet texture if specified
-      if (this.bulletSprite) {
-        bullet.setTexture(this.bulletSprite);
-      }
-      
       bullet.fire(shooter.x, shooter.y, angle);
-      bullet.setDamage(this.damage);
     }
      
     this.lastFired = currentTime;
+  }
+  
+  // Method to deactivate all bullets (used when enemy dies)
+  public deactivateAllBullets(): void {
+    if (this.bullets) {
+      this.bullets.getChildren().forEach((bullet) => {
+        (bullet as Bullet).deactivate();
+      });
+    }
   }
 } 

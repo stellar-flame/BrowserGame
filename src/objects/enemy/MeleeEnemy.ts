@@ -36,7 +36,7 @@ export class MeleeEnemy extends Enemy {
   protected isInAttackRange(): boolean {
     const distance = Phaser.Math.Distance.Between(
       this.x, this.y,
-      this.playerX, this.playerY
+      this.playerPosition.x, this.playerPosition.y
     );
     
     return distance <= this.attackRange;
