@@ -3,17 +3,20 @@ import { Player } from '../objects/Player';
 import { Enemy } from '../objects/enemy/Enemy';
 import { RangedEnemy } from '../objects/enemy/RangedEnemy';
 import { EnemyFactory, EnemyType } from '../objects/enemy/EnemyFactory';
+import { PathfindingGrid } from '../objects/pathfinding/PathfindingGrid';
 
 export class TestScene extends Scene {
   private player!: Player;
   private enemies!: Phaser.Physics.Arcade.Group;
   private wallsLayer: Phaser.Tilemaps.TilemapLayer | null = null;
   private spawnText!: Phaser.GameObjects.Text;
-  private enemyType: EnemyType = 'NINJA'; // Default enemy type to spawn
+  private enemyType: EnemyType = 'ZOMBIE'; // Default enemy type to spawn
   private enemyTypeText!: Phaser.GameObjects.Text;
+  private pathfindingGrid: PathfindingGrid;
   
   constructor() {
     super({ key: 'TestScene' });
+    this.pathfindingGrid = PathfindingGrid.getInstance();
   }
 
   preload() {
@@ -116,6 +119,11 @@ export class TestScene extends Scene {
     
     // Listen for player death
     this.events.on('playerDied', this.handlePlayerDeath, this);
+
+    // Initialize pathfinding grid after map and layers are created
+    if (this.wallsLayer) {
+      this.pathfindingGrid.initialize(this, map, this.wallsLayer);
+    }
   }
   
   spawnEnemy(player:  Player) {
@@ -252,37 +260,67 @@ export class TestScene extends Scene {
     }
   }
   
+
+  // Getter for player
+  public getPlayer(): Player {
+    return this.player;
+  }
+  
+  // Getter for walls layer
+  public getWallsLayer(): Phaser.Tilemaps.TilemapLayer | null {
+    return this.wallsLayer;
+  }
+  
+  // Getter for tilemap
+  public getTilemap(): Phaser.Tilemaps.Tilemap | null {
+    return this.make.tilemap({ key: 'dungeon-map' });
+  }
+
+  // Add getter for pathfinding grid
+  public getPathfindingGrid(): PathfindingGrid {
+    return this.pathfindingGrid;
+  }
+
   handlePlayerDeath() {
     console.log('Player died in test scene!');
     
-    // Get player's death position
-    const playerX = this.player.x;
-    const playerY = this.player.y;
-    
-    // Create a semi-transparent overlay at the player's death location
-    const overlay = this.add.rectangle(playerX, playerY, 300, 200, 0x000000, 0.7);
-    overlay.setOrigin(0.5);
-    overlay.setDepth(100); // Ensure it's above other elements
-    
-    // Create game over text at player's death location
-    const gameOverText = this.add.text(playerX, playerY - 30, 'GAME OVER', {
-      fontSize: '64px',
-      color: '#ff0000',
-      fontFamily: 'Arial'
-    }).setOrigin(0.5).setDepth(101);
-    
-    // Add restart instruction
-    const restartText = this.add.text(playerX, playerY + 30, 'Press R to restart', {
-      fontSize: '32px',
-      color: '#ffffff',
-      fontFamily: 'Arial'
-    }).setOrigin(0.5).setDepth(101);
-    
-    // Add restart key
-    if (this.input.keyboard) {
-      this.input.keyboard.on('keydown-R', () => {
-        this.scene.restart();
-      });
+    // Handle player death
+    if (this.player.isDead()) {
+      // Stop all movement
+      this.player.setVelocity(0, 0);
+      
+      // Disable player controls
+      this.player.setActive(false);
+      
+      // Get camera center position
+      const cameraCenterX = this.cameras.main.scrollX + this.cameras.main.width / 2;
+      const cameraCenterY = this.cameras.main.scrollY + this.cameras.main.height / 2;
+      
+      // Create a semi-transparent overlay at the center of the screen
+      const overlay = this.add.rectangle(cameraCenterX, cameraCenterY, 300, 200, 0x000000, 0.7);
+      overlay.setOrigin(0.5);
+      overlay.setDepth(100); // Ensure it's above other elements
+      
+      // Create game over text at the center of the screen
+      const gameOverText = this.add.text(cameraCenterX, cameraCenterY - 30, 'GAME OVER', {
+        fontSize: '64px',
+        color: '#ff0000',
+        fontFamily: 'Arial'
+      }).setOrigin(0.5).setDepth(101);
+      
+      // Add restart instruction
+      const restartText = this.add.text(cameraCenterX, cameraCenterY + 30, 'Press R to restart', {
+        fontSize: '32px',
+        color: '#ffffff',
+        fontFamily: 'Arial'
+      }).setOrigin(0.5).setDepth(101);
+      
+      // Add restart key
+      if (this.input && this.input.keyboard) {
+        this.input.keyboard.on('keydown-R', () => {
+          this.scene.restart();
+        });
+      }
     }
   }
 } 

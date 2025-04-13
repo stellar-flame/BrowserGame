@@ -5,6 +5,7 @@ import { RangedEnemy } from '../objects/enemy/RangedEnemy';
 import { Bullet } from '../objects/Bullet';
 import { EnemyFactory, EnemyType } from '../objects/enemy/EnemyFactory';
 import { Door } from '../objects/Door';
+import { PathfindingGrid } from '../objects/pathfinding/PathfindingGrid';
 
 export class MainScene extends Scene {
   private player!: Player;
@@ -25,8 +26,11 @@ export class MainScene extends Scene {
   private roomEnemiesSpawned: Map<string, boolean> = new Map();  // Track if enemies were spawned
   private doors: Door[] = [];
   
+  private pathfindingGrid: PathfindingGrid;
+  
   constructor() {
     super({ key: 'MainScene' });
+    this.pathfindingGrid = PathfindingGrid.getInstance();
   }
 
   // In MainScene.ts preload method
@@ -153,6 +157,11 @@ export class MainScene extends Scene {
     // Setup room triggers and enemy spawn points from the map
     this.setupRoomsFromTilemap(map);
     this.setupDoors();
+
+    // Initialize pathfinding grid after map and layers are created
+    if (this.wallsLayer) {
+      this.pathfindingGrid.initialize(this, map, this.wallsLayer);
+    }
   }
 
 
@@ -451,40 +460,36 @@ export class MainScene extends Scene {
 
   // Handle player death
   private handlePlayerDeath(): void {
-    console.log('Player died!');
+    if (this.gameOver) return;
     
-    // Destroy all enemies and remove them from the scene
-    this.enemies.clear(true, true);
+    // Stop all movement
+    this.player.setVelocity(0, 0);
     
-    // Get player's death position
-    const playerX = this.player.x;
-    const playerY = this.player.y;
+    // Disable player controls
+    this.player.setActive(false);
     
-    // Create a semi-transparent overlay at the player's death location
-    const overlay = this.add.rectangle(playerX, playerY, 300, 200, 0x000000, 0.7);
+    // Get camera center position
+    const cameraCenterX = this.cameras.main.scrollX + this.cameras.main.width / 2;
+    const cameraCenterY = this.cameras.main.scrollY + this.cameras.main.height / 2;
+    
+    // Create a semi-transparent overlay at the center of the screen
+    const overlay = this.add.rectangle(cameraCenterX, cameraCenterY, 300, 200, 0x000000, 0.7);
     overlay.setOrigin(0.5);
     overlay.setDepth(100); // Ensure it's above other elements
     
-    // Show game over text at player's death location
-    this.gameOverText = this.add.text(playerX, playerY - 30, 'GAME OVER', { 
+    // Show game over text at the center of the screen
+    this.gameOverText = this.add.text(cameraCenterX, cameraCenterY - 30, 'GAME OVER', { 
       fontSize: '64px', 
       color: '#ff0000',
       fontFamily: 'Arial'
     }).setOrigin(0.5).setDepth(101);
     
     // Add restart instruction
-    this.restartText = this.add.text(playerX, playerY + 30, 'Press R to restart', { 
+    this.restartText = this.add.text(cameraCenterX, cameraCenterY + 30, 'Press R to restart', { 
       fontSize: '32px', 
       color: '#ffffff',
       fontFamily: 'Arial'
     }).setOrigin(0.5).setDepth(101);
-    
-    // Add restart key
-    if (this.input && this.input.keyboard) {
-      this.input.keyboard.on('keydown-R', () => {
-        this.scene.restart();
-      });
-    }
     
     // Set game over flag
     this.gameOver = true;
@@ -559,4 +564,23 @@ export class MainScene extends Scene {
     return this.doors.filter(door => door.getRoomId() === roomId);
   }
 
+  // Getter for player
+  public getPlayer(): Player {
+    return this.player;
+  }
+  
+  // Getter for walls layer
+  public getWallsLayer(): Phaser.Tilemaps.TilemapLayer | null {
+    return this.wallsLayer;
+  }
+  
+  // Getter for tilemap
+  public getTilemap(): Phaser.Tilemaps.Tilemap | null {
+    return this.make.tilemap({ key: 'dungeon-map' });
+  }
+
+  // Add getter for pathfinding grid
+  public getPathfindingGrid(): PathfindingGrid {
+    return this.pathfindingGrid;
+  }
 }
