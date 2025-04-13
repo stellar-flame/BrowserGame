@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="50" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="9" nextobjectid="44">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="50" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="9" nextobjectid="53">
  <editorsettings>
   <export target="dungeon-32.tmj" format="json"/>
  </editorsettings>
@@ -130,14 +130,14 @@
    </properties>
    <point/>
   </object>
-  <object id="34" name="EnemyTrigger" x="108.593" y="108.593" width="521.59" height="431.808">
+  <object id="34" name="EnemyTrigger" x="131.68" y="108.593" width="479.692" height="431.808">
    <properties>
     <property name="Room" value="1"/>
    </properties>
   </object>
-  <object id="42" name="EnemyTrigger" x="108.593" y="108.593" width="521.59" height="431.808">
+  <object id="44" name="EnemyTrigger" x="931.595" y="65.4128" width="662.676" height="445.489">
    <properties>
-    <property name="Room" value="1"/>
+    <property name="Room" value="2"/>
    </properties>
   </object>
  </objectgroup>
@@ -160,6 +160,13 @@
    </properties>
    <point/>
   </object>
+  <object id="46" name="Ninja" x="1266.35" y="123.13">
+   <properties>
+    <property name="Room" value="2"/>
+    <property name="Type" value="NINJA"/>
+   </properties>
+   <point/>
+  </object>
   <object id="41" name="Skeleton" x="528.431" y="308.679">
    <properties>
     <property name="Room" value="1"/>
@@ -171,6 +178,48 @@
    <properties>
     <property name="Room" value="1"/>
     <property name="Type" value="SKELETON"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="47" name="Ninja" x="1093.63" y="155.622">
+   <properties>
+    <property name="Room" value="2"/>
+    <property name="Type" value="NINJA"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="48" name="Ninja" x="1460.45" y="200.941">
+   <properties>
+    <property name="Room" value="2"/>
+    <property name="Type" value="NINJA"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="49" name="Ninja" x="1381.79" y="360.838">
+   <properties>
+    <property name="Room" value="2"/>
+    <property name="Type" value="NINJA"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="50" name="Ninja" x="1034.63" y="444.634">
+   <properties>
+    <property name="Room" value="2"/>
+    <property name="Type" value="NINJA"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="51" name="Zombie" x="1197.09" y="213.767">
+   <properties>
+    <property name="Room" value="2"/>
+    <property name="Type" value="ZOMBIE"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="52" name="Zombie" x="1224.45" y="378.794">
+   <properties>
+    <property name="Room" value="2"/>
+    <property name="Type" value="ZOMBIE"/>
    </properties>
    <point/>
   </object>

@@ -5,14 +5,11 @@ import { EnemyConfig } from './EnemyConfigs';
 import { WeaponFactory } from '../weapons/WeaponFactory';
 
 export class RangedEnemy extends Enemy {
-  private static animationsCreated: Map<string, boolean> = new Map();
-  private config: EnemyConfig;
   protected minDistance: number;
   protected maxDistance: number;
 
   constructor(scene: Scene, x: number, y: number, id: string, config: EnemyConfig) {
     super(scene, x, y, id, config);
-    this.config = config;
     
     // Apply configuration
     this.setTexture(config.sprite);
@@ -36,16 +33,6 @@ export class RangedEnemy extends Enemy {
     return true;
   }
 
-  protected isInAttackRange(): boolean {
-    // Use the base Enemy class's playerPosition
-    const distance = Phaser.Math.Distance.Between(
-      this.x, this.y,
-      this.playerPosition.x, this.playerPosition.y
-    );
-    
-    return distance >= this.minDistance && distance <= this.maxDistance;
-  }
-
   protected canAttack(): boolean {
     return this.isInAttackRange();
   }
@@ -62,22 +49,6 @@ export class RangedEnemy extends Enemy {
     this.performAttack();
   }
 
-  protected createAnimations(scene: Scene): void {
-    const animationKey = this.config.animationKey;
-    if (RangedEnemy.animationsCreated.get(animationKey)) return;
-    
-    if (!scene.anims.exists(animationKey)) {
-      scene.anims.create({
-        key: animationKey,
-        frames: scene.anims.generateFrameNumbers(this.config.sprite, { start: 0, end: 7 }),
-        frameRate: 10,
-        repeat: -1
-      });
-    }
-    
-    RangedEnemy.animationsCreated.set(animationKey, true);
-  }
-
   public die(): void {
     // Deactivate all bullets in the weapon
     if (this.weapon) {
@@ -87,18 +58,35 @@ export class RangedEnemy extends Enemy {
     super.die();
   }
 
-  preUpdate(time: number, delta: number) {
-    super.preUpdate(time, delta);
-    if (!this.body) return;
+  protected handleMovement(distance: number, angle: number, body: Phaser.Physics.Arcade.Body): void {
+    // Ranged enemies try to maintain optimal shooting distance
+    const optimalDistance = (this.minDistance + this.maxDistance) / 2;
     
-    // Play the walk animation
-    this.play(this.config.animationKey, true);
-    
-    // Flip the sprite based on movement direction
-    if (this.body.velocity.x < 0) {
-      this.flipX = true;
-    } else if (this.body.velocity.x > 0) {
-      this.flipX = false;
+    if (distance > this.maxDistance) {
+      // Move towards player if too far
+      body.setVelocity(
+        Math.cos(angle) * this.moveSpeed,
+        Math.sin(angle) * this.moveSpeed
+      );
+    } else if (distance < this.minDistance) {
+      // Move away from player if too close
+      body.setVelocity(
+        Math.cos(angle + Math.PI) * this.moveSpeed,
+        Math.sin(angle + Math.PI) * this.moveSpeed
+      );
+    } else {
+      // If within range, try to maintain optimal distance
+      const distanceDiff = distance - optimalDistance;
+      if (Math.abs(distanceDiff) > 20) { // Only move if significantly off optimal distance
+        const moveAngle = distanceDiff > 0 ? angle : angle + Math.PI;
+        body.setVelocity(
+          Math.cos(moveAngle) * this.moveSpeed * 0.5, // Slower movement when adjusting position
+          Math.sin(moveAngle) * this.moveSpeed * 0.5
+        );
+      } else {
+        // Stop if at good distance
+        body.setVelocity(0, 0);
+      }
     }
   }
 } 

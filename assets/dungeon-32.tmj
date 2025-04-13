@@ -108,6 +108,23 @@
                  "width":479.692176143651,
                  "x":131.680205215904,
                  "y":108.593415989739
+                }, 
+                {
+                 "height":445.489060282172,
+                 "id":44,
+                 "name":"EnemyTrigger",
+                 "properties":[
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"2"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":662.676181274049,
+                 "x":931.594786660966,
+                 "y":65.4128020521591
                 }],
          "opacity":1,
          "properties":[
@@ -174,6 +191,29 @@
                 }, 
                 {
                  "height":0,
+                 "id":46,
+                 "name":"Ninja",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"2"
+                        }, 
+                        {
+                         "name":"Type",
+                         "type":"string",
+                         "value":"NINJA"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":1266.35314236853,
+                 "y":123.129542539547
+                }, 
+                {
+                 "height":0,
                  "id":41,
                  "name":"Skeleton",
                  "point":true,
@@ -217,6 +257,144 @@
                  "width":0,
                  "x":528.430953398888,
                  "y":489.95297135528
+                }, 
+                {
+                 "height":0,
+                 "id":47,
+                 "name":"Ninja",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"2"
+                        }, 
+                        {
+                         "name":"Type",
+                         "type":"string",
+                         "value":"NINJA"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":1093.62975630611,
+                 "y":155.622060709705
+                }, 
+                {
+                 "height":0,
+                 "id":48,
+                 "name":"Ninja",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"2"
+                        }, 
+                        {
+                         "name":"Type",
+                         "type":"string",
+                         "value":"NINJA"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":1460.45318512185,
+                 "y":200.940572894399
+                }, 
+                {
+                 "height":0,
+                 "id":49,
+                 "name":"Ninja",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"2"
+                        }, 
+                        {
+                         "name":"Type",
+                         "type":"string",
+                         "value":"NINJA"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":1381.78708849936,
+                 "y":360.837964942283
+                }, 
+                {
+                 "height":0,
+                 "id":50,
+                 "name":"Ninja",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"2"
+                        }, 
+                        {
+                         "name":"Type",
+                         "type":"string",
+                         "value":"NINJA"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":1034.63018383925,
+                 "y":444.634459170586
+                }, 
+                {
+                 "height":0,
+                 "id":51,
+                 "name":"Zombie",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"2"
+                        }, 
+                        {
+                         "name":"Type",
+                         "type":"string",
+                         "value":"ZOMBIE"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":1197.09277469004,
+                 "y":213.766566908935
+                }, 
+                {
+                 "height":0,
+                 "id":52,
+                 "name":"Zombie",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"2"
+                        }, 
+                        {
+                         "name":"Type",
+                         "type":"string",
+                         "value":"ZOMBIE"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":1224.45489525438,
+                 "y":378.794356562634
                 }],
          "opacity":1,
          "properties":[
@@ -236,7 +414,7 @@
          "y":0
         }],
  "nextlayerid":9,
- "nextobjectid":44,
+ "nextobjectid":53,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",

@@ -11,8 +11,13 @@ export class Weapon {
   public attackSpeed: number;
   public bulletSpeed?: number;
   public bulletSprite?: string;
+  public bulletWidth?: number;
+  public bulletHeight?: number;
+  public bulletSpinSpeed?: number;
   public type: 'melee' | 'ranged';
   public bullets?: Physics.Arcade.Group;
+  public minDistance: number = 50;
+  public maxDistance: number = 200;
   
   private scene: Scene;
   private config: WeaponConfig;
@@ -27,11 +32,16 @@ export class Weapon {
     this.damage = config.damage;
     this.range = config.range;
     this.attackSpeed = config.attackSpeed;
+    this.minDistance = config.minDistance || this.minDistance;
+    this.maxDistance = config.maxDistance || this.maxDistance;
     
     // Set bullet properties for ranged weapons
     if (this.type === 'ranged') {
       this.bulletSpeed = config.bulletSpeed || 300;
       this.bulletSprite = config.bulletSprite || 'arrow';
+      this.bulletWidth = config.bulletWidth || 32;
+      this.bulletHeight = config.bulletHeight || 16;
+      this.bulletSpinSpeed = config.bulletSpinSpeed || 0;
       
       // Create bullet group for ranged weapons
       this.bullets = this.createBulletGroup(scene);
@@ -45,7 +55,7 @@ export class Weapon {
       createCallback: (item: Phaser.GameObjects.GameObject) => {
         const bullet = item as Bullet;
         bullet.setTexture(this.bulletSprite || 'arrow');
-        bullet.setDisplaySize(32, 16);
+        bullet.setDisplaySize(this.bulletWidth || 32, this.bulletHeight || 16);
         bullet.setOrigin(0.5, 0.5);
         bullet.setDamage(this.damage);
       }
@@ -98,6 +108,18 @@ export class Weapon {
     const bullet = this.bullets.get() as Bullet;
     if (bullet) {
       bullet.fire(shooter.x, shooter.y, angle);
+      
+      // Apply spinning animation if specified
+      if (this.bulletSpinSpeed !== undefined && this.bulletSpinSpeed !== 0) {
+        // Add a tween to continuously rotate the bullet
+        this.scene.tweens.add({
+          targets: bullet,
+          angle: 360,
+          duration: 1000 / this.bulletSpinSpeed, // Duration based on spin speed
+          repeat: -1, // Infinite repeat
+          ease: 'Linear' // Linear easing for smooth rotation
+        });
+      }
     }
      
     this.lastFired = currentTime;

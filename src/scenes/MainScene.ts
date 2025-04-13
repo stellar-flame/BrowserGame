@@ -34,8 +34,9 @@ export class MainScene extends Scene {
     this.loadSprite('player-sprite', 'assets/sprites/shooter-sprite.png', 64 , 64 );
     this.loadSprite('skeleton-sprite', 'assets/sprites/skeleton.png', 16, 32);
     this.loadSprite('zombie-sprite', 'assets/sprites/zombie.png', 32, 32);
-    this.loadSprite('ninja-sprite', 'assets/sprites/ninja.png', 32, 16);
+    this.loadSprite('ninja-sprite', 'assets/sprites/ninja.png', 16, 32 );
     this.loadSprite('arrow', 'assets/sprites/arrow.png', 32, 16);
+    this.loadSprite('ninja-star', 'assets/sprites/ninja-star.png', 32, 32);
     // Load your tileset image
     this.load.image('tiles-32', 'assets/tiles.png');
     
@@ -101,7 +102,9 @@ export class MainScene extends Scene {
       // Setup mouse input for targeting
       this.mousePointer = this.input.activePointer;
       
-      this.player = new Player(this, 100, 300);
+      this.player = new Player(this, 100,300);
+      
+      // this.player = new Player(this, 880, 320);
       console.log('Player created:', this.player);
       
       // Set a smaller hitbox for the player
@@ -150,7 +153,28 @@ export class MainScene extends Scene {
     // Add collisions between player bullets and walls
     if (this.wallsLayer) {
       this.physics.add.collider(this.player.bullets, this.wallsLayer, this.handleBulletPlatformCollision, undefined, this);
-      this.physics.add.collider(this.enemies, this.wallsLayer);
+      
+      // Add collision between enemies and walls with a callback to handle the collision
+      this.physics.add.collider(this.enemies, this.wallsLayer, (enemy, wall) => {
+        // When an enemy collides with a wall, we can add special handling here if needed
+        console.log('Enemy collided with wall:', enemy);
+        
+        // Force the enemy to stop moving when it hits a wall
+        const enemyInstance = enemy as Enemy;
+        if (enemyInstance.body) {
+          // Cast to Arcade.Body to access setVelocity
+          const body = enemyInstance.body as Phaser.Physics.Arcade.Body;
+          body.setVelocity(0, 0);
+          
+          // After a short delay, try to find an alternative path
+          this.time.delayedCall(200, () => {
+            if (enemyInstance.body && !enemyInstance.isEnemyDead()) {
+              // Let the enemy's updateMovement method handle finding an alternative path
+              enemyInstance.preUpdate(this.time.now, 0);
+            }
+          });
+        }
+      });
     }
     
     // Add collisions between player bullets and enemies
@@ -309,13 +333,14 @@ export class MainScene extends Scene {
 
       // Use the enemy type from the spawn point
       console.log('Spawning enemy:', point.type);
+      
       const enemy = EnemyFactory.createEnemy(this, point.type, point.x, point.y, `enemy_${roomId}_${index}`);
+      enemy.setPlayer(this.player);
+      
       this.enemies.add(enemy);
       
-      // Add collision with walls
-      if (this.wallsLayer) {
-        this.physics.add.collider(enemy, this.wallsLayer);
-      }
+      // Note: We don't need to add individual collisions with walls here
+      // as we've already set up a group collision in setupCollisions()
       
       // Set up collisions for enemy bullets if it's a RangedEnemy
       if (enemy instanceof RangedEnemy && enemy.weapon && enemy.weapon.bullets) {
@@ -423,22 +448,31 @@ export class MainScene extends Scene {
   private handlePlayerDeath(): void {
     console.log('Player died!');
     
-    // Stop all enemies
+    // Destroy all enemies and remove them from the scene
     this.enemies.clear(true, true);
     
-    // Show game over text
-    this.gameOverText = this.add.text(400, 300, 'GAME OVER', { 
+    // Get player's death position
+    const playerX = this.player.x;
+    const playerY = this.player.y;
+    
+    // Create a semi-transparent overlay at the player's death location
+    const overlay = this.add.rectangle(playerX, playerY, 300, 200, 0x000000, 0.7);
+    overlay.setOrigin(0.5);
+    overlay.setDepth(100); // Ensure it's above other elements
+    
+    // Show game over text at player's death location
+    this.gameOverText = this.add.text(playerX, playerY - 30, 'GAME OVER', { 
       fontSize: '64px', 
       color: '#ff0000',
       fontFamily: 'Arial'
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setDepth(101);
     
     // Add restart instruction
-    this.restartText = this.add.text(400, 400, 'Press R to restart', { 
+    this.restartText = this.add.text(playerX, playerY + 30, 'Press R to restart', { 
       fontSize: '32px', 
       color: '#ffffff',
       fontFamily: 'Arial'
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setDepth(101);
     
     // Add restart key
     if (this.input && this.input.keyboard) {
@@ -446,6 +480,9 @@ export class MainScene extends Scene {
         this.scene.restart();
       });
     }
+    
+    // Set game over flag
+    this.gameOver = true;
   }
 
   private setupDoors() {

@@ -1,17 +1,22 @@
 import { WeaponType } from '../weapons/WeaponConfigs';
 
+export interface AnimationConfig {
+  startFrame: number;
+  endFrame: number;
+  frameRate: number;
+  repeat: number;
+}
+
 export interface EnemyConfig {
   type: 'melee' | 'ranged';
   sprite: string;
   scale: number;
   attackRate: number;
-  minDistance: number;
-  maxDistance: number;
   moveSpeed: number;
   health: number;
   maxHealth: number;
   animationKey: string;
-  attackRange?: number;
+  animationConfig?: AnimationConfig;
   weaponType?: WeaponType;
 }
 
@@ -19,15 +24,18 @@ export const ENEMY_CONFIGS = {
   ZOMBIE: {
     type: 'melee',
     sprite: 'zombie-sprite',
-    scale: 1,
+    scale: 2,
     attackRate: 2000,
-    minDistance: 200,
-    maxDistance: 400,
     moveSpeed: 120,
-    health: 10,
-    maxHealth: 10,
+    health: 20,
+    maxHealth: 20,
     animationKey: 'zombie-walk',
-    attackRange: 10,
+    animationConfig: {
+      startFrame: 0,
+      endFrame: 7,
+      frameRate: 10,
+      repeat: -1
+    },
     weaponType: 'ZOMBIESTRIKE'
   },
   SKELETON: {
@@ -35,12 +43,16 @@ export const ENEMY_CONFIGS = {
     sprite: 'skeleton-sprite',
     scale: 2,
     attackRate: 1500,
-    minDistance: 100,
-    maxDistance: 200,
     moveSpeed: 80,
     health: 20,
     maxHealth: 20,
     animationKey: 'skeleton-walk',
+    animationConfig: {
+      startFrame: 0,
+      endFrame: 7,
+      frameRate: 10,
+      repeat: -1
+    },
     weaponType: 'BOW'
   },
   NINJA: {
@@ -48,12 +60,16 @@ export const ENEMY_CONFIGS = {
     sprite: 'ninja-sprite',
     scale: 2,
     attackRate: 1500,
-    minDistance: 200,
-    maxDistance: 400,
     moveSpeed: 80,
     health: 4,
     maxHealth: 4,
     animationKey: 'ninja-walk',
+    animationConfig: {
+      startFrame: 0,
+      endFrame: 7,
+      frameRate: 10,
+      repeat: -1
+    },
     weaponType: 'NINJA_STAR'
   },
 } as const; 
