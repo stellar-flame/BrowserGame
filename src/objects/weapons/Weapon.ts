@@ -7,8 +7,8 @@ import { WeaponConfig } from './WeaponConfigs';
 
 export class Weapon {
   public damage: number;
-  public range: number;
   public attackSpeed: number;
+  public attackRate: number;
   public bulletSpeed?: number;
   public bulletSprite?: string;
   public bulletWidth?: number;
@@ -30,8 +30,8 @@ export class Weapon {
     // Apply configuration
     this.type = config.type;
     this.damage = config.damage;
-    this.range = config.range;
     this.attackSpeed = config.attackSpeed;
+    this.attackRate = config.attackRate || 1000 / this.attackSpeed; // Default to calculated from attackSpeed if not provided
     this.minDistance = config.minDistance || this.minDistance;
     this.maxDistance = config.maxDistance || this.maxDistance;
     
@@ -58,6 +58,15 @@ export class Weapon {
         bullet.setDisplaySize(this.bulletWidth || 32, this.bulletHeight || 16);
         bullet.setOrigin(0.5, 0.5);
         bullet.setDamage(this.damage);
+        
+        // Set a smaller hit area for the bullet
+        const body = bullet.body as Phaser.Physics.Arcade.Body;
+        if (body) {
+          // Make hit area 50% of the display size
+          const hitWidth = (this.bulletWidth || 32) * 0.5;
+          const hitHeight = (this.bulletHeight || 16) * 0.5;
+          body.setSize(hitWidth, hitHeight);
+        }
       }
     });
   }
@@ -66,19 +75,20 @@ export class Weapon {
   public dealDamage(attacker: Player | Enemy, target: Player | Enemy): void {
     if (this.type !== 'melee') return;
     
-    // Check attack speed cooldown
+    // Check attack rate cooldown
     const currentTime = this.scene.time.now;
-    if (currentTime - this.lastFired < 1000 / this.attackSpeed) return;
+    if (currentTime - this.lastFired < this.attackRate) return;
     
     // Calculate distance to target
     const distance = Phaser.Math.Distance.Between(
       attacker.x, attacker.y,
       target.x, target.y
     );
-    
+    console.log('distance', distance);
     // Only attack if in range
-    if (distance <= this.range) {
+    if (distance <= this.maxDistance) {
       // Apply damage to target
+      console.log('dealDamage', this.damage, target);
       target.takeDamage(this.damage);
       this.lastFired = currentTime;
     }
@@ -88,13 +98,13 @@ export class Weapon {
   public fire(shooter: RangedEnemy, target: Player): void {
     if (this.type !== 'ranged' || !this.bullets) return;
     
-    // Check attack speed cooldown
+    // Check attack rate cooldown
     const currentTime = this.scene.time.now;
-    if (currentTime - this.lastFired < 1000 / this.attackSpeed) return;
+    if (currentTime - this.lastFired < this.attackRate) return;
     
     // Get target position
-    const targetX = target instanceof Player ? target.x : target.x;
-    const targetY = target instanceof Player ? target.y : target.y;
+    const targetX = target.x;
+    const targetY = target.y;
     
     // Calculate angle to target
     const angle = Phaser.Math.Angle.Between(

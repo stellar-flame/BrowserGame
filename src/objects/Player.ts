@@ -55,6 +55,15 @@ export class Player extends Physics.Arcade.Sprite {
     // Add to scene and enable physics
     scene.add.existing(this);
     scene.physics.world.enable(this); // Enable physics
+    
+    const frameWidth = this.frame.width;
+    const frameHeight = this.frame.height;
+    const midWidth = frameWidth / 2;
+    const midHeight = frameHeight / 2;
+    
+    if (this.body) {
+      this.body.setSize(midWidth, midHeight);
+    }
 
     // Setup physics properties (cast body to Arcade.Body)
     (this.body as Physics.Arcade.Body).setCollideWorldBounds(true);
@@ -72,6 +81,13 @@ export class Player extends Physics.Arcade.Sprite {
         bullet.setDisplaySize(6, 6); // Make it a small circle
         bullet.setAlpha(1); // Ensure full opacity
         bullet.setDepth(1); // Ensure bullets are drawn above the background
+        
+        // Set a smaller hit area for the bullet
+        const body = bullet.body as Phaser.Physics.Arcade.Body;
+        if (body) {
+          // Make hit area 50% of the display size
+          body.setSize(3, 3); // Half of the display size (6x6)
+        }
       }
     });
 

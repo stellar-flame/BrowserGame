@@ -21,6 +21,8 @@ export class MeleeEnemy extends Enemy {
     if (config.weaponType) {
       this.weapon = WeaponFactory.createWeapon(scene, config.weaponType);
     }
+    // Get the sprite's texture size
+    this.setHitBox();
     
     // Initialize animations
     this.createAnimations(scene);

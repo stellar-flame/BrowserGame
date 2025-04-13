@@ -24,6 +24,20 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   private static animationsCreated: Map<string, boolean> = new Map();
   protected config: EnemyConfig | null = null;
 
+  // Steering behavior properties
+  protected seekWeight: number = 1.0;
+  protected avoidWeight: number = 1.5;
+  protected separationWeight: number = 0.8;
+  protected maxSteeringForce: number = 0.5;
+  protected wallAvoidanceForce: number = 50;
+  protected separationRadius: number = 50;
+
+  // Add new property for path finding
+  protected lastKnownPlayerPosition: { x: number, y: number } | null = null;
+  protected stuckTimer: number = 0;
+  protected isStuck: boolean = false;
+  protected alternativeDirection: { x: number, y: number } | null = null;
+
   constructor(scene: Scene, x: number, y: number, id: string, config?: EnemyConfig) {
     // Call Sprite constructor (use __WHITE texture key for tinting)
     super(scene, x, y, '__WHITE');
@@ -34,13 +48,13 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     // Add to scene and enable physics
     scene.add.existing(this);
     scene.physics.world.enable(this); // Enable physics
-
+    
     // Get the physics body
     const enemyBody = this.body as Phaser.Physics.Arcade.Body;
     
     // Ensure the enemy can collide with walls
     enemyBody.setCollideWorldBounds(true);
-    enemyBody.setBounce(0); // No bounce when hitting walls
+  //  enemyBody.setBounce(0); // No bounce when hitting walls
     enemyBody.setDrag(0); // No drag to ensure they can move freely
 
     // Apply config if provided
@@ -53,6 +67,21 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     // Create health bar
     this.healthBar = new HealthBar(scene, this, 20, 2, false);
     this.healthBar.setHealth(this.health, this.maxHealth);
+  }
+
+  protected setHitBox() {
+    if (!this.body) return;
+    
+    const enemyBody = this.body as Phaser.Physics.Arcade.Body;
+   
+    // Get the frame dimensions instead of texture dimensions
+    const frameWidth = this.frame.width;
+    const frameHeight = this.frame.height;
+    const midWidth = frameWidth / 2;
+    const midHeight = frameHeight / 2;
+
+    // Set hitbox size to match frame size
+    enemyBody.setSize(midWidth  , midHeight );
   }
 
   // Create animations method moved from subclasses
@@ -116,43 +145,213 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
 
   // Method to update enemy movement
   protected updateMovement() {
-    console.log('updateMovement', this.player);
     if (!this.body || !this.player) return;
     
-    const distance = Phaser.Math.Distance.Between(this.x, this.y, this.player.x, this.player.y);
     const body = this.body as Phaser.Physics.Arcade.Body;
-    
-    // Calculate angle to player
+    const distance = Phaser.Math.Distance.Between(this.x, this.y, this.player.x, this.player.y);
     const angle = Phaser.Math.Angle.Between(this.x, this.y, this.player.x, this.player.y);
     
-    // Let subclasses handle specific movement behavior
-    this.handleMovement(distance, angle, body);
+    // Calculate steering forces
+    const steering = this.calculateSteering(body);
+  
     
-    // Handle wall collisions
-    if (body.blocked.left || body.blocked.right || body.blocked.up || body.blocked.down) {
-      // If we're blocked by a wall, try to find an alternative path
-      const currentAngle = Math.atan2(body.velocity.y, body.velocity.x);
-      const alternativeAngle = currentAngle + (Math.PI / 2) * (Math.random() > 0.5 ? 1 : -1);
-      
-      // Try moving in the alternative direction
+    // Apply steering to velocity
+    body.setVelocity(
+      body.velocity.x + steering.x,
+      body.velocity.y + steering.y
+    );
+    
+    // Limit speed to moveSpeed
+    const currentSpeed = Math.sqrt(body.velocity.x * body.velocity.x + body.velocity.y * body.velocity.y);
+    if (currentSpeed > this.moveSpeed) {
       body.setVelocity(
-        Math.cos(alternativeAngle) * this.moveSpeed,
-        Math.sin(alternativeAngle) * this.moveSpeed
+        (body.velocity.x / currentSpeed) * this.moveSpeed,
+        (body.velocity.y / currentSpeed) * this.moveSpeed
       );
+    }
+    
+    // Let subclasses handle any specific movement behavior
+    this.handleMovement(distance, angle, body);
+  }
+  
+  private calculateSteering(body: Phaser.Physics.Arcade.Body): { x: number, y: number } {
+    const steering = { x: 0, y: 0 };
+    
+    // Add seeking force toward player
+    const seekForce = this.calculateSeekForce();
+    steering.x += seekForce.x * this.seekWeight;
+    steering.y += seekForce.y * this.seekWeight;
+    
+    // Add wall avoidance force if near walls
+    if (body.blocked.left || body.blocked.right || body.blocked.up || body.blocked.down) {
+      const avoidForce = this.calculateWallAvoidanceForce(body);
+      steering.x += avoidForce.x * this.avoidWeight;
+      steering.y += avoidForce.y * this.avoidWeight;
+    }
+    
+    // Add separation force from other enemies
+    const separationForce = this.calculateSeparationForce();
+    steering.x += separationForce.x * this.separationWeight;
+    steering.y += separationForce.y * this.separationWeight;
+    
+    // Limit maximum steering force
+    const steeringMagnitude = Math.sqrt(steering.x * steering.x + steering.y * steering.y);
+    if (steeringMagnitude > this.maxSteeringForce) {
+      steering.x = (steering.x / steeringMagnitude) * this.maxSteeringForce;
+      steering.y = (steering.y / steeringMagnitude) * this.maxSteeringForce;
+    }
+    
+    return steering;
+  }
+  
+  private calculateSeekForce(): { x: number, y: number } {
+    if (!this.player) return { x: 0, y: 0 };
+    
+    // Calculate desired velocity (normalized direction to player * moveSpeed)
+    const dx = this.player.x - this.x;
+    const dy = this.player.y - this.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    if (distance === 0) return { x: 0, y: 0 };
+    
+    return {
+      x: (dx / distance) * this.moveSpeed,
+      y: (dy / distance) * this.moveSpeed
+    };
+  }
+  
+  private calculateWallAvoidanceForce(body: Phaser.Physics.Arcade.Body): { x: number, y: number } {
+    const wallNormal = this.getWallNormal(body);
+    
+    // Calculate direction to player
+    if (!this.player) return { x: 0, y: 0 };
+    const dx = this.player.x - this.x;
+    const dy = this.player.y - this.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    if (distance === 0) return { x: 0, y: 0 };
+    
+    // Calculate the dot product between wall normal and direction to player
+    const dotProduct = (wallNormal.x * dx + wallNormal.y * dy) / distance;
+    
+    // Check if we're stuck against a wall
+    const isBlockedByWall = body.blocked.left || body.blocked.right || body.blocked.up || body.blocked.down;
+    if (isBlockedByWall) {
+      this.stuckTimer += 1;
+      if (this.stuckTimer > 60) { // After about 1 second of being stuck
+        this.isStuck = true;
+        // Store last known player position
+        this.lastKnownPlayerPosition = { x: this.player.x, y: this.player.y };
+        // Generate alternative direction
+        this.generateAlternativeDirection(wallNormal);
+      }
+    } else {
+      this.stuckTimer = 0;
+      this.isStuck = false;
+      this.alternativeDirection = null;
+    }
+    
+    // If stuck, use alternative direction
+    if (this.isStuck && this.alternativeDirection) {
+      return {
+        x: this.alternativeDirection.x * this.moveSpeed,
+        y: this.alternativeDirection.y * this.moveSpeed
+      };
+    }
+    
+    // Normal wall avoidance behavior
+    const avoidanceMultiplier = dotProduct < 0 ? 2.0 : 1.0;
+    const slideDirection = {
+      x: -wallNormal.y,
+      y: wallNormal.x
+    };
+    
+    return {
+      x: (wallNormal.x * this.wallAvoidanceForce * avoidanceMultiplier + slideDirection.x * this.moveSpeed) * 0.5,
+      y: (wallNormal.y * this.wallAvoidanceForce * avoidanceMultiplier + slideDirection.y * this.moveSpeed) * 0.5
+    };
+  }
+  
+  private generateAlternativeDirection(wallNormal: { x: number, y: number }): void {
+    // Try to find a direction that's not blocked by the wall
+    const possibleDirections = [
+      { x: -wallNormal.y, y: wallNormal.x },  // Perpendicular clockwise
+      { x: wallNormal.y, y: -wallNormal.x },  // Perpendicular counter-clockwise
+      { x: wallNormal.x, y: wallNormal.y },   // Along wall
+      { x: -wallNormal.x, y: -wallNormal.y }  // Opposite to wall
+    ];
+    
+    // Choose the direction that's most towards the player's last known position
+    if (this.lastKnownPlayerPosition) {
+      let bestDirection = possibleDirections[0];
+      let bestDotProduct = -Infinity;
       
-      // After a short delay, try moving towards the player again
-      this.scene.time.delayedCall(200, () => {
-        if (this.body && !this.isDead) {
-          this.updateMovement();
+      for (const dir of possibleDirections) {
+        const dx = this.lastKnownPlayerPosition.x - this.x;
+        const dy = this.lastKnownPlayerPosition.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance === 0) continue;
+        
+        const dotProduct = (dir.x * dx + dir.y * dy) / distance;
+        if (dotProduct > bestDotProduct) {
+          bestDotProduct = dotProduct;
+          bestDirection = dir;
         }
-      });
+      }
+      
+      this.alternativeDirection = bestDirection;
+    } else {
+      // If no last known position, just pick a random perpendicular direction
+      this.alternativeDirection = possibleDirections[Math.floor(Math.random() * 2)];
     }
   }
-
-  // Abstract method to be implemented by subclasses for specific movement behavior
-  protected abstract handleMovement(distance: number, angle: number, body: Phaser.Physics.Arcade.Body): void;
-
   
+  private calculateSeparationForce(): { x: number, y: number } {
+    const separation = { x: 0, y: 0 };
+    let count = 0;
+    
+    // Get all enemies in the scene
+    const enemies = (this.scene as any).enemies;
+    if (!enemies) return separation;
+    
+    // Check each enemy
+    enemies.getChildren().forEach((enemy: any) => {
+      if (enemy === this) return;
+      
+      const distance = Phaser.Math.Distance.Between(this.x, this.y, enemy.x, enemy.y);
+      
+      // If within separation radius, add separation force
+      if (distance < this.separationRadius) {
+        const dx = this.x - enemy.x;
+        const dy = this.y - enemy.y;
+        
+        // Normalize and scale by distance (closer = stronger)
+        const force = (this.separationRadius - distance) / this.separationRadius;
+        
+        separation.x += (dx / distance) * force;
+        separation.y += (dy / distance) * force;
+        count++;
+      }
+    });
+    
+    // Average the separation force
+    if (count > 0) {
+      separation.x /= count;
+      separation.y /= count;
+    }
+    
+    return separation;
+  }
+  
+  // Helper method to determine the normal vector of the wall being hit
+  private getWallNormal(body: Phaser.Physics.Arcade.Body): { x: number, y: number } {
+    if (body.blocked.left) return { x: 1, y: 0 };
+    if (body.blocked.right) return { x: -1, y: 0 };
+    if (body.blocked.up) return { x: 0, y: 1 };
+    if (body.blocked.down) return { x: 0, y: -1 };
+    return { x: 0, y: 0 };
+  }
 
   // Method to set player reference
   public setPlayer(player: Player): void {
@@ -161,6 +360,7 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
 
   // Method to take damage
   public takeDamage(amount: number): void {
+    console.log('takeDamage', amount);
     if (this.isDead) return;
     
     this.health -= amount;
@@ -238,4 +438,7 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     
     return distance >= this.weapon.minDistance && distance <= this.weapon.maxDistance;
   }
+
+  // Abstract method to be implemented by subclasses for specific movement behavior
+  protected abstract handleMovement(distance: number, angle: number, body: Phaser.Physics.Arcade.Body): void;
 }

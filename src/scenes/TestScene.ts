@@ -9,7 +9,7 @@ export class TestScene extends Scene {
   private enemies!: Phaser.Physics.Arcade.Group;
   private wallsLayer: Phaser.Tilemaps.TilemapLayer | null = null;
   private spawnText!: Phaser.GameObjects.Text;
-  private enemyType: EnemyType = 'ZOMBIE'; // Default enemy type to spawn
+  private enemyType: EnemyType = 'NINJA'; // Default enemy type to spawn
   private enemyTypeText!: Phaser.GameObjects.Text;
   
   constructor() {
@@ -49,6 +49,7 @@ export class TestScene extends Scene {
     
     // Create floor and walls layers
     const floorLayer = map.createLayer('Floor', tileset, 0, 0);
+    const floorDecorLayer = map.createLayer('FloorDecor', tileset, 0, 0);
     this.wallsLayer = map.createLayer('Walls', tileset, 0, 0);
     
     if (floorLayer) {
@@ -56,12 +57,17 @@ export class TestScene extends Scene {
       floorLayer.setDepth(-1);
     }
     
+    if (floorDecorLayer) {
+      floorDecorLayer.setAlpha(1);
+      floorDecorLayer.setDepth(-0.5); // Put floor decor between floor and walls
+    }
+    
     if (this.wallsLayer) {
       this.wallsLayer.setCollisionFromCollisionGroup();
     }
     
     // Create player at the center of the screen
-    this.player = new Player(this, 400, 300);
+    this.player = new Player(this, 1400, 300);
     
     // Set up player collision with walls
     if (this.wallsLayer) {
@@ -71,6 +77,10 @@ export class TestScene extends Scene {
     // Create enemies group
     this.enemies = this.physics.add.group({ classType: Enemy });
     
+
+      // Enable physics debug graphics
+    // this.physics.world.createDebugGraphic();
+
     // Set up collisions
     this.setupCollisions();
     
@@ -109,9 +119,7 @@ export class TestScene extends Scene {
   }
   
   spawnEnemy(player:  Player) {
-    const angle = Math.random() * Math.PI * 2;
-    const distance = 200 + Math.random() * 100;
-    const x = 100;
+    const x = 1100;
     const y = 300
     // Create enemy based on current type
     const enemy = EnemyFactory.createEnemy(
@@ -234,6 +242,7 @@ export class TestScene extends Scene {
     // Deactivate the bullet
     bulletInstance.deactivate();
     
+    console.log('handleEnemyBulletCollision', bulletInstance.getDamage());
     // Apply damage from the bullet
     enemyInstance.takeDamage(bulletInstance.getDamage());
     

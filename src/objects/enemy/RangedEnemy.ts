@@ -1,12 +1,9 @@
 import { Scene, Physics } from 'phaser';
 import { Enemy } from './Enemy';
-import { Bullet } from '../Bullet';
 import { EnemyConfig } from './EnemyConfigs';
 import { WeaponFactory } from '../weapons/WeaponFactory';
 
 export class RangedEnemy extends Enemy {
-  protected minDistance: number;
-  protected maxDistance: number;
 
   constructor(scene: Scene, x: number, y: number, id: string, config: EnemyConfig) {
     super(scene, x, y, id, config);
@@ -14,8 +11,6 @@ export class RangedEnemy extends Enemy {
     // Apply configuration
     this.setTexture(config.sprite);
     this.setScale(config.scale);
-    this.minDistance = config.minDistance || 100;
-    this.maxDistance = config.maxDistance || 300;
     this.moveSpeed = config.moveSpeed;
     this.health = config.health;
     this.maxHealth = config.maxHealth;
@@ -23,8 +18,8 @@ export class RangedEnemy extends Enemy {
     // Initialize weapon if specified in config
     if (config.weaponType) {
       this.weapon = WeaponFactory.createWeapon(scene, config.weaponType);
-    }
-    
+    } 
+    this.setHitBox();
     // Initialize animations
     this.createAnimations(scene);
   }
@@ -60,15 +55,17 @@ export class RangedEnemy extends Enemy {
 
   protected handleMovement(distance: number, angle: number, body: Phaser.Physics.Arcade.Body): void {
     // Ranged enemies try to maintain optimal shooting distance
-    const optimalDistance = (this.minDistance + this.maxDistance) / 2;
+    let minDistance = this.weapon?.minDistance || 100;
+    let maxDistance = this.weapon?.maxDistance || 300;
+    const optimalDistance = (minDistance + maxDistance) / 2;
     
-    if (distance > this.maxDistance) {
+    if (distance > maxDistance) {
       // Move towards player if too far
       body.setVelocity(
         Math.cos(angle) * this.moveSpeed,
         Math.sin(angle) * this.moveSpeed
       );
-    } else if (distance < this.minDistance) {
+    } else if (distance < minDistance) {
       // Move away from player if too close
       body.setVelocity(
         Math.cos(angle + Math.PI) * this.moveSpeed,

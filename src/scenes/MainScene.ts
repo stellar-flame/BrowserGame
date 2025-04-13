@@ -79,6 +79,7 @@ export class MainScene extends Scene {
     }
     
     const floorLayer = map.createLayer('Floor', tileset, 0, 0);
+    const floorDecorLayer = map.createLayer('FloorDecor', tileset, 0, 0);
     this.wallsLayer = map.createLayer('Walls', tileset, 0, 0);
    
     // Disable grid lines on floor tiles
@@ -87,11 +88,17 @@ export class MainScene extends Scene {
       floorLayer.setDepth(-1); // Put floor behind other elements
     }
    
+    // Set up floor decor layer
+    if (floorDecorLayer) {
+      floorDecorLayer.setAlpha(1);
+      floorDecorLayer.setDepth(-0.5); // Put floor decor between floor and walls
+    }
+   
     // Set collision properties for walls
     if (this.wallsLayer) {
       this.wallsLayer.setCollisionFromCollisionGroup();
   
-      // Enable physics on the walls layer
+      // Enable physics debug graphics
       // this.physics.world.createDebugGraphic();
     } else {
       console.error('Walls layer is null');
@@ -180,8 +187,8 @@ export class MainScene extends Scene {
     // Add collisions between player bullets and enemies
     this.physics.add.collider(this.enemies, this.player.bullets, this.handleEnemyBulletCollision, undefined, this);
     
-    // Add collisions between player and enemies
-    this.physics.add.collider(this.player, this.enemies, (player, enemy) => {
+    // Add overlap between player and enemies (instead of collision)
+    this.physics.add.overlap(this.player, this.enemies, (player, enemy) => {
       // Cast to Player and Enemy types
       const playerInstance = player as Player;
       const enemyInstance = enemy as Enemy;
@@ -390,11 +397,11 @@ export class MainScene extends Scene {
       return;
     }
 
-    // Always deactivate the bullet
-    bulletInstance.deactivate();
-
-    // Apply damage from the bullet
+    // Apply damage to player from enemy bullet
     playerInstance.takeDamage(bulletInstance.getDamage());
+    
+    // Deactivate the bullet
+    bulletInstance.deactivate();
   }
 
   handleEnemyBulletCollision(enemy: any, bullet: any) {
