@@ -2,7 +2,6 @@ import { Scene, Physics, Input } from 'phaser';
 import { Player } from '../objects/Player';
 import { Enemy } from '../objects/enemy/Enemy';
 import { RangedEnemy } from '../objects/enemy/RangedEnemy';
-import { MeleeEnemy } from '../objects/enemy/MeleeEnemy';
 import { EnemyFactory, EnemyType } from '../objects/enemy/EnemyFactory';
 
 export class TestScene extends Scene {
@@ -89,7 +88,7 @@ export class TestScene extends Scene {
     // Add keyboard input
     if (this.input.keyboard) {
       this.input.keyboard.on('keydown-SPACE', () => {
-        this.spawnEnemy();
+        this.spawnEnemy(this.player);
       });
 
       this.input.keyboard.on('keydown-M', () => {
@@ -109,7 +108,7 @@ export class TestScene extends Scene {
     this.events.on('playerDied', this.handlePlayerDeath, this);
   }
   
-  spawnEnemy() {
+  spawnEnemy(player:  Player) {
     const angle = Math.random() * Math.PI * 2;
     const distance = 200 + Math.random() * 100;
     const x = 100;
@@ -122,6 +121,8 @@ export class TestScene extends Scene {
       y, 
       `enemy_${this.enemies.getLength()}`
     );
+
+    enemy.setPlayer(player);
     
     this.enemies.add(enemy);
     
@@ -196,7 +197,6 @@ export class TestScene extends Scene {
     // Update enemies
     this.enemies.getChildren().forEach((enemy) => {
       const enemyInstance = enemy as Enemy;
-      enemyInstance.updatePlayerPosition(this.player.x, this.player.y);
       enemyInstance.preUpdate(time, delta);
     });
   }

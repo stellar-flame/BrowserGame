@@ -18,6 +18,8 @@ export interface EnemyConfig {
   animationKey: string;
   animationConfig?: AnimationConfig;
   weaponType?: WeaponType;
+  minDistance?: number;
+  maxDistance?: number;
 }
 
 export const ENEMY_CONFIGS = {

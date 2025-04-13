@@ -11,7 +11,6 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   
   // Movement properties
   protected moveSpeed: number = 100;
-  protected playerPosition: Phaser.Math.Vector2 = new Phaser.Math.Vector2(0, 0);
   protected player: Player | null = null;
   
   // Health properties
@@ -119,13 +118,14 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
 
   // Method to update enemy movement
   protected updateMovement() {
-    if (!this.body) return;
+    console.log('updateMovement', this.player);
+    if (!this.body || !this.player) return;
     
-    const distance = Phaser.Math.Distance.Between(this.x, this.y, this.playerPosition.x, this.playerPosition.y);
+    const distance = Phaser.Math.Distance.Between(this.x, this.y, this.player.x, this.player.y);
     const body = this.body as Phaser.Physics.Arcade.Body;
     
     // Calculate angle to player
-    const angle = Phaser.Math.Angle.Between(this.x, this.y, this.playerPosition.x, this.playerPosition.y);
+    const angle = Phaser.Math.Angle.Between(this.x, this.y, this.player.x, this.player.y);
     
     // Let subclasses handle specific movement behavior
     this.handleMovement(distance, angle, body);
@@ -154,14 +154,11 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   // Abstract method to be implemented by subclasses for specific movement behavior
   protected abstract handleMovement(distance: number, angle: number, body: Phaser.Physics.Arcade.Body): void;
 
-  // Method to update player position for targeting
-  public updatePlayerPosition(x: number, y: number): void {
-    this.playerPosition.set(x, y);
-  }
+  
 
   // Method to set player reference
-  public setPlayer(player: any): void {
-    this.scene.data.set('player', player);
+  public setPlayer(player: Player): void {
+    this.player = player;
   }
 
   // Method to take damage
@@ -234,11 +231,11 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
 
   // Method to check if enemy is in attack range
   protected isInAttackRange(): boolean {
-    if (!this.weapon) return false;
+    if (!this.weapon || !this.player) return false;
     
     const distance = Phaser.Math.Distance.Between(
       this.x, this.y,
-      this.playerPosition.x, this.playerPosition.y
+      this.player.x, this.player.y
     );
     
     return distance >= this.weapon.minDistance && distance <= this.weapon.maxDistance;

@@ -8,8 +8,8 @@ const config: Phaser.Types.Core.GameConfig = {
   height: 600,
   parent: 'game',
   backgroundColor: '#2d2d2d',
-  scene: [TestScene],
-  // scene: [MainScene],
+  // scene: [TestScene],
+  scene: [MainScene],
   physics: {
     default: 'arcade',
     arcade: {

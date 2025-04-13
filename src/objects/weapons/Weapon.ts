@@ -85,7 +85,7 @@ export class Weapon {
   }
 
   // Fire method for ranged weapons
-  public fire(shooter: RangedEnemy, target: Player | Math.Vector2): void {
+  public fire(shooter: RangedEnemy, target: Player): void {
     if (this.type !== 'ranged' || !this.bullets) return;
     
     // Check attack speed cooldown

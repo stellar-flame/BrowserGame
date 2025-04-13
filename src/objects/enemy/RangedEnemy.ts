@@ -38,10 +38,10 @@ export class RangedEnemy extends Enemy {
   }
 
   protected performAttack(): void {
-    if (!this.weapon) return;
+    if (!this.weapon || !this.player) return;
     
     // Use the weapon's fire method
-    this.weapon.fire(this, this.playerPosition);
+    this.weapon.fire(this, this.player);
   }
 
   // Keep the public fire method for backward compatibility

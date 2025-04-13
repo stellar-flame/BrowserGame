@@ -336,7 +336,7 @@ export class MainScene extends Scene {
       
       const enemy = EnemyFactory.createEnemy(this, point.type, point.x, point.y, `enemy_${roomId}_${index}`);
       enemy.setPlayer(this.player);
-      
+
       this.enemies.add(enemy);
       
       // Note: We don't need to add individual collisions with walls here
@@ -367,8 +367,6 @@ export class MainScene extends Scene {
     // Update enemies and their health bars
     this.enemies.getChildren().forEach((enemy) => {
       const enemyInstance = enemy as Enemy;
-      // Update player position for targeting
-      enemyInstance.updatePlayerPosition(this.player.x, this.player.y);
       // Update enemy behavior
       enemyInstance.preUpdate(time, delta);
     });
