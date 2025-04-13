@@ -35,10 +35,8 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.world.enable(this); // Enable physics
 
-    // Set a smaller hitbox for the enemy
+    // Get the physics body
     const enemyBody = this.body as Phaser.Physics.Arcade.Body;
-    enemyBody.setSize(32, 32); // Make hitbox smaller than sprite
-    enemyBody.setOffset(16, 16); // Center the hitbox
     
     // Ensure the enemy can collide with walls
     enemyBody.setCollideWorldBounds(true);
