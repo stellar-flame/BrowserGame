@@ -32,7 +32,7 @@
   </tile>
   <tile id="35">
    <objectgroup draworder="index" id="2">
-    <object id="1" x="0" y="0" width="32" height="32"/>
+    <object id="6" x="0" y="0" width="32" height="32"/>
    </objectgroup>
   </tile>
   <tile id="36">
@@ -198,42 +198,42 @@
    </properties>
    <point/>
   </object>
-  <object id="47" name="Ninja" x="1093.63" y="155.622">
+  <object id="47" name="Ninja" x="1488.93" y="130.79">
    <properties>
     <property name="Room" value="2"/>
     <property name="Type" value="NINJA"/>
    </properties>
    <point/>
   </object>
-  <object id="48" name="Ninja" x="1460.45" y="200.941">
+  <object id="48" name="Ninja" x="1455.76" y="135.169">
    <properties>
     <property name="Room" value="2"/>
     <property name="Type" value="NINJA"/>
    </properties>
    <point/>
   </object>
-  <object id="49" name="Ninja" x="1476.05" y="472.484">
+  <object id="49" name="Ninja" x="1508.27" y="418.793">
    <properties>
     <property name="Room" value="2"/>
     <property name="Type" value="NINJA"/>
    </properties>
    <point/>
   </object>
-  <object id="50" name="Ninja" x="1041.32" y="460.679">
+  <object id="50" name="Ninja" x="1493.66" y="174.102">
    <properties>
     <property name="Room" value="2"/>
     <property name="Type" value="NINJA"/>
    </properties>
    <point/>
   </object>
-  <object id="51" name="Zombie" x="1249.91" y="108.137">
+  <object id="51" name="Zombie" x="947.894" y="200.084">
    <properties>
     <property name="Room" value="2"/>
     <property name="Type" value="ZOMBIE"/>
    </properties>
    <point/>
   </object>
-  <object id="52" name="Zombie" x="1253.2" y="467.041">
+  <object id="52" name="Zombie" x="1516.96" y="495.229">
    <properties>
     <property name="Room" value="2"/>
     <property name="Type" value="ZOMBIE"/>

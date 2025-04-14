@@ -4,6 +4,8 @@ import { RangedEnemy } from './RangedEnemy';
 import { Weapon } from '../weapons/Weapon';
 import { EnemyConfig } from './EnemyConfigs';
 import { Player } from '../Player';
+import { MainScene } from '../../scenes/MainScene';
+
 
 // Extend Physics.Arcade.Sprite for physics and preUpdate/update capabilities
 export abstract class Enemy extends Physics.Arcade.Sprite {
@@ -38,6 +40,12 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   protected isStuck: boolean = false;
   protected alternativeDirection: { x: number, y: number } | null = null;
 
+  protected pathfindingEnabled: boolean = false;
+  protected currentPath: Array<{x: number, y: number}> = [];
+  protected pathUpdateTimer: number = 0;
+  protected pathUpdateInterval: number = 1000; // Update path every second
+
+ 
   constructor(scene: Scene, x: number, y: number, id: string, config?: EnemyConfig) {
     // Call Sprite constructor (use __WHITE texture key for tinting)
     super(scene, x, y, '__WHITE');
@@ -67,8 +75,24 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     // Create health bar
     this.healthBar = new HealthBar(scene, this, 20, 2, false);
     this.healthBar.setHealth(this.health, this.maxHealth);
+
+
+    // Initialize pathfinding
+    this.initializePathfinding();
   }
 
+
+  private initializePathfinding(): void {
+    // Get the pathfinding grid from the scene
+    const mainScene = this.scene as MainScene;
+    const pathfindingGrid = mainScene.getPathfindingGrid();
+    
+    if (pathfindingGrid) {
+      // Enable pathfinding
+      this.pathfindingEnabled = true;
+    }
+  }
+  
   protected setHitBox() {
     if (!this.body) return;
     
@@ -109,6 +133,182 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     }
   }
 
+  protected findPathToPlayer(): void {
+    if (!this.pathfindingEnabled) return;
+    
+    const mainScene = this.scene as MainScene;
+    if (!this.player) return;
+    
+    const pathfindingGrid = mainScene.getPathfindingGrid();
+    const easystar = pathfindingGrid.getEasyStar();
+    const gridSize = pathfindingGrid.getGridSize();
+    
+    // Convert world coordinates to tile coordinates
+    const startX = Math.floor(this.x / gridSize);
+    const startY = Math.floor(this.y / gridSize);
+    const endX = Math.floor(this.player.x / gridSize);
+    const endY = Math.floor(this.player.y / gridSize);
+    
+
+    // Check if we already have a path to the player's current position
+    const hasPathToCurrentPosition = this.lastKnownPlayerPosition && 
+      this.lastKnownPlayerPosition.x === this.player.x && 
+      this.lastKnownPlayerPosition.y === this.player.y &&
+      this.currentPath.length > 0;
+    
+    // Only recalculate path if:
+    // 1. We don't have a path to the player's current position, or
+    // 2. The player has moved significantly
+    if (!hasPathToCurrentPosition) {
+      // Store current player position
+      this.lastKnownPlayerPosition = { x: this.player.x, y: this.player.y };
+      
+      // Find path to player
+      easystar.findPath(startX, startY, endX, endY, (path) => {
+        if (path) {
+          // Convert tile coordinates to world coordinates
+          this.currentPath = path.map(point => ({
+            x: point.x * gridSize + gridSize / 2,
+            y: point.y * gridSize + gridSize / 2
+          }));
+          
+          // Remove the first point if it's too close to the enemy
+          if (this.currentPath.length > 0) {
+            const firstPoint = this.currentPath[0];
+            const dx = firstPoint.x - this.x;
+            const dy = firstPoint.y - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < 5) {
+              this.currentPath.shift();
+            }
+          }
+        } else {
+          // If no path found, try to find a path to a point closer to the player
+          console.log("No path found to player, trying alternative path");
+          this.findAlternativePath(startX, startY, endX, endY);
+        }
+      });
+      easystar.calculate();
+    }
+  }
+
+  private findAlternativePath(startX: number, startY: number, endX: number, endY: number): void {
+    const mainScene = this.scene as MainScene;
+    const pathfindingGrid = mainScene.getPathfindingGrid();
+    const easystar = pathfindingGrid.getEasyStar();
+    const gridSize = pathfindingGrid.getGridSize();
+    
+    // Try to find a path to a point closer to the player
+    // This helps when there's no direct path but we can get closer
+    
+    // Calculate direction vector from start to end
+    const dx = endX - startX;
+    const dy = endY - startY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // Normalize direction vector
+    const dirX = dx / distance;
+    const dirY = dy / distance;
+    
+    // Try points at increasing distances along the direction vector
+    const maxAttempts = 5;
+    let attempt = 0;
+    
+    const tryPath = () => {
+      if (attempt >= maxAttempts) {
+        console.log("Failed to find any path after multiple attempts");
+        return;
+      }
+      
+      // Calculate a point at increasing distance
+      const attemptDistance = Math.min(distance * 0.5, (attempt + 1) * 5);
+      const targetX = Math.floor(startX + dirX * attemptDistance);
+      const targetY = Math.floor(startY + dirY * attemptDistance);
+      
+      // Ensure target is within map bounds
+      const map = (this.scene as MainScene).getTilemap();
+      if (!map) return;
+      
+      const boundedX = Math.max(0, Math.min(targetX, map.width - 1));
+      const boundedY = Math.max(0, Math.min(targetY, map.height - 1));
+      
+      console.log(`Trying alternative path to (${boundedX}, ${boundedY})`);
+      
+      easystar.findPath(startX, startY, boundedX, boundedY, (path) => {
+        if (path) {
+          // Convert tile coordinates to world coordinates
+          this.currentPath = path.map(point => ({
+            x: point.x * gridSize + gridSize / 2,
+            y: point.y * gridSize + gridSize / 2
+          }));
+          
+          console.log(`Found alternative path with ${this.currentPath.length} waypoints`);
+        } else {
+          // Try next attempt
+          attempt++;
+          tryPath();
+        }
+      });
+      easystar.calculate();
+    };
+    
+    tryPath();
+  }
+  
+  protected followPath(): void {
+    if (this.currentPath.length === 0) return;
+    console.log('Following path', this.currentPath.length);
+    // Get the next waypoint
+    const nextWaypoint = this.currentPath[0];
+    
+    // Calculate direction to the waypoint
+    const dx = nextWaypoint.x - this.x;
+    const dy = nextWaypoint.y - this.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // If we're close enough to the waypoint, move to the next one
+    if (distance < 5) {
+      this.currentPath.shift();
+      return;
+    }
+    
+    // Check if we're in attack range of the player
+    if (this.player) {
+      
+      // If we're in attack range, stop moving
+      if (this.stopFollowingPath()) {
+        this.currentPath = [];
+        console.log('Stopping path');
+        const body = this.body as Phaser.Physics.Arcade.Body;
+        body.setVelocity(0, 0);
+        return;
+      }
+    }
+    
+    // Move towards the waypoint
+    const angle = Math.atan2(dy, dx);
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    
+    // Apply velocity with some smoothing for more natural movement
+    const targetVx = Math.cos(angle) * this.moveSpeed;
+    const targetVy = Math.sin(angle) * this.moveSpeed;
+    
+    // Smooth the velocity change
+    const smoothingFactor = 0.1;
+    const currentVx = body.velocity.x;
+    const currentVy = body.velocity.y;
+    
+    const newVx = currentVx + (targetVx - currentVx) * smoothingFactor;
+    const newVy = currentVy + (targetVy - currentVy) * smoothingFactor;
+    
+    body.setVelocity(newVx, newVy);
+  }
+
+  protected stopFollowingPath(): boolean {
+    return false;
+  }
+
   // Update method to handle movement and shooting logic
   preUpdate(time: number, delta: number) {
     super.preUpdate(time, delta);
@@ -144,214 +344,7 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   }
 
   // Method to update enemy movement
-  protected updateMovement() {
-    if (!this.body || !this.player) return;
-    
-    const body = this.body as Phaser.Physics.Arcade.Body;
-    const distance = Phaser.Math.Distance.Between(this.x, this.y, this.player.x, this.player.y);
-    const angle = Phaser.Math.Angle.Between(this.x, this.y, this.player.x, this.player.y);
-    
-    // Calculate steering forces
-    const steering = this.calculateSteering(body);
-  
-    
-    // Apply steering to velocity
-    body.setVelocity(
-      body.velocity.x + steering.x,
-      body.velocity.y + steering.y
-    );
-    
-    // Limit speed to moveSpeed
-    const currentSpeed = Math.sqrt(body.velocity.x * body.velocity.x + body.velocity.y * body.velocity.y);
-    if (currentSpeed > this.moveSpeed) {
-      body.setVelocity(
-        (body.velocity.x / currentSpeed) * this.moveSpeed,
-        (body.velocity.y / currentSpeed) * this.moveSpeed
-      );
-    }
-    
-    // Let subclasses handle any specific movement behavior
-    this.handleMovement(distance, angle, body);
-  }
-  
-  private calculateSteering(body: Phaser.Physics.Arcade.Body): { x: number, y: number } {
-    const steering = { x: 0, y: 0 };
-    
-    // Add seeking force toward player
-    const seekForce = this.calculateSeekForce();
-    steering.x += seekForce.x * this.seekWeight;
-    steering.y += seekForce.y * this.seekWeight;
-    
-    // Add wall avoidance force if near walls
-    if (body.blocked.left || body.blocked.right || body.blocked.up || body.blocked.down) {
-      const avoidForce = this.calculateWallAvoidanceForce(body);
-      steering.x += avoidForce.x * this.avoidWeight;
-      steering.y += avoidForce.y * this.avoidWeight;
-    }
-    
-    // Add separation force from other enemies
-    const separationForce = this.calculateSeparationForce();
-    steering.x += separationForce.x * this.separationWeight;
-    steering.y += separationForce.y * this.separationWeight;
-    
-    // Limit maximum steering force
-    const steeringMagnitude = Math.sqrt(steering.x * steering.x + steering.y * steering.y);
-    if (steeringMagnitude > this.maxSteeringForce) {
-      steering.x = (steering.x / steeringMagnitude) * this.maxSteeringForce;
-      steering.y = (steering.y / steeringMagnitude) * this.maxSteeringForce;
-    }
-    
-    return steering;
-  }
-  
-  private calculateSeekForce(): { x: number, y: number } {
-    if (!this.player) return { x: 0, y: 0 };
-    
-    // Calculate desired velocity (normalized direction to player * moveSpeed)
-    const dx = this.player.x - this.x;
-    const dy = this.player.y - this.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    if (distance === 0) return { x: 0, y: 0 };
-    
-    return {
-      x: (dx / distance) * this.moveSpeed,
-      y: (dy / distance) * this.moveSpeed
-    };
-  }
-  
-  private calculateWallAvoidanceForce(body: Phaser.Physics.Arcade.Body): { x: number, y: number } {
-    const wallNormal = this.getWallNormal(body);
-    
-    // Calculate direction to player
-    if (!this.player) return { x: 0, y: 0 };
-    const dx = this.player.x - this.x;
-    const dy = this.player.y - this.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    if (distance === 0) return { x: 0, y: 0 };
-    
-    // Calculate the dot product between wall normal and direction to player
-    const dotProduct = (wallNormal.x * dx + wallNormal.y * dy) / distance;
-    
-    // Check if we're stuck against a wall
-    const isBlockedByWall = body.blocked.left || body.blocked.right || body.blocked.up || body.blocked.down;
-    if (isBlockedByWall) {
-      this.stuckTimer += 1;
-      if (this.stuckTimer > 60) { // After about 1 second of being stuck
-        this.isStuck = true;
-        // Store last known player position
-        this.lastKnownPlayerPosition = { x: this.player.x, y: this.player.y };
-        // Generate alternative direction
-        this.generateAlternativeDirection(wallNormal);
-      }
-    } else {
-      this.stuckTimer = 0;
-      this.isStuck = false;
-      this.alternativeDirection = null;
-    }
-    
-    // If stuck, use alternative direction
-    if (this.isStuck && this.alternativeDirection) {
-      return {
-        x: this.alternativeDirection.x * this.moveSpeed,
-        y: this.alternativeDirection.y * this.moveSpeed
-      };
-    }
-    
-    // Normal wall avoidance behavior
-    const avoidanceMultiplier = dotProduct < 0 ? 2.0 : 1.0;
-    const slideDirection = {
-      x: -wallNormal.y,
-      y: wallNormal.x
-    };
-    
-    return {
-      x: (wallNormal.x * this.wallAvoidanceForce * avoidanceMultiplier + slideDirection.x * this.moveSpeed) * 0.5,
-      y: (wallNormal.y * this.wallAvoidanceForce * avoidanceMultiplier + slideDirection.y * this.moveSpeed) * 0.5
-    };
-  }
-  
-  private generateAlternativeDirection(wallNormal: { x: number, y: number }): void {
-    // Try to find a direction that's not blocked by the wall
-    const possibleDirections = [
-      { x: -wallNormal.y, y: wallNormal.x },  // Perpendicular clockwise
-      { x: wallNormal.y, y: -wallNormal.x },  // Perpendicular counter-clockwise
-      { x: wallNormal.x, y: wallNormal.y },   // Along wall
-      { x: -wallNormal.x, y: -wallNormal.y }  // Opposite to wall
-    ];
-    
-    // Choose the direction that's most towards the player's last known position
-    if (this.lastKnownPlayerPosition) {
-      let bestDirection = possibleDirections[0];
-      let bestDotProduct = -Infinity;
-      
-      for (const dir of possibleDirections) {
-        const dx = this.lastKnownPlayerPosition.x - this.x;
-        const dy = this.lastKnownPlayerPosition.y - this.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        if (distance === 0) continue;
-        
-        const dotProduct = (dir.x * dx + dir.y * dy) / distance;
-        if (dotProduct > bestDotProduct) {
-          bestDotProduct = dotProduct;
-          bestDirection = dir;
-        }
-      }
-      
-      this.alternativeDirection = bestDirection;
-    } else {
-      // If no last known position, just pick a random perpendicular direction
-      this.alternativeDirection = possibleDirections[Math.floor(Math.random() * 2)];
-    }
-  }
-  
-  private calculateSeparationForce(): { x: number, y: number } {
-    const separation = { x: 0, y: 0 };
-    let count = 0;
-    
-    // Get all enemies in the scene
-    const enemies = (this.scene as any).enemies;
-    if (!enemies) return separation;
-    
-    // Check each enemy
-    enemies.getChildren().forEach((enemy: any) => {
-      if (enemy === this) return;
-      
-      const distance = Phaser.Math.Distance.Between(this.x, this.y, enemy.x, enemy.y);
-      
-      // If within separation radius, add separation force
-      if (distance < this.separationRadius) {
-        const dx = this.x - enemy.x;
-        const dy = this.y - enemy.y;
-        
-        // Normalize and scale by distance (closer = stronger)
-        const force = (this.separationRadius - distance) / this.separationRadius;
-        
-        separation.x += (dx / distance) * force;
-        separation.y += (dy / distance) * force;
-        count++;
-      }
-    });
-    
-    // Average the separation force
-    if (count > 0) {
-      separation.x /= count;
-      separation.y /= count;
-    }
-    
-    return separation;
-  }
-  
-  // Helper method to determine the normal vector of the wall being hit
-  private getWallNormal(body: Phaser.Physics.Arcade.Body): { x: number, y: number } {
-    if (body.blocked.left) return { x: 1, y: 0 };
-    if (body.blocked.right) return { x: -1, y: 0 };
-    if (body.blocked.up) return { x: 0, y: 1 };
-    if (body.blocked.down) return { x: 0, y: -1 };
-    return { x: 0, y: 0 };
-  }
+  protected abstract updateMovement(): void;
 
   // Method to set player reference
   public setPlayer(player: Player): void {

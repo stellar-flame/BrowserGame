@@ -1,7 +1,7 @@
 import { Scene, Tilemaps } from 'phaser';
 import { Enemy } from './Enemy';
-import { MeleeEnemy } from './MeleeEnemy';
 import { RangedEnemy } from './RangedEnemy';
+import { MeleeEnemy } from './MeleeEnemy';
 import { ENEMY_CONFIGS } from './EnemyConfigs';
 
 export type EnemyType = keyof typeof ENEMY_CONFIGS;

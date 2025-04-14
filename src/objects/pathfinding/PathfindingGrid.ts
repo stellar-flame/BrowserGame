@@ -37,6 +37,12 @@ export class PathfindingGrid {
     this.debugGrid(this.bufferedGrid);
   }
 
+  public debugBufferedGrid(): void {
+    if (this.bufferedGrid) {
+      this.debugGrid(this.bufferedGrid);
+    }
+  }
+
   private createBaseGrid(map: Tilemaps.Tilemap, wallsLayer: Tilemaps.TilemapLayer): number[][] {
     const width = map.width;
     const height = map.height;

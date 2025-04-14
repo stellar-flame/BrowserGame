@@ -15,7 +15,7 @@ export interface WeaponConfig {
 export const WEAPON_CONFIGS = {
   ZOMBIESTRIKE: {
     type: 'melee',
-    damage: 5,
+    damage: 20,
     attackSpeed: 1.0,
     attackRate: 1000, // 1 second cooldown
     minDistance: 40,

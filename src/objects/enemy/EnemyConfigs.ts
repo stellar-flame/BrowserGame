@@ -24,14 +24,14 @@ export const ENEMY_CONFIGS = {
     type: 'melee',
     sprite: 'zombie-sprite',
     scale: 2,
-    moveSpeed: 60,
-    health: 20,
-    maxHealth: 20,
+    moveSpeed: 120,
+    health: 40,
+    maxHealth: 40,
     animationKey: 'zombie-walk',
     animationConfig: {
       startFrame: 0,
       endFrame: 7,
-      frameRate: 5,
+      frameRate: 8,
       repeat: -1
     },
     weaponType: 'ZOMBIESTRIKE'

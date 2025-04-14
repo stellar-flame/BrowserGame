@@ -63,8 +63,8 @@ export class Weapon {
         const body = bullet.body as Phaser.Physics.Arcade.Body;
         if (body) {
           // Make hit area 50% of the display size
-          const hitWidth = (this.bulletWidth || 32) * 0.5;
-          const hitHeight = (this.bulletHeight || 16) * 0.5;
+          const hitWidth = 8;
+          const hitHeight = 8;
           body.setSize(hitWidth, hitHeight);
         }
       }
