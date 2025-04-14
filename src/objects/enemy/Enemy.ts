@@ -258,7 +258,6 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   
   protected followPath(): void {
     if (this.currentPath.length === 0) return;
-    console.log('Following path', this.currentPath.length);
     // Get the next waypoint
     const nextWaypoint = this.currentPath[0];
     
@@ -278,8 +277,6 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
       
       // If we're in attack range, stop moving
       if (this.stopFollowingPath()) {
-        this.currentPath = [];
-        console.log('Stopping path');
         const body = this.body as Phaser.Physics.Arcade.Body;
         body.setVelocity(0, 0);
         return;
