@@ -1,21 +1,26 @@
-import { Scene, Types, Physics} from "phaser";
+import { Scene, Types, Physics } from "phaser";
 import { Room } from "./Room";
 import { MainScene } from "../../scenes/MainScene";
 import { Door } from "../Door";
 import { DoorDirection } from "../Door";
-export class RoomFactory {
 
-  
-  static createRooms(scene: MainScene, roomLayer: Phaser.Tilemaps.ObjectLayer): Map<string, Room> {
-    const rooms: Map<string, Room> = new Map();
+export class RoomManager {
+  private scene: MainScene;
+  private rooms: Map<string, Room>;
 
+  constructor(scene: MainScene) {
+    this.scene = scene;
+    this.rooms = new Map();
+  }
+
+  public initializeRooms(roomLayer: Phaser.Tilemaps.ObjectLayer): void {
     if (roomLayer) {
       roomLayer.objects.filter(obj => obj.name === "Room").forEach(roomObj => {
-        const room = RoomFactory.createFromTilemapObject(scene, roomObj);
+        const room = this.createFromTilemapObject(roomObj);
         if (room) {
-          rooms.set(room.getId(), room);
-          scene.physics.add.overlap(scene.getPlayer(), room.getZone(), () => {
-            scene.handleRoomEntry(room.getId());
+          this.rooms.set(room.getId(), room);
+          this.scene.physics.add.overlap(this.scene.getPlayer(), room.getZone(), () => {
+            this.scene.handleRoomEntry(room.getId());
           });
         }
       });
@@ -23,31 +28,26 @@ export class RoomFactory {
       roomLayer.objects.filter(obj => obj.name === "EnemyTrigger").forEach(triggerObj => {
         const roomProperty = triggerObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
         if (!roomProperty) return;
-        const room = rooms.get(roomProperty.value as string);
+        const room = this.rooms.get(roomProperty.value as string);
         if (room) {
-          RoomFactory.setupEnemyTrigger(scene, triggerObj, room);
+          this.setupEnemyTrigger(triggerObj, room);
         }
       });
 
       roomLayer.objects.filter(obj => obj.name === "Door").forEach(doorObj => {
         const roomProperty = doorObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
         if (!roomProperty) return;
-        const room = rooms.get(roomProperty.value as string);
+        const room = this.rooms.get(roomProperty.value as string);
         if (room) {
-          RoomFactory.setupDoor(scene, doorObj, room);
+          this.setupDoor(doorObj, room);
         }
       });
-    
-    } 
-    else {
+    } else {
       console.warn("No 'Rooms' layer found in map");
     }
-
-    return rooms
   }
 
-  static createFromTilemapObject(scene: Scene, roomObj: Types.Tilemaps.TiledObject): Room | null {
-    // Get room ID from properties
+  private createFromTilemapObject(roomObj: Types.Tilemaps.TiledObject): Room | null {
     const roomProperty = roomObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
     if (!roomProperty) {
       console.warn('Room object missing Room property');
@@ -57,7 +57,6 @@ export class RoomFactory {
     const roomId = roomProperty.value;
     console.log('Creating room with ID:', roomId);
     
-    // Ensure all required properties exist
     if (typeof roomObj.x !== 'number' || 
         typeof roomObj.y !== 'number' || 
         typeof roomObj.width !== 'number' || 
@@ -66,9 +65,8 @@ export class RoomFactory {
       return null;
     }
     
-    // Create the room
     return new Room(
-      scene,
+      this.scene,
       roomId,
       roomObj.x,
       roomObj.y,
@@ -77,7 +75,7 @@ export class RoomFactory {
     );
   }
 
-  static setupEnemyTrigger(scene: MainScene, obj: Phaser.Types.Tilemaps.TiledObject, room: Room) {
+  private setupEnemyTrigger(obj: Phaser.Types.Tilemaps.TiledObject, room: Room): void {
     if (typeof obj.x !== 'number' || 
         typeof obj.y !== 'number' || 
         typeof obj.width !== 'number' || 
@@ -86,8 +84,7 @@ export class RoomFactory {
       return;
     }
     
-    // Create a zone with the same bounds as the trigger object
-    const zone = scene.add.zone(
+    const zone = this.scene.add.zone(
       obj.x + (obj.width / 2), 
       obj.y + (obj.height / 2),
       obj.width,
@@ -95,29 +92,26 @@ export class RoomFactory {
     );
     room.setEnemyTriggerZone(zone);
 
-    // Enable physics on the zone
-    scene.physics.world.enable(zone);
+    this.scene.physics.world.enable(zone);
     (zone.body as Physics.Arcade.Body).setAllowGravity(false);
     (zone.body as Physics.Arcade.Body).moves = false;
     
-    if (scene.getPlayer()) {  
-        scene.physics.add.overlap(scene.getPlayer(), zone, () => {
-            // Only spawn enemies if room is not cleared, but don't update currentRoomId
-            if (!room.isRoomCleared()) {
-              room.spawnEnemies();
-            }
-        });
+    if (this.scene.getPlayer()) {  
+      this.scene.physics.add.overlap(this.scene.getPlayer(), zone, () => {
+        if (!room.isRoomCleared()) {
+          room.spawnEnemies();
+        }
+      });
     }
     console.log('Enemy trigger zone created:', zone);   
   }
 
-  static setupDoor(scene: MainScene, obj: Phaser.Types.Tilemaps.TiledObject, room: Room) {
-        // Get the door properties
+  private setupDoor(obj: Phaser.Types.Tilemaps.TiledObject, room: Room): void {
     const isOpen = obj.properties.find((prop: { name: string; value: any }) => prop.name === 'Open')?.value === 1;
     const roomId = obj.properties.find((prop: { name: string; value: any }) => prop.name === 'Room')?.value || 'unknown';
     const directionProp = obj.properties.find((prop: { name: string; value: any }) => prop.name === 'Direction');
-    let direction = DoorDirection.East; // Default direction
-    console.log('Direction:', directionProp);
+    let direction = DoorDirection.East;
+
     if (directionProp) {
       switch (directionProp.value) {
         case 'East':
@@ -135,11 +129,10 @@ export class RoomFactory {
       }
     }
     
-    // Create a new Door instance with direction
     const door = new Door(
-      scene,
-      (obj.x || 0) + (obj.width || 0) / 2, // Center the door horizontally
-      (obj.y || 0) + (obj.height || 0) / 2, // Center the door vertically
+      this.scene,
+      (obj.x || 0) + (obj.width || 0) / 2,
+      (obj.y || 0) + (obj.height || 0) / 2,
       isOpen,
       roomId,
       direction
@@ -147,23 +140,31 @@ export class RoomFactory {
     room.addDoor(door);
   }
 
-  static setupSpawnPoints(enemiesLayer: Phaser.Tilemaps.ObjectLayer, rooms: Map<string, Room>) {
-      // Initialize enemy spawn points map
-      enemiesLayer.objects.forEach(enemyObj => {
-        // Get room ID from properties
-        const roomProperty = enemyObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
-        if (!roomProperty) return;
-        
-        const roomId = roomProperty.value as string;
-        console.log('Room ID:', roomId);
-  
-        const room = rooms.get(roomId);
-        if (room) {
-          room.setupEnemies(enemyObj);
-        }
-      });
-    }
+  public setupSpawnPoints(enemiesLayer: Phaser.Tilemaps.ObjectLayer): void {
+    enemiesLayer.objects.forEach(enemyObj => {
+      const roomProperty = enemyObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
+      if (!roomProperty) return;
+      
+      const roomId = roomProperty.value as string;
+      console.log('Room ID:', roomId);
 
-  
-  
-}
+      const room = this.rooms.get(roomId);
+      if (room) {
+        room.setupEnemies(enemyObj);
+      }
+    });
+  }
+
+  public getRooms(): Map<string, Room> {
+    return this.rooms;
+  }
+
+  public getRoom(roomId: string): Room | undefined {
+    return this.rooms.get(roomId);
+  }
+
+  public destroy(): void {
+    this.rooms.forEach(room => room.destroy());
+    this.rooms.clear();
+  }
+} 

@@ -5,7 +5,7 @@ import { RangedEnemy } from '../objects/enemy/RangedEnemy';
 import { Bullet } from '../objects/weapons/Bullet';
 import { PathfindingGrid } from '../objects/pathfinding/PathfindingGrid';
 import { Room } from '../objects/rooms/Room';
-import { RoomFactory } from '../objects/rooms/RoomFactory';
+import { RoomManager } from '../objects/rooms/RoomManager';
 import { BarrelManager } from '../objects/props/BarrelManager';
 
 export class MainScene extends Scene {
@@ -22,7 +22,7 @@ export class MainScene extends Scene {
   
   // Room system
   private currentRoomId: string = "1";
-  private rooms: Map<string, Room> = new Map();
+  private roomManager: RoomManager;
   
   // Managers and utilities
   private pathfindingGrid: PathfindingGrid;
@@ -32,6 +32,7 @@ export class MainScene extends Scene {
     super({ key: 'MainScene' });
     this.pathfindingGrid = PathfindingGrid.getInstance();
     this.barrelManager = new BarrelManager(this);
+    this.roomManager = new RoomManager(this);
   }
 
   // Asset loading
@@ -154,8 +155,8 @@ export class MainScene extends Scene {
 
   private setupRooms() {
     const map = this.make.tilemap({ key: 'dungeon-map' });
-    this.rooms = RoomFactory.createRooms(this, map.getObjectLayer('Rooms') as Phaser.Tilemaps.ObjectLayer);
-    RoomFactory.setupSpawnPoints(map.getObjectLayer('Enemies') as Phaser.Tilemaps.ObjectLayer, this.rooms);
+    this.roomManager.initializeRooms(map.getObjectLayer('Rooms') as Phaser.Tilemaps.ObjectLayer);
+    this.roomManager.setupSpawnPoints(map.getObjectLayer('Enemies') as Phaser.Tilemaps.ObjectLayer);
   }
 
   public addToMainEnemyGroup(enemy: Enemy) {
@@ -249,7 +250,7 @@ export class MainScene extends Scene {
     if (enemyInstance.isEnemyDead()) {
        // Find which room this enemy belonged to (might need a reference on the enemy)
        // For now, assume it's the current room - this might be inaccurate if enemies wander
-       const currentRoom = this.rooms.get(this.currentRoomId);
+       const currentRoom = this.roomManager.getRoom(this.currentRoomId);
        if (currentRoom) {
           console.log(`Enemy ${enemyInstance} died in room ${currentRoom.getId()}`);  
           currentRoom.checkCleared(); // Let the room handle door opening etc.
@@ -277,7 +278,7 @@ export class MainScene extends Scene {
   }
 
   private setupBarrels() {
-    this.barrelManager.initializeFromPropsLayer();
+    this.barrelManager.initializeBarrelGroups();
   }
 
   
@@ -307,7 +308,7 @@ export class MainScene extends Scene {
   }
 
   public anyTargetableObjectsInRoom() {
-    const room = this.rooms.get(this.currentRoomId);
+    const room = this.roomManager.getRoom(this.currentRoomId);
     if (!room) return false;
     return room.isEnemiesSpawned() &&  !room.isRoomCleared();
   }
