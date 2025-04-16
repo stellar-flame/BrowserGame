@@ -23,6 +23,7 @@ export class Bullet extends Physics.Arcade.Sprite {
         body.onWorldBounds = true;       // But detect when hitting bounds
         body.setAllowGravity(false);
         body.setBounce(0);
+        
 
         // Deactivate by default
         this.deactivate();
@@ -54,17 +55,14 @@ export class Bullet extends Physics.Arcade.Sprite {
 
         // 4. Ensure physics properties are correct for an active bullet
         const body = this.body as Physics.Arcade.Body;
-        body.setCollideWorldBounds(false);
-        body.onWorldBounds = true;
-        body.setAllowGravity(false);
-        body.setBounce(0);
+        
 
-        // 5. Calculate and set velocity manually
+        // 6. Calculate and set velocity manually
         const vx = Math.cos(angle) * this.speed;
         const vy = Math.sin(angle) * this.speed;
         body.setVelocity(vx, vy);
         
-        // 6. Set rotation to match the angle
+        // 7. Set rotation to match the angle
         this.setRotation(angle);
     }
 

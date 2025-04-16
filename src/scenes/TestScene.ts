@@ -1,22 +1,32 @@
-import { Scene, Physics, Input } from 'phaser';
+import { Scene, Physics, Input, Types } from 'phaser';
 import { Player } from '../objects/Player';
 import { Enemy } from '../objects/enemy/Enemy';
 import { RangedEnemy } from '../objects/enemy/RangedEnemy';
 import { EnemyFactory, EnemyType } from '../objects/enemy/EnemyFactory';
 import { PathfindingGrid } from '../objects/pathfinding/PathfindingGrid';
+import { Door, DoorDirection } from '../objects/Door';
+import { BarrelManager } from '../objects/BarrelManager';
 
 export class TestScene extends Scene {
   private player!: Player;
   private enemies!: Phaser.Physics.Arcade.Group;
+  private bullets!: Phaser.Physics.Arcade.Group;
   private wallsLayer: Phaser.Tilemaps.TilemapLayer | null = null;
+  private map!: Phaser.Tilemaps.Tilemap;
   private spawnText!: Phaser.GameObjects.Text;
   private enemyType: EnemyType = 'ZOMBIE'; // Default enemy type to spawn
   private enemyTypeText!: Phaser.GameObjects.Text;
   private pathfindingGrid: PathfindingGrid;
+  private doors: Phaser.Physics.Arcade.Group;
+  private barrelManager: BarrelManager;
+  private roomTriggers: Phaser.Physics.Arcade.Group;
   
   constructor() {
     super({ key: 'TestScene' });
     this.pathfindingGrid = PathfindingGrid.getInstance();
+    this.doors = this.physics.add.group();
+    this.barrelManager = new BarrelManager(this);
+    this.roomTriggers = this.physics.add.group();
   }
 
   preload() {
@@ -29,6 +39,8 @@ export class TestScene extends Scene {
     this.loadSprite('ninja-star', 'assets/sprites/ninja-star.png', 32, 32);
     this.load.image('tiles-32', 'assets/tiles.png');
     this.load.tilemapTiledJSON('dungeon-map', 'assets/dungeon-32.tmj');
+    this.load.image('barrel', 'assets/sprites/barrel.png');
+    this.load.image('smashed-barrel', 'assets/sprites/smashed-barrel.png');
   }
 
   loadSprite(name: string, path: string, frameWidth: number, frameHeight: number) {
@@ -42,8 +54,8 @@ export class TestScene extends Scene {
     console.log('Test Scene started!');
     
     // Create a simple map for testing
-    const map = this.make.tilemap({ key: 'dungeon-map' });
-    const tileset = map.addTilesetImage('tiles-32', 'tiles-32');
+    this.map = this.make.tilemap({ key: 'dungeon-map' });
+    const tileset = this.map.addTilesetImage('tiles-32', 'tiles-32');
     
     if (!tileset) {
       console.error('Failed to load tilesets');
@@ -51,9 +63,9 @@ export class TestScene extends Scene {
     }
     
     // Create floor and walls layers
-    const floorLayer = map.createLayer('Floor', tileset, 0, 0);
-    const floorDecorLayer = map.createLayer('FloorDecor', tileset, 0, 0);
-    this.wallsLayer = map.createLayer('Walls', tileset, 0, 0);
+    const floorLayer = this.map.createLayer('Floor', tileset, 0, 0);
+    const floorDecorLayer = this.map.createLayer('FloorDecor', tileset, 0, 0);
+    this.wallsLayer = this.map.createLayer('Walls', tileset, 0, 0);
     
     if (floorLayer) {
       floorLayer.setAlpha(1);
@@ -122,8 +134,14 @@ export class TestScene extends Scene {
 
     // Initialize pathfinding grid after map and layers are created
     if (this.wallsLayer) {
-      this.pathfindingGrid.initialize(this, map, this.wallsLayer);
+      this.pathfindingGrid.initialize(this, this.map, this.wallsLayer);
     }
+
+    this.setupDoors();
+    
+    // Initialize barrels from Props layer
+    this.barrelManager.initializeFromPropsLayer();
+    this.barrelManager.setupCollisions();
   }
   
   spawnEnemy(player:  Player) {
@@ -273,12 +291,17 @@ export class TestScene extends Scene {
   
   // Getter for tilemap
   public getTilemap(): Phaser.Tilemaps.Tilemap | null {
-    return this.make.tilemap({ key: 'dungeon-map' });
+    return this.map;
   }
 
   // Add getter for pathfinding grid
   public getPathfindingGrid(): PathfindingGrid {
     return this.pathfindingGrid;
+  }
+  
+  // Add getter for barrel manager
+  public getBarrelManager(): BarrelManager {
+    return this.barrelManager;
   }
 
   handlePlayerDeath() {
@@ -322,5 +345,77 @@ export class TestScene extends Scene {
         });
       }
     }
+  }
+
+  private setupDoors(): void {
+    const doorsLayer = this.map.getObjectLayer('doors');
+    if (!doorsLayer) return;
+
+    doorsLayer.objects.forEach((doorObj: Phaser.Types.Tilemaps.TiledObject) => {
+        if (doorObj.x === undefined || doorObj.y === undefined) return;
+        
+        const x = doorObj.x + (doorObj.width || 0) / 2;
+        const y = doorObj.y - (doorObj.height || 0) / 2;
+        const direction = doorObj.properties?.find((p: { name: string; value: any }) => p.name === 'direction')?.value as DoorDirection || DoorDirection.East;
+        const isOpen = doorObj.properties?.find((p: { name: string; value: any }) => p.name === 'isOpen')?.value as boolean || false;
+        const roomId = doorObj.properties?.find((p: { name: string; value: any }) => p.name === 'roomId')?.value as string || 'default';
+        const doorId = doorObj.name || `door-${x}-${y}`;
+        
+        const doorInstance = new Door(this, x, y, isOpen, roomId, doorId, direction);
+        this.doors.add(doorInstance);
+        console.log(`Created door at (${x}, ${y}) with direction: ${direction}`);
+    });
+  }
+
+  private setupRoomTriggers(): void {
+    const triggersLayer = this.map.getObjectLayer('triggers');
+    if (!triggersLayer) return;
+
+    triggersLayer.objects.forEach((roomObj: Phaser.Types.Tilemaps.TiledObject) => {
+      if (roomObj.name === "Room") {
+        const roomProperty = roomObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
+        if (!roomProperty) return;
+        
+        const roomId = roomProperty.value as string;
+        console.log('Room ID:', roomId);
+        
+        // Ensure all required properties exist
+        if (typeof roomObj.x !== 'number' || 
+            typeof roomObj.y !== 'number' || 
+            typeof roomObj.width !== 'number' || 
+            typeof roomObj.height !== 'number') {
+          console.warn('Invalid room object properties:', roomObj);
+          return;
+        }
+        
+        // Create a zone for the room
+        const zone = this.add.zone(
+          roomObj.x + (roomObj.width / 2), 
+          roomObj.y + (roomObj.height / 2),
+          roomObj.width,
+          roomObj.height
+        );
+        
+        // Enable physics on the zone
+        this.physics.world.enable(zone);
+        
+        // Store the zone in our map
+        this.roomTriggers.add(zone);
+        
+        // Add overlap detection with the player
+        this.physics.add.overlap(
+          this.player,
+          zone,
+          () => this.handleRoomEntry(roomId)
+        );
+        
+        console.log(`Created room zone for room ${roomId}`);
+      }
+    });
+  }
+
+  private handleRoomEntry(roomId: string): void {
+    console.log(`Player entered room ${roomId}`);
+    // Implement room entry logic here
   }
 } 

@@ -84,7 +84,7 @@
             0, 0, 0, 19, 18, 205, 205, 205, 205, 205, 205, 205, 205, 205, 205, 205, 205, 205, 18, 19, 0, 0, 0, 0, 0, 0, 0, 0, 36, 36, 36, 36, 36, 36, 36, 35, 0, 0, 0, 0, 0, 0, 0, 0, 35, 36, 36, 36, 36, 36,
             0, 0, 0, 0, 18, 205, 205, 205, 205, 205, 205, 205, 205, 205, 205, 205, 205, 205, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0, 35, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0, 35, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0, 35, 0, 0, 0, 0, 0],
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 36, 36, 36, 0, 0, 36, 36, 36, 36, 0, 0, 0, 0, 0],
          "height":20,
          "id":1,
          "name":"Walls",
@@ -98,31 +98,8 @@
         {
          "draworder":"topdown",
          "id":4,
-         "name":"RoomTriggers",
+         "name":"Rooms",
          "objects":[
-                {
-                 "height":0,
-                 "id":6,
-                 "name":"Door",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Open",
-                         "type":"string",
-                         "value":"0"
-                        }, 
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"1"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":800,
-                 "y":320
-                }, 
                 {
                  "height":431.80846515605,
                  "id":34,
@@ -156,6 +133,96 @@
                  "width":250.187880699106,
                  "x":1156.22374775202,
                  "y":46.025183386562
+                }, 
+                {
+                 "height":0,
+                 "id":79,
+                 "name":"Door",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"Direction",
+                         "type":"string",
+                         "value":"East"
+                        }, 
+                        {
+                         "name":"Open",
+                         "type":"string",
+                         "value":"0"
+                        }, 
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"1"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":800,
+                 "y":320
+                }, 
+                {
+                 "height":0,
+                 "id":80,
+                 "name":"Door",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"Direction",
+                         "type":"string",
+                         "value":"East"
+                        }, 
+                        {
+                         "name":"Open",
+                         "type":"string",
+                         "value":"0"
+                        }, 
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"1"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":1280,
+                 "y":608
+                }, 
+                {
+                 "height":578,
+                 "id":92,
+                 "name":"Room",
+                 "properties":[
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"1"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":766,
+                 "x":33,
+                 "y":32
+                }, 
+                {
+                 "height":651,
+                 "id":93,
+                 "name":"Room",
+                 "properties":[
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"2"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":800,
+                 "x":800,
+                 "y":-11
                 }],
          "opacity":1,
          "properties":[
@@ -286,8 +353,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1093.62975630611,
-                 "y":155.622060709705
+                 "x":1538.59619925913,
+                 "y":171.729443260041
                 }, 
                 {
                  "height":0,
@@ -309,8 +376,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1460.45318512185,
-                 "y":200.940572894399
+                 "x":1455.75519854467,
+                 "y":135.168760813862
                 }, 
                 {
                  "height":0,
@@ -332,8 +399,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1476.05102752864,
-                 "y":472.483906913135
+                 "x":1450.54767182394,
+                 "y":509.396658590987
                 }, 
                 {
                  "height":0,
@@ -355,8 +422,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1041.31556958601,
-                 "y":460.679384962804
+                 "x":1537.28872394842,
+                 "y":452.625693687636
                 }, 
                 {
                  "height":0,
@@ -378,8 +445,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1249.90732208942,
-                 "y":108.137472110166
+                 "x":1478.76638249211,
+                 "y":311.493176808152
                 }, 
                 {
                  "height":0,
@@ -401,8 +468,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1253.20205396544,
-                 "y":467.041448419834
+                 "x":1505.55104725403,
+                 "y":495.229367882921
                 }],
          "opacity":1,
          "properties":[
@@ -420,9 +487,139 @@
          "visible":true,
          "x":0,
          "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":12,
+         "name":"Props",
+         "objects":[
+                {
+                 "height":50,
+                 "id":84,
+                 "name":"Barrels",
+                 "properties":[
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"2"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":124,
+                 "x":1439,
+                 "y":99
+                }, 
+                {
+                 "height":86,
+                 "id":86,
+                 "name":"Barrels",
+                 "properties":[
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"2"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":124,
+                 "x":1441,
+                 "y":422
+                }, 
+                {
+                 "height":55,
+                 "id":87,
+                 "name":"Barrels",
+                 "properties":[
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"2"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":111,
+                 "x":929,
+                 "y":455
+                }, 
+                {
+                 "height":62,
+                 "id":88,
+                 "name":"Barrels",
+                 "properties":[
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"2"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":88,
+                 "x":932,
+                 "y":160
+                }, 
+                {
+                 "height":49,
+                 "id":89,
+                 "name":"Barrels",
+                 "properties":[
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"1"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":124,
+                 "x":162,
+                 "y":66
+                }, 
+                {
+                 "height":86,
+                 "id":90,
+                 "name":"Barrels",
+                 "properties":[
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"1"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":46,
+                 "x":134,
+                 "y":429
+                }, 
+                {
+                 "height":57.3414532303792,
+                 "id":91,
+                 "name":"Barrels",
+                 "properties":[
+                        {
+                         "name":"Room",
+                         "type":"string",
+                         "value":"1"
+                        }],
+                 "rotation":359.411137130083,
+                 "type":"",
+                 "visible":true,
+                 "width":126.150781127285,
+                 "x":446.855881403107,
+                 "y":515.29650392876
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
         }],
- "nextlayerid":10,
- "nextobjectid":53,
+ "nextlayerid":13,
+ "nextobjectid":94,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",

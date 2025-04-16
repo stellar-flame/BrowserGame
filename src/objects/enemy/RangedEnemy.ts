@@ -110,6 +110,8 @@ export class RangedEnemy extends Enemy {
       }
     });
     
+    // Removed barrel line of sight check since enemies should not consider barrels as blocking tiles
+    
     // Set a timer to remove the debug graphics after a longer delay
     this.scene.time.delayedCall(500, () => {
       if (this.debugGraphics) {
@@ -122,10 +124,8 @@ export class RangedEnemy extends Enemy {
     if (hasBlockingTiles && !this.shotsBlocked) {
       this.shotsBlocked = true;
       this.shotsBlockedTimer = this.scene.time.now;
-      console.log('Shots are now blocked, timer started');
     } else if (!hasBlockingTiles) {
       this.shotsBlocked = false;
-      console.log('Shots are no longer blocked');
     }
   }
   
@@ -174,8 +174,6 @@ export class RangedEnemy extends Enemy {
         }
       }
     }
-
-    console.log('Shots blocked:', this.shotsBlocked, "currentPath:", this.currentPath.length);
 
     // Follow the path if we have one
     if (this.shotsBlocked && this.currentPath.length > 0) {

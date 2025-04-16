@@ -4,74 +4,87 @@ import { Enemy } from '../objects/enemy/Enemy';
 import { RangedEnemy } from '../objects/enemy/RangedEnemy';
 import { Bullet } from '../objects/Bullet';
 import { EnemyFactory, EnemyType } from '../objects/enemy/EnemyFactory';
-import { Door } from '../objects/Door';
+import { Door, DoorDirection } from '../objects/Door';
 import { PathfindingGrid } from '../objects/pathfinding/PathfindingGrid';
+import { BarrelManager } from '../objects/BarrelManager';
+import { Room } from '../objects/Room';
 
 export class MainScene extends Scene {
+  // Core game objects
   private player!: Player;
   private enemies!: Phaser.Physics.Arcade.Group;
-  private gameOver: boolean = false;
-  private gameOverText: Phaser.GameObjects.Text | null = null;
-  private restartText: Phaser.GameObjects.Text | null = null;
   private wallsLayer: Phaser.Tilemaps.TilemapLayer | null = null;
   private mousePointer: Phaser.Input.Pointer | null = null;
   
-  // Room system
-  private currentRoomId: string = 'room1';
+  // Game state
+  private gameOver: boolean = false;
+  private gameOverText: Phaser.GameObjects.Text | null = null;
+  private restartText: Phaser.GameObjects.Text | null = null;
   
-  // Room triggers and enemy spawn points
-  private roomTriggers: Map<string, Phaser.GameObjects.Zone> = new Map();
-  private enemySpawnPoints: Map<string, Array<{x: number, y: number, type: EnemyType | undefined}>> = new Map();
-  private roomCleared: Map<string, boolean> = new Map();
-  private roomEnemiesSpawned: Map<string, boolean> = new Map();  // Track if enemies were spawned
+  // Room system
+  private currentRoomId: string = "1";
+  private rooms: Map<string, Room> = new Map();
   private doors: Door[] = [];
   
+  // Managers and utilities
   private pathfindingGrid: PathfindingGrid;
+  private barrelManager: BarrelManager;
   
   constructor() {
     super({ key: 'MainScene' });
     this.pathfindingGrid = PathfindingGrid.getInstance();
+    this.barrelManager = new BarrelManager(this);
   }
 
-  // In MainScene.ts preload method
+  // Asset loading
   preload() {
-    this.loadSprite('player-sprite', 'assets/sprites/shooter-sprite.png', 64 , 64 );
+    this.loadGameAssets();
+  }
+
+  private loadGameAssets() {
+    // Load sprites
+    this.loadSprite('player-sprite', 'assets/sprites/shooter-sprite.png', 64, 64);
     this.loadSprite('skeleton-sprite', 'assets/sprites/skeleton.png', 16, 32);
     this.loadSprite('zombie-sprite', 'assets/sprites/zombie.png', 32, 32);
-    this.loadSprite('ninja-sprite', 'assets/sprites/ninja.png', 16, 32 );
+    this.loadSprite('ninja-sprite', 'assets/sprites/ninja.png', 16, 32);
     this.loadSprite('arrow', 'assets/sprites/arrow.png', 32, 16);
     this.loadSprite('ninja-star', 'assets/sprites/ninja-star.png', 32, 32);
-    // Load your tileset image
-    this.load.image('tiles-32', 'assets/tiles.png');
     
-    // Load your TMJ tilemap - same method as for JSON
-    this.load.tilemapTiledJSON('dungeon-map', 'assets/dungeon-32.tmj');  // Updated to use the correct file name
+    // Load tiles and maps
+    this.load.image('tiles-32', 'assets/tiles.png');
+    this.load.tilemapTiledJSON('dungeon-map', 'assets/dungeon-32.tmj');
+    
+    // Load props
     this.load.image('door-open', 'assets/sprites/door-open.png');
     this.load.image('door-closed', 'assets/sprites/door-closed.png');
+    this.load.image('barrel', 'assets/sprites/barrel.png');
+    this.load.image('smashed-barrel', 'assets/sprites/smashed-barrel.png');
   }
 
-  loadSprite(name: string, path: string, frameWidth: number, frameHeight: number) {  
+  private loadSprite(name: string, path: string, frameWidth: number, frameHeight: number) {  
     this.load.spritesheet(name, path, {
       frameWidth: frameWidth,
       frameHeight: frameHeight
     });
-  } 
+  }
 
+  // Scene initialization
   create() {
     console.log('Game started!');
     
-    const map = this.make.tilemap({ key: 'dungeon-map' });
+    this.setupInput();
+    this.setupMap();
+    this.setupPlayer();
+    this.setupCamera();
+    this.setupPhysics();
+    this.setupRooms();
+    this.setupPathfinding();
+    // this.setupBarrels();
+    this.setupCollisions();
+  
+  }
 
-    const tileset = map.addTilesetImage('tiles-32', 'tiles-32');
-    
-    
-    // Add null checks before creating layers
-    if (!tileset) {
-      console.error('Failed to load tilesets');
-      return;
-    }
-
-    // Add fullscreen toggle key
+  private setupInput() {
     if (this.input && this.input.keyboard) {
       this.input.keyboard.on('keydown-F', () => {
         if (this.scale.isFullscreen) {
@@ -80,239 +93,267 @@ export class MainScene extends Scene {
           this.scale.startFullscreen();
         }
       });
+      this.mousePointer = this.input.activePointer;
     }
+  }
+
+  private setupMap() {
+    const map = this.make.tilemap({ key: 'dungeon-map' });
+    const tileset = map.addTilesetImage('tiles-32', 'tiles-32');
     
+    if (!tileset) {
+      console.error('Failed to load tilesets');
+      return;
+    }
+
     const floorLayer = map.createLayer('Floor', tileset, 0, 0);
     const floorDecorLayer = map.createLayer('FloorDecor', tileset, 0, 0);
     this.wallsLayer = map.createLayer('Walls', tileset, 0, 0);
    
-    // Disable grid lines on floor tiles
     if (floorLayer) {
       floorLayer.setAlpha(1);
-      floorLayer.setDepth(-1); // Put floor behind other elements
+      floorLayer.setDepth(-1);
     }
    
-    // Set up floor decor layer
     if (floorDecorLayer) {
       floorDecorLayer.setAlpha(1);
-      floorDecorLayer.setDepth(-0.5); // Put floor decor between floor and walls
+      floorDecorLayer.setDepth(-0.5);
     }
    
-    // Set collision properties for walls
     if (this.wallsLayer) {
       this.wallsLayer.setCollisionFromCollisionGroup();
-  
-      // Enable physics debug graphics
-      // this.physics.world.createDebugGraphic();
     } else {
       console.error('Walls layer is null');
     }
+  }
 
-    // Create player and setup input
-    if (this.input && this.input.keyboard) {
-      // Setup mouse input for targeting
-      this.mousePointer = this.input.activePointer;
-      
-      this.player = new Player(this, 100,300);
-      
-      // this.player = new Player(this, 880, 320);
-      console.log('Player created:', this.player);
-      
-      // Set a smaller hitbox for the player
-      const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
-      playerBody.setSize(32, 32); // Make hitbox smaller than sprite
-      playerBody.setOffset(16, 16); // Center the hitbox
-      
-      // Add collision between player and walls
-      if (this.wallsLayer) {
-        this.physics.add.collider(this.player, this.wallsLayer);
-        console.log('Added collision between player and walls');
-      }
-      
-      // Listen for player death event
-      this.events.on('playerDied', this.handlePlayerDeath, this);
-    } else {
+  private setupPlayer() {
+    if (!this.input || !this.input.keyboard) {
       console.error('Keyboard input not available');
       return;
     }
-    
-  
 
-    // Setup camera to follow player
+    this.player = new Player(this, 100, 300);
+    console.log('Player created:', this.player);
+    
+    const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
+    playerBody.setSize(32, 32);
+    playerBody.setOffset(16, 16);
+    
+    
+    this.events.on('playerDied', this.handlePlayerDeath, this);
+  }
+
+  private setupCamera() {
     this.cameras.main.setBounds(0, 0, 1600, 1200);
     this.cameras.main.startFollow(this.player);
-    
-    // Set physics world bounds to match camera bounds
+  }
+
+  private setupPhysics() {
     this.physics.world.setBounds(0, 0, 1600, 1200);
-
-    // Create the two-room system
-   // this.createRooms();
-    
-    // Setup physics groups
     this.enemies = this.physics.add.group({ classType: Enemy });
-    
-    // Setup collisions
-    this.setupCollisions();
+  }
 
-    // Setup room triggers and enemy spawn points from the map
+  public addToMainEnemyGroup(enemy: Enemy) {
+    this.enemies.add(enemy);
+    this.setupEnemyBulletCollisions(enemy as Enemy);
+  }
+
+  // Setup collisions AFTER enemies group and player exist
+  private setupCollisions() {
+    // Collisions with walls
+    if (this.wallsLayer) {
+      this.physics.add.collider(this.player, this.wallsLayer); // Player vs Walls
+      this.physics.add.collider(this.player.bullets, this.wallsLayer, this.handleBulletPlatformCollision, undefined, this); // Player Bullets vs Walls
+      this.physics.add.collider(this.enemies, this.wallsLayer, this.handleEnemyWallCollision, undefined, this); // Enemies vs Walls
+    }
+
+    // Collisions involving enemies (using the main group) 
+    this.physics.add.collider(this.enemies, this.player.bullets, this.handleEnemyBulletCollision, undefined, this); // Player Bullets vs Enemies
+
+    this.physics.add.overlap(this.player, this.enemies, this.handlePlayerEnemyOverlap, undefined, this); // Player vs Enemies (Overlap for melee)
+
+   
+     // Barrel collisions (assuming BarrelManager handles its own group collisions)
+    //  this.barrelManager.setupCollisions(); // Ensure BarrelManager collision setup is called
+  }
+
+   // Helper to set up collisions for a specific enemy's bullets
+ private setupEnemyBulletCollisions(enemyInstance: Enemy) {
+  if (enemyInstance instanceof RangedEnemy && enemyInstance.weapon && enemyInstance.weapon.bullets) {
+       // Enemy Bullets vs Player
+       this.physics.add.collider(this.player, enemyInstance.weapon.bullets, this.handlePlayerBulletCollision, undefined, this); 
+       // Enemy Bullets vs Walls
+       if (this.wallsLayer) {
+           this.physics.add.collider(enemyInstance.weapon.bullets, this.wallsLayer, this.handleBulletPlatformCollision, undefined, this);
+       }
+   }
+  }
+
+
+ private handleEnemyWallCollision(enemy: any, wall: any) {
+    console.log('Enemy collided with wall:', enemy);
+    
+    const enemyInstance = enemy as Enemy;
+    if (enemyInstance.body) {
+      const body = enemyInstance.body as Phaser.Physics.Arcade.Body;
+      body.setVelocity(0, 0);
+      
+      this.time.delayedCall(200, () => {
+        if (enemyInstance.body && !enemyInstance.isEnemyDead()) {
+          enemyInstance.preUpdate(this.time.now, 0);
+        }
+      });
+    }``
+  }
+
+
+  // Handles collision between player bullets and walls/platforms
+  private handleBulletPlatformCollision(bullet: any, platform: any) {
+    const bulletInstance = bullet as Bullet;
+    if (bulletInstance && bulletInstance.active) {
+      bulletInstance.deactivate();
+    }
+  }
+
+  // Handles collision between enemy bullets and the player
+  private handlePlayerBulletCollision(player: any, bullet: any) {
+    const playerInstance = player as Player;
+    const bulletInstance = bullet as Bullet;
+    
+    if (!playerInstance.active || !bulletInstance.active) {
+      return;
+    }
+
+    playerInstance.takeDamage(bulletInstance.getDamage());
+    bulletInstance.deactivate();
+  }
+  
+  // Handles collision between player bullets and enemies
+  private handleEnemyBulletCollision(enemy: any, bullet: any) {
+    const enemyInstance = enemy as Enemy;
+    const bulletInstance = bullet as Bullet;
+    
+    if (!enemyInstance.active || !bulletInstance.active) {
+      return;
+    }
+    
+    bulletInstance.deactivate();
+    if (enemyInstance.weapon) {
+      enemyInstance.weapon.dealDamage(enemyInstance, this.player);
+    }
+    
+    // If enemy is dead, let the Room check if it's cleared
+    if (enemyInstance.isEnemyDead()) {
+       // Find which room this enemy belonged to (might need a reference on the enemy)
+       // For now, assume it's the current room - this might be inaccurate if enemies wander
+       const currentRoom = this.rooms.get(this.currentRoomId);
+       if (currentRoom) {
+        console.log(`Enemy ${enemyInstance} died in room ${currentRoom.getId()}`);  
+          currentRoom.checkCleared(); // Let the room handle door opening etc.
+       }
+       // Note: No need to remove from the group here, destroy() handles that.
+    }
+  }
+
+  // Handles overlap between player and enemies (for melee)
+  private handlePlayerEnemyOverlap(player: any, enemy: any) {
+    const playerInstance = player as Player;
+    const enemyInstance = enemy as Enemy;
+  
+    
+    if (enemyInstance.active && !(enemyInstance instanceof RangedEnemy) && enemyInstance.weapon) {
+      enemyInstance.weapon.dealDamage(enemyInstance, playerInstance);
+    }
+  }
+
+
+  private setupRooms() {
+    const map = this.make.tilemap({ key: 'dungeon-map' });
     this.setupRoomsFromTilemap(map);
     this.setupDoors();
+  }
 
-    // Initialize pathfinding grid after map and layers are created
+  private setupPathfinding() {
     if (this.wallsLayer) {
+      const map = this.make.tilemap({ key: 'dungeon-map' });
       this.pathfindingGrid.initialize(this, map, this.wallsLayer);
     }
   }
 
-
-  setupCollisions() {
-    // Add collisions between player bullets and walls
-    if (this.wallsLayer) {
-      this.physics.add.collider(this.player.bullets, this.wallsLayer, this.handleBulletPlatformCollision, undefined, this);
-      
-      // Add collision between enemies and walls with a callback to handle the collision
-      this.physics.add.collider(this.enemies, this.wallsLayer, (enemy, wall) => {
-        // When an enemy collides with a wall, we can add special handling here if needed
-        console.log('Enemy collided with wall:', enemy);
-        
-        // Force the enemy to stop moving when it hits a wall
-        const enemyInstance = enemy as Enemy;
-        if (enemyInstance.body) {
-          // Cast to Arcade.Body to access setVelocity
-          const body = enemyInstance.body as Phaser.Physics.Arcade.Body;
-          body.setVelocity(0, 0);
-          
-          // After a short delay, try to find an alternative path
-          this.time.delayedCall(200, () => {
-            if (enemyInstance.body && !enemyInstance.isEnemyDead()) {
-              // Let the enemy's updateMovement method handle finding an alternative path
-              enemyInstance.preUpdate(this.time.now, 0);
-            }
-          });
-        }
-      });
-    }
-    
-    // Add collisions between player bullets and enemies
-    this.physics.add.collider(this.enemies, this.player.bullets, this.handleEnemyBulletCollision, undefined, this);
-    
-    // Add overlap between player and enemies (instead of collision)
-    this.physics.add.overlap(this.player, this.enemies, (player, enemy) => {
-      // Cast to Player and Enemy types
-      const playerInstance = player as Player;
-      const enemyInstance = enemy as Enemy;
-      
-      // Only apply damage if the enemy is a MeleeEnemy and has a weapon
-      if (!(enemyInstance instanceof RangedEnemy) && enemyInstance.weapon) {
-        // Use the weapon's dealDamage method
-        enemyInstance.weapon.dealDamage(enemyInstance, playerInstance);
-      }
-    });
-    
-    // Add collisions between player and enemy bullets
-    this.enemies.getChildren().forEach((enemy) => {
-      const enemyInstance = enemy as Enemy;
-      if (enemyInstance instanceof RangedEnemy && enemyInstance.weapon && enemyInstance.weapon.bullets) {
-        this.physics.add.collider(this.player, enemyInstance.weapon.bullets, this.handlePlayerBulletCollision, undefined, this);
-        
-        // Add collision between player bullets and enemy bullets
-        this.physics.add.collider(this.player.bullets, enemyInstance.weapon.bullets, (playerBullet, enemyBullet) => {
-          // Deactivate both bullets
-          (playerBullet as Bullet).deactivate();
-          (enemyBullet as Bullet).deactivate();
-        });
-      }
-    });
+  private setupBarrels() {
+    this.barrelManager.initializeFromPropsLayer();
   }
 
   setupRoomsFromTilemap(map: Phaser.Tilemaps.Tilemap) {
     // Get room triggers from object layer
-    const roomTriggersLayer = map.getObjectLayer('RoomTriggers');
-    if (roomTriggersLayer) {
-      roomTriggersLayer.objects.forEach(triggerObj => {
-        // Only process objects with name "EnemyTrigger"
-        if (triggerObj.name !== "EnemyTrigger") {
-          return;
-        }
-        
-        // Get room ID from properties
-        const roomProperty = triggerObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
-        if (!roomProperty) return;
-        
-        const roomId = roomProperty.value as string;
-        console.log('Room ID:', roomId);
-        // Ensure all required properties exist
-        if (typeof triggerObj.x !== 'number' || 
-            typeof triggerObj.y !== 'number' || 
-            typeof triggerObj.width !== 'number' || 
-            typeof triggerObj.height !== 'number') {
-          console.warn('Invalid trigger object properties:', triggerObj);
-          return;
-        }
-        
-        // Create a zone with the same bounds as the trigger object
-        const zone = this.add.zone(
-          triggerObj.x + (triggerObj.width / 2), 
-          triggerObj.y + (triggerObj.height / 2),
-          triggerObj.width,
-          triggerObj.height
-        );
-        
-        // Enable physics on the zone
-        this.physics.world.enable(zone);
-        (zone.body as Physics.Arcade.Body).setAllowGravity(false);
-        (zone.body as Physics.Arcade.Body).moves = false;
-        
-        // Store zone by room ID
-        this.roomTriggers.set(roomId, zone);
-        this.roomCleared.set(roomId, false);
-        
-        // Add overlap detection
-        this.physics.add.overlap(this.player, zone, () => {
-          this.handleRoomEntry(roomId);
-        });
-        
-        console.log(`Created room trigger for room ${roomId}`);
+    const rooms = map.getObjectLayer('Rooms');
+    if (rooms) {
+      rooms.objects.filter(obj => obj.name === "Room").forEach(roomObj => {
+        this.setupRoom(roomObj);
       });
-    } else {
-      console.warn("No 'RoomTriggers' layer found in map");
+
+      rooms.objects.filter(obj => obj.name === "EnemyTrigger").forEach(roomObj => {
+        this.setupEnemyTrigger(roomObj);
+      });
+    } 
+    else {
+      console.warn("No 'Rooms' layer found in map");
     }
     
     // Get enemy spawn points from object layer
     const enemiesLayer = map.getObjectLayer('Enemies');
     if (enemiesLayer) {
-      console.log('Enemies layer:', enemiesLayer);
-      // Initialize enemy spawn points map
-      enemiesLayer.objects.forEach(enemyObj => {
-        // Get room ID from properties
-        const roomProperty = enemyObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
-        if (!roomProperty) return;
-        
-        const roomId = roomProperty.value as string;
-        console.log('Room ID:', roomId);
-
-        // Ensure position properties exist
-        if (typeof enemyObj.x !== 'number' || typeof enemyObj.y !== 'number') {
-          console.warn('Invalid enemy object position:', enemyObj);
-          return;
-        }
-        
-        // Create entry for this room if it doesn't exist
-        if (!this.enemySpawnPoints.has(roomId)) {
-          this.enemySpawnPoints.set(roomId, []);
-        }
-        
-        // Add spawn point
-        this.enemySpawnPoints.get(roomId)?.push({
-          x: enemyObj.x,
-          y: enemyObj.y,
-          type: this.getEnemyTypeFromProperties(enemyObj.properties)
-        });
-      });
-      console.log('Enemy spawn points loaded:', this.enemySpawnPoints);
+      this.setupEnemies(enemiesLayer);
     } else {
       console.warn("No 'Enemies' layer found in map");
     }
+  }
+
+  setupEnemies(enemiesLayer: Phaser.Tilemaps.ObjectLayer) {
+    console.log('Enemies layer:', enemiesLayer);
+    // Initialize enemy spawn points map
+    enemiesLayer.objects.forEach(enemyObj => {
+      // Get room ID from properties
+      const roomProperty = enemyObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
+      if (!roomProperty) return;
+      
+      const roomId = roomProperty.value as string;
+      console.log('Room ID:', roomId);
+
+      const room = this.rooms.get(roomId);
+      if (room) {
+        room.setupEnemies(enemyObj);
+      }
+    });
+  }
+  
+  setupEnemyTrigger(roomObj: Phaser.Types.Tilemaps.TiledObject) {
+    // Get room ID from properties
+    const roomProperty = roomObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
+    if (!roomProperty) return;
+
+    const room = this.rooms.get(roomProperty.value as string);
+    if (!room) {
+      console.warn('Room not found:', roomProperty.value);
+      return;
+    }
+    room.setupEnemyTrigger(roomObj);    
+  }
+
+  setupRoom(roomObj: Phaser.Types.Tilemaps.TiledObject) {
+    const room = Room.createFromRoomObject(this, roomObj);
+    if (!room) return;
+    this.rooms.set(room.getId(), room);
+    const zone = room.getZone();
+    
+    
+    // Add overlap detection
+    this.physics.add.overlap(this.player, zone, () => {
+      this.handleRoomEntry(room.getId());
+    });
+    
+    return;
   }
 
   handleRoomEntry(roomId: string) {
@@ -321,55 +362,6 @@ export class MainScene extends Scene {
     
     console.log(`Player entered room ${roomId}`);
     this.currentRoomId = roomId;
-    
-    // Spawn enemies if room is not cleared
-    if (!this.roomCleared.get(roomId)) {
-      this.spawnEnemiesInRoom(roomId);
-    }
-  }
-
-  spawnEnemiesInRoom(roomId: string) {
-    const spawnPoints = this.enemySpawnPoints.get(roomId);
-    
-    if (!spawnPoints || spawnPoints.length === 0) {
-      console.log(`No enemy spawn points for room ${roomId}`);
-      return;
-    }
-    
-    // Clear any existing enemies
-    this.enemies.clear(true, true);
-    
-    // Spawn new enemies at each spawn point
-    spawnPoints.forEach((point, index) => {
-      // Skip if no enemy type is specified
-      if (!point.type) {
-        console.log(`Skipping enemy spawn point ${index} in room ${roomId} - no type specified`);
-        return;
-      }
-
-      // Use the enemy type from the spawn point
-      console.log('Spawning enemy:', point.type);
-      
-      const enemy = EnemyFactory.createEnemy(this, point.type, point.x, point.y, `enemy_${roomId}_${index}`);
-      enemy.setPlayer(this.player);
-
-      this.enemies.add(enemy);
-      
-      // Note: We don't need to add individual collisions with walls here
-      // as we've already set up a group collision in setupCollisions()
-      
-      // Set up collisions for enemy bullets if it's a RangedEnemy
-      if (enemy instanceof RangedEnemy && enemy.weapon && enemy.weapon.bullets) {
-        this.physics.add.collider(this.player, enemy.weapon.bullets, this.handlePlayerBulletCollision, undefined, this);
-        if (this.wallsLayer) {
-          this.physics.add.collider(this.wallsLayer, enemy.weapon.bullets, this.handleBulletPlatformCollision, undefined, this);
-        }
-      }
-    });
-    
-    // Mark that enemies have been spawned in this room
-    this.roomEnemiesSpawned.set(roomId, true);
-    console.log(`Spawned ${spawnPoints.length} enemies in room ${roomId}`);
   }
 
   update(time: number, delta: number) {
@@ -388,75 +380,35 @@ export class MainScene extends Scene {
     });
 
     // Check if room is cleared
-    this.checkRoomCleared();
+    // this.checkRoomCleared();
   }
 
-  handleBulletPlatformCollision(bullet: any, platform: any) {
-    const bulletInstance = bullet as Bullet;
-    if (bulletInstance && bulletInstance.active) {
-      bulletInstance.deactivate();
-    }
-  }
-
-  handlePlayerBulletCollision(player: any, bullet: any) {
-    const playerInstance = player as Player;
-    const bulletInstance = bullet as Bullet;
+  
+  // checkRoomCleared() {
+  //   if (!this.currentRoomId) return;
     
-    if (!playerInstance.active || !bulletInstance.active) {
-      return;
-    }
-
-    // Apply damage to player from enemy bullet
-    playerInstance.takeDamage(bulletInstance.getDamage());
-    
-    // Deactivate the bullet
-    bulletInstance.deactivate();
-  }
-
-  handleEnemyBulletCollision(enemy: any, bullet: any) {
-    const enemyInstance = enemy as Enemy;
-    const bulletInstance = bullet as Bullet;
-    
-    if (!enemyInstance.active || !bulletInstance.active) {
-      return;
-    }
-    
-    // Deactivate the bullet
-    bulletInstance.deactivate();
-    
-    // Apply damage from the bullet
-    enemyInstance.takeDamage(bulletInstance.getDamage());
-    
-    // If enemy is dead, remove it from the group
-    if (enemyInstance.isEnemyDead()) {
-      this.enemies.remove(enemyInstance, true, true);
-      // Check if room is cleared after enemy is removed
-      this.checkRoomCleared();
-    }
-  }
-
-  checkRoomCleared() {
-    if (!this.currentRoomId) return;
-    
-    // Only mark as cleared if enemies were spawned and then cleared
-    if (this.roomEnemiesSpawned.get(this.currentRoomId) && this.enemies.getLength() === 0) {
-      this.roomCleared.set(this.currentRoomId, true);
+  //   // Only mark as cleared if enemies were spawned and then cleared
+  //   if (this.roomEnemiesSpawned.get(this.currentRoomId) && this.enemies.getLength() === 0) {
+  //     this.roomCleared.set(this.currentRoomId, true);
       
-      // Find and open all doors associated with this room
-      const roomDoors = this.findDoorsByRoomId(this.currentRoomId);
-      roomDoors.forEach(door => {
-        if (!door.isDoorOpen()) {
-          door.open();
-          console.log(`Opening door ${door.getDoorId()} in room ${this.currentRoomId}`);
-        }
-      });
-    }
+  //     // Find and open all doors associated with this room
+  //     const roomDoors = this.findDoorsByRoomId(this.currentRoomId);
+  //     roomDoors.forEach(door => {
+  //       if (!door.isDoorOpen()) {
+  //         door.open();
+  //         console.log(`Opening door ${door.getDoorId()} in room ${this.currentRoomId}`);
+  //       }
+  //     });
+  //   }
+  // }
+
+
+  public anyTargetableObjectsInRoom() {
+    const room = this.rooms.get(this.currentRoomId);
+    if (!room) return false;
+    return room.isEnemiesSpawned() &&  !room.isRoomCleared();
   }
 
-  // Helper method to get enemy type from properties
-  private getEnemyTypeFromProperties(properties: any[] | undefined): EnemyType | undefined {
-    return properties?.find(p => p.name === 'Type')?.value?.toUpperCase() as EnemyType | undefined;
-  }
 
   // Handle player death
   private handlePlayerDeath(): void {
@@ -497,73 +449,31 @@ export class MainScene extends Scene {
 
   private setupDoors() {
     // Get the RoomTriggers layer from the tilemap
-    const roomTriggersLayer = this.make.tilemap({ key: 'dungeon-map' }).getObjectLayer('RoomTriggers');
+    const roomLayer = this.make.tilemap({ key: 'dungeon-map' }).getObjectLayer('Rooms');
     
-    if (!roomTriggersLayer) {
-      console.error('RoomTriggers layer not found in the tilemap');
+    if (!roomLayer) {
+      console.error('Rooms layer not found in the tilemap');
       return;
     }
-    console.log('RoomTriggers layer:', roomTriggersLayer);
     
     // Find all Door objects in the RoomTriggers layer
-    const doorObjects = roomTriggersLayer.objects.filter((obj: Phaser.Types.Tilemaps.TiledObject) => obj.name === 'Door');
+    const doorObjects = roomLayer.objects.filter((obj: Phaser.Types.Tilemaps.TiledObject) => obj.name === 'Door');
     
     // Create Door instances for each door object
     doorObjects.forEach((doorObj: Phaser.Types.Tilemaps.TiledObject) => {
-      console.log('Door object:', doorObj);
-      // Get the door properties
-      const isOpen = doorObj.properties.find((prop: { name: string; value: any }) => prop.name === 'Open')?.value === 1;
-      const roomId = doorObj.properties.find((prop: { name: string; value: any }) => prop.name === 'Room')?.value || 'unknown';
-      const doorId = doorObj.properties.find((prop: { name: string; value: any }) => prop.name === 'id')?.value || 'unknown';
-      
-      // Create a new Door instance
-      const door = new Door(
-        this,
-        (doorObj.x || 0) + (doorObj.width || 0) / 2, // Center the door horizontally
-        (doorObj.y || 0) + (doorObj.height || 0) / 2, // Center the door vertically
-        isOpen,
-        roomId,
-        doorId
-      );
-      
-      console.log('Adding door:', door);
-      // Add the door to our doors array
-      this.doors.push(door);
-      
-      // If the door is closed, add physics body and collision with player
-      if (!isOpen) {
-        // Enable physics on the door
-        this.physics.world.enable(door);
-        
-        // Set up the physics body
-        const doorBody = door.body as Phaser.Physics.Arcade.Body;
-        doorBody.setImmovable(true);
-        doorBody.setSize(doorObj.width || 32, doorObj.height || 32);
-        
-        // Add collision between player and closed door
-        const collider = this.physics.add.collider(this.player, door);
-        door.setCollider(collider);
+      const room = this.rooms.get(doorObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room')?.value as string);
+      if (room ) {
+        const door = room.setupDoors(doorObj);  
+        if (door) {
+          const collider = this.physics.add.collider(this.player, door);
+          door.setCollider(collider);
+        }
       }
-      
-      console.log(`Created door: ${doorId} in room: ${roomId}, isOpen: ${isOpen}`);
     });
   }
   
-  // Method to get all doors
-  public getDoors(): Door[] {
-    return this.doors;
-  }
+    
   
-  // Method to find a door by ID
-  public findDoorById(doorId: string): Door | undefined {
-    return this.doors.find(door => door.getDoorId() === doorId);
-  }
-  
-  // Method to find doors by room ID
-  public findDoorsByRoomId(roomId: string): Door[] {
-    return this.doors.filter(door => door.getRoomId() === roomId);
-  }
-
   // Getter for player
   public getPlayer(): Player {
     return this.player;
@@ -582,5 +492,10 @@ export class MainScene extends Scene {
   // Add getter for pathfinding grid
   public getPathfindingGrid(): PathfindingGrid {
     return this.pathfindingGrid;
+  }
+  
+  // Add getter for barrel manager
+  public getBarrelManager(): BarrelManager {
+    return this.barrelManager;
   }
 }

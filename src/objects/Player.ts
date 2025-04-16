@@ -286,8 +286,8 @@ export class Player extends Physics.Arcade.Sprite {
     const mouseY = this.scene.input.activePointer.worldY;
     
     // Get all enemies in the scene
-    const enemies = (this.scene as any).enemies;
-    if (!enemies || enemies.getLength() === 0) {
+    const targetableObjects = (this.scene as any).anyTargetableObjectsInRoom();
+    if (!targetableObjects) {
       // No enemies, don't fire
       return;
     }

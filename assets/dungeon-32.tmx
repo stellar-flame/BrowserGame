@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="50" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="53">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="50" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="13" nextobjectid="94">
  <editorsettings>
   <export target="dungeon-32.tmj" format="json"/>
  </editorsettings>
@@ -140,26 +140,45 @@
 0,0,0,19,18,205,205,205,205,205,205,205,205,205,205,205,205,205,18,19,0,0,0,0,0,0,0,0,36,36,36,36,36,36,36,35,0,0,0,0,0,0,0,0,35,36,36,36,36,36,
 0,0,0,0,18,205,205,205,205,205,205,205,205,205,205,205,205,205,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,0,0,0,0,35,0,0,0,0,0,
 0,0,0,0,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,0,0,0,0,35,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,0,0,0,0,35,0,0,0,0,0
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,36,36,36,36,0,0,36,36,36,36,0,0,0,0,0
 </data>
  </layer>
- <objectgroup id="4" name="RoomTriggers">
+ <objectgroup id="4" name="Rooms">
   <properties>
    <property name="Room" value="1"/>
   </properties>
-  <object id="6" name="Door" x="800" y="320">
-   <properties>
-    <property name="Open" value="0"/>
-    <property name="Room" value="1"/>
-   </properties>
-   <point/>
-  </object>
   <object id="34" name="EnemyTrigger" x="131.68" y="108.593" width="479.692" height="431.808">
    <properties>
     <property name="Room" value="1"/>
    </properties>
   </object>
   <object id="44" name="EnemyTrigger" x="1156.22" y="46.0252" width="250.188" height="464.877">
+   <properties>
+    <property name="Room" value="2"/>
+   </properties>
+  </object>
+  <object id="79" name="Door" x="800" y="320">
+   <properties>
+    <property name="Direction" value="East"/>
+    <property name="Open" value="0"/>
+    <property name="Room" value="1"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="80" name="Door" x="1280" y="608">
+   <properties>
+    <property name="Direction" value="East"/>
+    <property name="Open" value="0"/>
+    <property name="Room" value="1"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="92" name="Room" x="33" y="32" width="766" height="578">
+   <properties>
+    <property name="Room" value="1"/>
+   </properties>
+  </object>
+  <object id="93" name="Room" x="800" y="-11" width="800" height="651">
    <properties>
     <property name="Room" value="2"/>
    </properties>
@@ -198,7 +217,7 @@
    </properties>
    <point/>
   </object>
-  <object id="47" name="Ninja" x="1488.93" y="130.79">
+  <object id="47" name="Ninja" x="1538.6" y="171.729">
    <properties>
     <property name="Room" value="2"/>
     <property name="Type" value="NINJA"/>
@@ -212,33 +231,70 @@
    </properties>
    <point/>
   </object>
-  <object id="49" name="Ninja" x="1508.27" y="418.793">
+  <object id="49" name="Ninja" x="1450.55" y="509.397">
    <properties>
     <property name="Room" value="2"/>
     <property name="Type" value="NINJA"/>
    </properties>
    <point/>
   </object>
-  <object id="50" name="Ninja" x="1493.66" y="174.102">
+  <object id="50" name="Ninja" x="1537.29" y="452.626">
    <properties>
     <property name="Room" value="2"/>
     <property name="Type" value="NINJA"/>
    </properties>
    <point/>
   </object>
-  <object id="51" name="Zombie" x="947.894" y="200.084">
+  <object id="51" name="Zombie" x="1478.77" y="311.493">
    <properties>
     <property name="Room" value="2"/>
     <property name="Type" value="ZOMBIE"/>
    </properties>
    <point/>
   </object>
-  <object id="52" name="Zombie" x="1516.96" y="495.229">
+  <object id="52" name="Zombie" x="1505.55" y="495.229">
    <properties>
     <property name="Room" value="2"/>
     <property name="Type" value="ZOMBIE"/>
    </properties>
    <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="12" name="Props">
+  <object id="84" name="Barrels" x="1439" y="99" width="124" height="50">
+   <properties>
+    <property name="Room" value="2"/>
+   </properties>
+  </object>
+  <object id="86" name="Barrels" x="1441" y="422" width="124" height="86">
+   <properties>
+    <property name="Room" value="2"/>
+   </properties>
+  </object>
+  <object id="87" name="Barrels" x="929" y="455" width="111" height="55">
+   <properties>
+    <property name="Room" value="2"/>
+   </properties>
+  </object>
+  <object id="88" name="Barrels" x="932" y="160" width="88" height="62">
+   <properties>
+    <property name="Room" value="2"/>
+   </properties>
+  </object>
+  <object id="89" name="Barrels" x="162" y="66" width="124" height="49">
+   <properties>
+    <property name="Room" value="1"/>
+   </properties>
+  </object>
+  <object id="90" name="Barrels" x="134" y="429" width="46" height="86">
+   <properties>
+    <property name="Room" value="1"/>
+   </properties>
+  </object>
+  <object id="91" name="Barrels" x="446.856" y="515.297" width="126.151" height="57.3415" rotation="359.411">
+   <properties>
+    <property name="Room" value="1"/>
+   </properties>
   </object>
  </objectgroup>
 </map>

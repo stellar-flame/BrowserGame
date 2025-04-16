@@ -350,7 +350,6 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
 
   // Method to take damage
   public takeDamage(amount: number): void {
-    console.log('takeDamage', amount);
     if (this.isDead) return;
     
     this.health -= amount;
