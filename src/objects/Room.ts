@@ -43,113 +43,10 @@ private scene: MainScene;
 
   }
 
-  /**
-   * Creates a Room instance from a tilemap object
-   * @param scene The Phaser scene
-   * @param roomObj The tilemap object containing room data
-   * @returns A new Room instance or null if the object is invalid
-   */
-  public static createFromTilemapObject(scene: Scene, roomObj: Types.Tilemaps.TiledObject): Room | null {
-    // Get room ID from properties
-    const roomProperty = roomObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
-    if (!roomProperty) {
-      console.warn('Room object missing Room property');
-      return null;
-    }
-    
-    const roomId = roomProperty.value;
-    console.log('Creating room with ID:', roomId);
-    
-    // Ensure all required properties exist
-    if (typeof roomObj.x !== 'number' || 
-        typeof roomObj.y !== 'number' || 
-        typeof roomObj.width !== 'number' || 
-        typeof roomObj.height !== 'number') {
-      console.warn('Invalid room object properties:', roomObj);
-      return null;
-    }
-    
-    // Create the room
-    return new Room(
-      scene,
-      roomId,
-      roomObj.x,
-      roomObj.y,
-      roomObj.width,
-      roomObj.height
-    );
+  public setEnemyTriggerZone(zone: GameObjects.Zone) {
+    this.enemyTriggerZone = zone;
   }
 
-  /**
-   * Creates a Room instance from an enemy trigger object
-   * @param scene The Phaser scene
-   * @param obj The tilemap object containing trigger data
-   * @returns A new Room instance or null if the object is invalid
-   */
-  public static createFromRoomObject(scene: Scene, obj: Types.Tilemaps.TiledObject): Room | null {
-    // Get room ID from properties
-    const roomProperty = obj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
-    if (!roomProperty) {
-      console.warn('Trigger object missing Room property');
-      return null;
-    }
-    
-    const roomId = roomProperty.value;
-    console.log('Creating Room with ID:', roomId);
-    
-    // Ensure all required properties exist
-    if (typeof obj.x !== 'number' || 
-        typeof obj.y !== 'number' || 
-        typeof obj.width !== 'number' || 
-        typeof obj.height !== 'number') {
-      console.warn('Invalid trigger object properties:', obj);
-      return null;
-    }
-    
-    // Create the room
-    return new Room(
-      scene,
-      roomId,
-      obj.x,
-      obj.y,
-      obj.width,
-      obj.height
-    );
-  }
-
-  public setupEnemyTrigger(obj: Phaser.Types.Tilemaps.TiledObject) {
-    if (typeof obj.x !== 'number' || 
-        typeof obj.y !== 'number' || 
-        typeof obj.width !== 'number' || 
-        typeof obj.height !== 'number') {
-      console.warn('Invalid trigger object properties:', obj);
-      return;
-    }
-    
-    // Create a zone with the same bounds as the trigger object
-    this.enemyTriggerZone = this.scene.add.zone(
-      obj.x + (obj.width / 2), 
-      obj.y + (obj.height / 2),
-      obj.width,
-      obj.height
-    );
-    
-    // Enable physics on the zone
-    this.scene.physics.world.enable(this.enemyTriggerZone);
-    (this.enemyTriggerZone.body as Physics.Arcade.Body).setAllowGravity(false);
-    (this.enemyTriggerZone.body as Physics.Arcade.Body).moves = false;
-    
-    if (this.scene.getPlayer()) {  
-        this.scene.physics.add.overlap(this.scene.getPlayer(), this.enemyTriggerZone, () => {
-            // Only spawn enemies if room is not cleared, but don't update currentRoomId
-            if (!this.isRoomCleared()) {
-              this.spawnEnemies();
-            }
-        });
-    }
-    console.log('Enemy trigger zone created:', this.enemyTriggerZone);
-      
-  }
 
   public setupEnemies(obj: Phaser.Types.Tilemaps.TiledObject) {
       // Ensure position properties exist
@@ -166,48 +63,6 @@ private scene: MainScene;
       });
     
   }
-
-  public setupDoors(obj: Phaser.Types.Tilemaps.TiledObject) {
-    // Get the door properties
-    const isOpen = obj.properties.find((prop: { name: string; value: any }) => prop.name === 'Open')?.value === 1;
-    const roomId = obj.properties.find((prop: { name: string; value: any }) => prop.name === 'Room')?.value || 'unknown';
-    const doorId = obj.properties.find((prop: { name: string; value: any }) => prop.name === 'id')?.value || 'unknown';
-    const directionProp = obj.properties.find((prop: { name: string; value: any }) => prop.name === 'Direction');
-    let direction = DoorDirection.East; // Default direction
-    
-    if (directionProp) {
-      switch (directionProp.value) {
-        case 'East':
-          direction = DoorDirection.East;
-          break;
-        case 'South':
-          direction = DoorDirection.South;
-          break;
-        case 'West':
-          direction = DoorDirection.West;
-          break;
-        case 'North':
-          direction = DoorDirection.North;
-          break;
-      }
-    }
-    
-    // Create a new Door instance with direction
-    const door = new Door(
-      this.scene,
-      (obj.x || 0) + (obj.width || 0) / 2, // Center the door horizontally
-      (obj.y || 0) + (obj.height || 0) / 2, // Center the door vertically
-      isOpen,
-      roomId,
-      doorId,
-      direction
-    );
-    
-    this.doors.push(door);
-    
-    return door;  
-  }
-  
 
   // Helper method to get enemy type from properties
   private getEnemyTypeFromProperties(properties: any[] | undefined): EnemyType | undefined {

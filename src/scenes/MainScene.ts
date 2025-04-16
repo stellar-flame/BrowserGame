@@ -3,11 +3,11 @@ import { Player } from '../objects/Player';
 import { Enemy } from '../objects/enemy/Enemy';
 import { RangedEnemy } from '../objects/enemy/RangedEnemy';
 import { Bullet } from '../objects/Bullet';
-import { EnemyFactory, EnemyType } from '../objects/enemy/EnemyFactory';
-import { Door, DoorDirection } from '../objects/Door';
+import { Door } from '../objects/Door';
 import { PathfindingGrid } from '../objects/pathfinding/PathfindingGrid';
 import { BarrelManager } from '../objects/BarrelManager';
 import { Room } from '../objects/Room';
+import { RoomFactory } from '../objects/rooms/RoomFactory';
 
 export class MainScene extends Scene {
   // Core game objects
@@ -24,7 +24,6 @@ export class MainScene extends Scene {
   // Room system
   private currentRoomId: string = "1";
   private rooms: Map<string, Room> = new Map();
-  private doors: Door[] = [];
   
   // Managers and utilities
   private pathfindingGrid: PathfindingGrid;
@@ -154,6 +153,12 @@ export class MainScene extends Scene {
     this.enemies = this.physics.add.group({ classType: Enemy });
   }
 
+  private setupRooms() {
+    const map = this.make.tilemap({ key: 'dungeon-map' });
+    this.rooms = RoomFactory.createRooms(this, map.getObjectLayer('Rooms') as Phaser.Tilemaps.ObjectLayer);
+    RoomFactory.setupSpawnPoints(map.getObjectLayer('Enemies') as Phaser.Tilemaps.ObjectLayer, this.rooms);
+  }
+
   public addToMainEnemyGroup(enemy: Enemy) {
     this.enemies.add(enemy);
     this.setupEnemyBulletCollisions(enemy as Enemy);
@@ -265,13 +270,6 @@ export class MainScene extends Scene {
     }
   }
 
-
-  private setupRooms() {
-    const map = this.make.tilemap({ key: 'dungeon-map' });
-    this.setupRoomsFromTilemap(map);
-    this.setupDoors();
-  }
-
   private setupPathfinding() {
     if (this.wallsLayer) {
       const map = this.make.tilemap({ key: 'dungeon-map' });
@@ -283,77 +281,7 @@ export class MainScene extends Scene {
     this.barrelManager.initializeFromPropsLayer();
   }
 
-  setupRoomsFromTilemap(map: Phaser.Tilemaps.Tilemap) {
-    // Get room triggers from object layer
-    const rooms = map.getObjectLayer('Rooms');
-    if (rooms) {
-      rooms.objects.filter(obj => obj.name === "Room").forEach(roomObj => {
-        this.setupRoom(roomObj);
-      });
-
-      rooms.objects.filter(obj => obj.name === "EnemyTrigger").forEach(roomObj => {
-        this.setupEnemyTrigger(roomObj);
-      });
-    } 
-    else {
-      console.warn("No 'Rooms' layer found in map");
-    }
-    
-    // Get enemy spawn points from object layer
-    const enemiesLayer = map.getObjectLayer('Enemies');
-    if (enemiesLayer) {
-      this.setupEnemies(enemiesLayer);
-    } else {
-      console.warn("No 'Enemies' layer found in map");
-    }
-  }
-
-  setupEnemies(enemiesLayer: Phaser.Tilemaps.ObjectLayer) {
-    console.log('Enemies layer:', enemiesLayer);
-    // Initialize enemy spawn points map
-    enemiesLayer.objects.forEach(enemyObj => {
-      // Get room ID from properties
-      const roomProperty = enemyObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
-      if (!roomProperty) return;
-      
-      const roomId = roomProperty.value as string;
-      console.log('Room ID:', roomId);
-
-      const room = this.rooms.get(roomId);
-      if (room) {
-        room.setupEnemies(enemyObj);
-      }
-    });
-  }
   
-  setupEnemyTrigger(roomObj: Phaser.Types.Tilemaps.TiledObject) {
-    // Get room ID from properties
-    const roomProperty = roomObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
-    if (!roomProperty) return;
-
-    const room = this.rooms.get(roomProperty.value as string);
-    if (!room) {
-      console.warn('Room not found:', roomProperty.value);
-      return;
-    }
-    room.setupEnemyTrigger(roomObj);    
-  }
-
-  setupRoom(roomObj: Phaser.Types.Tilemaps.TiledObject) {
-    const room = Room.createFromRoomObject(this, roomObj);
-    if (!room) return;
-    this.rooms.set(room.getId(), room);
-    const zone = room.getZone();
-    
-    
-    // Add overlap detection
-    this.physics.add.overlap(this.player, zone, () => {
-      this.handleRoomEntry(room.getId());
-    });
-    
-    return;
-  }
-
   handleRoomEntry(roomId: string) {
     // If we're already in this room, do nothing
     if (this.currentRoomId === roomId) return;
@@ -377,29 +305,9 @@ export class MainScene extends Scene {
       enemyInstance.preUpdate(time, delta);
     });
 
-    // Check if room is cleared
-    // this.checkRoomCleared();
   }
 
   
-  // checkRoomCleared() {
-  //   if (!this.currentRoomId) return;
-    
-  //   // Only mark as cleared if enemies were spawned and then cleared
-  //   if (this.roomEnemiesSpawned.get(this.currentRoomId) && this.enemies.getLength() === 0) {
-  //     this.roomCleared.set(this.currentRoomId, true);
-      
-  //     // Find and open all doors associated with this room
-  //     const roomDoors = this.findDoorsByRoomId(this.currentRoomId);
-  //     roomDoors.forEach(door => {
-  //       if (!door.isDoorOpen()) {
-  //         door.open();
-  //         console.log(`Opening door ${door.getDoorId()} in room ${this.currentRoomId}`);
-  //       }
-  //     });
-  //   }
-  // }
-
 
   public anyTargetableObjectsInRoom() {
     const room = this.rooms.get(this.currentRoomId);
@@ -445,30 +353,7 @@ export class MainScene extends Scene {
     this.gameOver = true;
   }
 
-  private setupDoors() {
-    // Get the RoomTriggers layer from the tilemap
-    const roomLayer = this.make.tilemap({ key: 'dungeon-map' }).getObjectLayer('Rooms');
-    
-    if (!roomLayer) {
-      console.error('Rooms layer not found in the tilemap');
-      return;
-    }
-    
-    // Find all Door objects in the RoomTriggers layer
-    const doorObjects = roomLayer.objects.filter((obj: Phaser.Types.Tilemaps.TiledObject) => obj.name === 'Door');
-    
-    // Create Door instances for each door object
-    doorObjects.forEach((doorObj: Phaser.Types.Tilemaps.TiledObject) => {
-      const room = this.rooms.get(doorObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room')?.value as string);
-      if (room ) {
-        const door = room.setupDoors(doorObj);  
-        if (door) {
-          const collider = this.physics.add.collider(this.player, door);
-          door.setCollider(collider);
-        }
-      }
-    });
-  }
+  
   
     
   
