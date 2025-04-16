@@ -239,9 +239,7 @@ export class MainScene extends Scene {
     }
     
     bulletInstance.deactivate();
-    if (enemyInstance.weapon) {
-      enemyInstance.weapon.dealDamage(enemyInstance, this.player);
-    }
+    enemyInstance.takeDamage(bulletInstance.getDamage());
     
     // If enemy is dead, let the Room check if it's cleared
     if (enemyInstance.isEnemyDead()) {
