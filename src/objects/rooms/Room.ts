@@ -24,6 +24,9 @@ export class Room {
   private spawnPoints: Array<{x: number, y: number, type: EnemyType | undefined}> = [];
   private barrels: Barrel[] = [];
 
+  public static readonly ENEMY_CREATED = 'enemy-created';
+
+
   constructor(
     scene: Scene,
     id: string,
@@ -133,12 +136,17 @@ export class Room {
         `enemy_${this.id}_${index}`
       );
       
+      // Set player reference and ensure enemy is initialized
       enemy.setPlayer(this.scene.getPlayer());
+      
+      // Add to room's enemy list
       this.enemies.push(enemy);
-      this.scene.addToMainEnemyGroup(enemy);
-    })
+      
+      // Emit event with properly initialized enemy
+      this.scene.events.emit(Room.ENEMY_CREATED, { enemy });
+    });
 
-     this.enemiesSpawned = true;
+    this.enemiesSpawned = true;
   }
 
   public addBarrel(barrel: Barrel): void {
@@ -173,7 +181,6 @@ export class Room {
     this.doors.forEach(door => {
       if (!door.isDoorOpen()) {
         door.open();
-        console.log(`Opening door ${door.getDoorId()} in room ${this.id}`);
       }
     });
   }

@@ -105,10 +105,6 @@ export class Door extends GameObjects.Sprite {
     return this.roomId;
   }
   
-  // Method to get the door ID
-  public getDoorId(): string {
-    return this.doorId;
-  }
 
   // Method to get the door direction
   public getDirection(): DoorDirection {

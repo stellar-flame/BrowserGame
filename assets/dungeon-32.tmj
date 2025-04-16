@@ -266,29 +266,6 @@
                 }, 
                 {
                  "height":0,
-                 "id":39,
-                 "name":"Skeleton",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"1"
-                        }, 
-                        {
-                         "name":"Type",
-                         "type":"string",
-                         "value":"SKELETON"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":519.880290722531,
-                 "y":147.926464300983
-                }, 
-                {
-                 "height":0,
                  "id":41,
                  "name":"Skeleton",
                  "point":true,

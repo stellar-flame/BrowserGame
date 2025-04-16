@@ -1,11 +1,11 @@
 import { Scene } from 'phaser';
 import { Player } from '../objects/Player';
 import { Enemy } from '../objects/enemy/Enemy';
-import { RangedEnemy } from '../objects/enemy/RangedEnemy';
 import { Bullet } from '../objects/weapons/Bullet';
 import { PathfindingGrid } from '../objects/pathfinding/PathfindingGrid';
 import { RoomManager } from '../objects/rooms/RoomManager';
 import { BarrelManager } from '../objects/props/BarrelManager';
+import { EnemyManager } from '../objects/enemy/EnemyManager';
 
 export class MainScene extends Scene {
   // Core game objects
@@ -25,12 +25,15 @@ export class MainScene extends Scene {
   
   // Managers and utilities
   private pathfindingGrid: PathfindingGrid;
-  private barrelManager: BarrelManager | null = null; 
+  private barrelManager: BarrelManager | null = null;
+  private enemyManager: EnemyManager | null = null;
   
+ 
   constructor() {
     super({ key: 'MainScene' });
     this.pathfindingGrid = PathfindingGrid.getInstance();
     this.roomManager = new RoomManager(this);
+
   }
 
   // Asset loading
@@ -78,8 +81,13 @@ export class MainScene extends Scene {
     this.setupRooms();
     this.setupPathfinding();
     this.setupBarrels();
+    this.setupEnemies();
     this.setupCollisions();
-  
+    
+
+    this.events.on(EnemyManager.ENEMY_DIED, (data: { enemy: Enemy }) => {
+      this.roomManager.getRoom(this.currentRoomId)?.checkCleared();
+    });
   }
 
   private setupInput() {
@@ -155,7 +163,6 @@ export class MainScene extends Scene {
   private setupRooms() {
     const map = this.make.tilemap({ key: 'dungeon-map' });
     this.roomManager.initializeRooms(map.getObjectLayer('Rooms') as Phaser.Tilemaps.ObjectLayer);
-    this.roomManager.setupSpawnPoints(map.getObjectLayer('Enemies') as Phaser.Tilemaps.ObjectLayer);
   }
 
   private setupPathfinding() {
@@ -172,10 +179,13 @@ export class MainScene extends Scene {
     this.barrelManager.createBarrelsFromPropsLayer(map.getObjectLayer('Props') as Phaser.Tilemaps.ObjectLayer, this.roomManager.getRooms());
   }
 
-  public addToMainEnemyGroup(enemy: Enemy) {
-    this.enemies.add(enemy);
-    this.setupEnemyBulletCollisions(enemy as Enemy);
+  private setupEnemies() {
+    this.enemyManager = new EnemyManager(this);
+    console.log('EnemyManager created:', this.enemyManager);
+    const map = this.make.tilemap({ key: 'dungeon-map' });
+    this.enemyManager.createEnemiesFromSpawnLayer(map.getObjectLayer('Enemies') as Phaser.Tilemaps.ObjectLayer, this.roomManager.getRooms());
   }
+
 
   // Setup collisions AFTER enemies group and player exist
   private setupCollisions() {
@@ -183,103 +193,25 @@ export class MainScene extends Scene {
     if (this.wallsLayer) {
       this.physics.add.collider(this.player, this.wallsLayer); // Player vs Walls
       this.physics.add.collider(this.player.bullets, this.wallsLayer, this.handleBulletPlatformCollision, undefined, this); // Player Bullets vs Walls
-      this.physics.add.collider(this.enemies, this.wallsLayer, this.handleEnemyWallCollision, undefined, this); // Enemies vs Walls
     }
 
-    // Collisions involving enemies (using the main group) 
-    this.physics.add.collider(this.enemies, this.player.bullets, this.handleEnemyBulletCollision, undefined, this); // Player Bullets vs Enemies
+    // Setup enemy collisions
+    if (this.enemyManager) {
+      this.enemyManager.setupCollisions();
+    }
 
-    this.physics.add.overlap(this.player, this.enemies, this.handlePlayerEnemyOverlap, undefined, this); // Player vs Enemies (Overlap for melee)
-
-   
-     // Barrel collisions (assuming BarrelManager handles its own group collisions)
-    //  this.barrelManager.setupCollisions(); // Ensure BarrelManager collision setup is called
-  }
-
-   // Helper to set up collisions for a specific enemy's bullets
- private setupEnemyBulletCollisions(enemyInstance: Enemy) {
-  if (enemyInstance instanceof RangedEnemy && enemyInstance.weapon && enemyInstance.weapon.bullets) {
-       // Enemy Bullets vs Player
-       this.physics.add.collider(this.player, enemyInstance.weapon.bullets, this.handlePlayerBulletCollision, undefined, this); 
-       // Enemy Bullets vs Walls
-       if (this.wallsLayer) {
-           this.physics.add.collider(enemyInstance.weapon.bullets, this.wallsLayer, this.handleBulletPlatformCollision, undefined, this);
-       }
-   }
-  }
-
-
- private handleEnemyWallCollision(enemy: any, wall: any) {
-    console.log('Enemy collided with wall:', enemy);
-    
-    const enemyInstance = enemy as Enemy;
-    if (enemyInstance.body) {
-      const body = enemyInstance.body as Phaser.Physics.Arcade.Body;
-      body.setVelocity(0, 0);
-      
-      this.time.delayedCall(200, () => {
-        if (enemyInstance.body && !enemyInstance.isEnemyDead()) {
-          enemyInstance.preUpdate(this.time.now, 0);
-        }
-      });
-    }``
+    // Setup barrel collisions
+    if (this.barrelManager) {
+      this.barrelManager.setupCollisions();
+    }
   }
 
 
   // Handles collision between player bullets and walls/platforms
-  private handleBulletPlatformCollision(bullet: any, platform: any) {
+  public handleBulletPlatformCollision(bullet: any, platform: any) {
     const bulletInstance = bullet as Bullet;
     if (bulletInstance && bulletInstance.active) {
       bulletInstance.deactivate();
-    }
-  }
-
-  // Handles collision between enemy bullets and the player
-  private handlePlayerBulletCollision(player: any, bullet: any) {
-    const playerInstance = player as Player;
-    const bulletInstance = bullet as Bullet;
-    
-    if (!playerInstance.active || !bulletInstance.active) {
-      return;
-    }
-
-    playerInstance.takeDamage(bulletInstance.getDamage());
-    bulletInstance.deactivate();
-  }
-  
-  // Handles collision between player bullets and enemies
-  private handleEnemyBulletCollision(enemy: any, bullet: any) {
-    const enemyInstance = enemy as Enemy;
-    const bulletInstance = bullet as Bullet;
-    
-    if (!enemyInstance.active || !bulletInstance.active) {
-      return;
-    }
-    
-    bulletInstance.deactivate();
-    enemyInstance.takeDamage(bulletInstance.getDamage());
-    
-    // If enemy is dead, let the Room check if it's cleared
-    if (enemyInstance.isEnemyDead()) {
-       // Find which room this enemy belonged to (might need a reference on the enemy)
-       // For now, assume it's the current room - this might be inaccurate if enemies wander
-       const currentRoom = this.roomManager.getRoom(this.currentRoomId);
-       if (currentRoom) {
-          console.log(`Enemy ${enemyInstance} died in room ${currentRoom.getId()}`);  
-          currentRoom.checkCleared(); // Let the room handle door opening etc.
-       }
-       // Note: No need to remove from the group here, destroy() handles that.
-    }
-  }
-
-  // Handles overlap between player and enemies (for melee)
-  private handlePlayerEnemyOverlap(player: any, enemy: any) {
-    const playerInstance = player as Player;
-    const enemyInstance = enemy as Enemy;
-  
-    
-    if (enemyInstance.active && !(enemyInstance instanceof RangedEnemy) && enemyInstance.weapon) {
-      enemyInstance.weapon.dealDamage(enemyInstance, playerInstance);
     }
   }
 
@@ -375,6 +307,14 @@ export class MainScene extends Scene {
   
   // Add getter for barrel manager
   public getBarrelManager(): BarrelManager {
+    if (!this.barrelManager) {
+      throw new Error('BarrelManager not initialized');
+    }
     return this.barrelManager;
+  }
+
+  // Add getter for enemy manager
+  public getEnemyManager(): EnemyManager | null {
+    return this.enemyManager;
   }
 }

@@ -5,7 +5,6 @@ export class Barrel extends Phaser.Physics.Arcade.Sprite {
   private isSmashed: boolean = false;
   private smashedFrame: number = 0;
 
-  // Event name constant for consistency
   public static readonly SMASHED_EVENT = 'barrel-smashed';
 
   constructor(scene: Scene, x: number, y: number) {

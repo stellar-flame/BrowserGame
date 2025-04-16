@@ -82,7 +82,6 @@ export class BarrelManager {
         }
       }
     });
-    this.setupCollisions();
   }
 
   public setupCollisions(): void {

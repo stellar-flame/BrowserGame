@@ -196,13 +196,6 @@
    </properties>
    <point/>
   </object>
-  <object id="39" name="Skeleton" x="519.88" y="147.926">
-   <properties>
-    <property name="Room" value="1"/>
-    <property name="Type" value="SKELETON"/>
-   </properties>
-   <point/>
-  </object>
   <object id="41" name="Skeleton" x="528.431" y="308.679">
    <properties>
     <property name="Room" value="1"/>

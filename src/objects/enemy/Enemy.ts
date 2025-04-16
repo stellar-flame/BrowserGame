@@ -431,4 +431,22 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
 
   // Abstract method to be implemented by subclasses for specific movement behavior
   protected abstract handleMovement(distance: number, angle: number, body: Phaser.Physics.Arcade.Body): void;
+
+  public handleWallCollision(): void {
+    // Stop movement and change direction when hitting a wall
+    if (this.body instanceof Phaser.Physics.Arcade.Body) {
+      this.body.velocity.x = 0;
+      this.body.velocity.y = 0;
+      // You can add additional logic here, like changing direction
+      this.reverseDirection();
+    }
+  }
+
+  protected reverseDirection(): void {
+    // Reverse the current movement direction
+    if (this.body instanceof Phaser.Physics.Arcade.Body) {
+      this.body.velocity.x *= -1;
+      this.body.velocity.y *= -1;
+    }
+  }
 }

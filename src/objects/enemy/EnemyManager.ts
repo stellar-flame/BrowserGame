@@ -1,0 +1,166 @@
+import { Scene, GameObjects, Physics } from 'phaser';
+import { Enemy } from './Enemy';
+import { Room } from '../rooms/Room';
+import { MainScene } from '../../scenes/MainScene';
+import { EnemyFactory, EnemyType } from './EnemyFactory';
+import { Player } from '../Player';
+import { RangedEnemy } from './RangedEnemy';
+import { Bullet } from '../weapons/Bullet';
+
+
+export class EnemyManager {
+  private scene: MainScene;
+  private enemies: Phaser.Physics.Arcade.Group;
+  public static readonly ENEMY_DIED = 'enemy-died';
+
+
+  constructor(scene: MainScene) {
+    this.scene = scene;
+    this.enemies = this.scene.physics.add.group({
+      classType: Enemy,
+      runChildUpdate: true
+    });
+
+    // Listen for enemy created events
+    this.scene.events.on(Room.ENEMY_CREATED, (data: { enemy: Enemy }) => {
+      if (data.enemy && data.enemy.body) {
+        this.enemies.add(data.enemy);
+        this.setupEnemyBulletCollisions(data.enemy);
+      }
+    });
+  }
+
+  public createEnemiesFromSpawnLayer(spawnLayer: Phaser.Tilemaps.ObjectLayer, rooms: Map<string, Room>): void {
+    // Find all enemy spawn points in the spawn layer
+    spawnLayer.objects.forEach((obj) => {
+        // Ensure all required properties exist
+        if (typeof obj.x !== 'number' || 
+            typeof obj.y !== 'number') {
+          console.warn('Invalid enemy spawn object properties:', obj);
+          return;
+        }
+
+        const roomProperty = obj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
+        const roomId = roomProperty?.value;
+        const room = rooms.get(roomId);
+        
+        if (room) {
+          // Get enemy type from properties
+          const typeProperty = obj.properties?.find((p: { name: string; value: string }) => p.name === 'Type');
+          const enemyType = typeProperty?.value?.toUpperCase() as EnemyType;
+
+          // Add spawn point to room
+          room.addSpawnPoint(obj.x, obj.y, enemyType);
+        }
+    });
+  }
+
+  public setupCollisions(): void {
+    const player = this.scene.getPlayer();
+    const wallsLayer = this.scene.getWallsLayer();
+
+    if (wallsLayer) {
+      // Enemy collisions with walls
+      this.scene.physics.add.collider(
+        this.enemies,
+        wallsLayer,
+        this.handleEnemyWallCollision,
+        undefined,
+        this
+      );
+    }
+
+    // Enemy collisions with player bullets
+    this.scene.physics.add.collider(
+      this.enemies,
+      player.bullets,
+      this.handleEnemyBulletCollision,
+      undefined,
+      this
+    );
+
+    // Enemy overlap with player (for melee damage)
+    this.scene.physics.add.overlap(
+      this.enemies,
+      player,
+      this.handlePlayerEnemyOverlap,
+      undefined,
+      this
+    );
+  }
+
+     // Helper to set up collisions for a specific enemy's bullets
+ private setupEnemyBulletCollisions(enemyInstance: Enemy) {
+    const player = this.scene.getPlayer();
+    const wallsLayer = this.scene.getWallsLayer();
+  
+    if (enemyInstance instanceof RangedEnemy && enemyInstance.weapon && enemyInstance.weapon.bullets) {
+         // Enemy Bullets vs Player
+         this.scene.physics.add.collider(player, enemyInstance.weapon.bullets, this.handlePlayerBulletCollision, undefined, this); 
+         // Enemy Bullets vs Walls
+         if (wallsLayer) {
+             this.scene.physics.add.collider(enemyInstance.weapon.bullets, wallsLayer, this.scene.handleBulletPlatformCollision, undefined, this);
+         }
+     }
+}
+  
+    // Handles collision between enemy bullets and the player
+private handlePlayerBulletCollision(player: any, bullet: any) {
+    const playerInstance = player as Player;
+    const bulletInstance = bullet as Bullet;
+    
+    if (!playerInstance.active || !bulletInstance.active) {
+      return;
+    }
+
+    playerInstance.takeDamage(bulletInstance.getDamage());
+    bulletInstance.deactivate();
+    }
+
+  private handleEnemyWallCollision(enemy: any, wall: any): void {
+    if (enemy instanceof Enemy) {
+      // Handle enemy wall collision (e.g., stop movement, change direction)
+      enemy.handleWallCollision();
+    }
+  }
+
+  private handleEnemyBulletCollision(enemy: any, bullet: any): void {
+    const enemyInstance = enemy as Enemy;
+    const bulletInstance = bullet as Bullet;
+    
+    if (!enemyInstance.active || !bulletInstance.active) {
+      return;
+    }
+    
+    bulletInstance.deactivate();
+    enemyInstance.takeDamage(bulletInstance.getDamage());
+    
+    this.scene.events.emit(EnemyManager.ENEMY_DIED, {
+      enemy: enemyInstance
+    });
+  }
+
+  private handlePlayerEnemyOverlap(player: any, enemy: any): void {
+    const playerInstance = player as Player;
+    const enemyInstance = enemy as Enemy;
+  
+    
+    if (enemyInstance.active && !(enemyInstance instanceof RangedEnemy) && enemyInstance.weapon) {
+      enemyInstance.weapon.dealDamage(enemyInstance, playerInstance);
+    }
+  }
+
+  public spawnEnemyInRoom(room: Room): void {
+    if (!room.isEnemiesSpawned() && !room.isRoomCleared()) {
+      room.spawnEnemies();
+    }
+  }
+
+  public destroyEnemies(): void {
+    this.enemies.destroy(true);
+  }
+
+  public getEnemies(): Phaser.Physics.Arcade.Group {
+    return this.enemies;
+  }
+} 
