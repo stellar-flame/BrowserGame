@@ -7,6 +7,7 @@ import { DoorDirection } from "../Door";
 export class RoomManager {
   private scene: MainScene;
   private rooms: Map<string, Room>;
+  private currentRoom: Room | null = null;  
 
   constructor(scene: MainScene) {
     this.scene = scene;
@@ -21,10 +22,12 @@ export class RoomManager {
         if (room) {
           this.rooms.set(room.getId(), room);
           this.scene.physics.add.overlap(this.scene.getPlayer(), room.getZone(), () => {
-            this.scene.handleRoomEntry(room.getId());
+            this.handleRoomEntry(room);
           });
         }
       });
+
+      this.currentRoom = this.rooms.get("1") || null;
 
       roomLayer.objects.filter(obj => obj.name === "EnemyTrigger").forEach(triggerObj => {
         const roomProperty = triggerObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
@@ -138,6 +141,13 @@ export class RoomManager {
       roomId,
       direction
     );
+
+    // Add collision with player if door is closed
+    if (!isOpen) {
+      const collider = this.scene.physics.add.collider(this.scene.getPlayer(), door);
+      door.setCollider(collider);
+    }
+
     room.addDoor(door);
   }
 
@@ -156,6 +166,15 @@ export class RoomManager {
     });
   }
 
+
+  private handleRoomEntry(room: Room) {
+    // If we're already in this room, do nothing
+    if (this.currentRoom === room) return;
+    
+    console.log(`Player entered room ${room.getId()}`);
+    this.currentRoom = room;
+  }
+
   public getRooms(): Map<string, Room> {
     return this.rooms;
   }
@@ -164,10 +183,9 @@ export class RoomManager {
     return this.rooms.get(roomId);
   }
 
-  public anyTargetableObjectsInRoom(roomId: string): boolean {
-    const room = this.rooms.get(roomId);
-    if (!room) return false;
-    return (room.isEnemiesSpawned() &&  !room.isRoomCleared()) || room.getBarrels().length > 0;
+  public anyTargetableObjectsInRoom(): boolean {
+    if (!this.currentRoom) return false;
+    return (this.currentRoom?.isEnemiesSpawned() &&  !this.currentRoom?.isRoomCleared()) || this.currentRoom?.getBarrels().length > 0;
   }
 
   public destroy(): void {

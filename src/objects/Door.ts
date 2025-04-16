@@ -28,16 +28,18 @@ export class Door extends GameObjects.Sprite {
     // Set depth to ensure doors are drawn above the floor but below other elements
     this.setDepth(1);
     
-      // If the door is closed, add physics body and collision with player
-      if (!isOpen) {
-        // Enable physics on the door
-        this.scene.physics.world.enable(this);
-        
-        // Set up the physics body
-        const doorBody = this.body as Phaser.Physics.Arcade.Body;
-        doorBody.setImmovable(true);
-        doorBody.setSize(this.width || 32, this.height || 32);
-      }
+    // Always enable physics on the door, but control its active state
+    scene.physics.world.enable(this);
+    
+    // Set up the physics body
+    const doorBody = this.body as Phaser.Physics.Arcade.Body;
+    doorBody.setImmovable(true);
+    doorBody.setSize(this.width || 32, this.height || 32);
+    
+    // If the door is open, disable the physics body
+    if (isOpen) {
+      doorBody.enable = false;
+    }
     
     // Apply rotation based on direction
     this.applyDirectionRotation();

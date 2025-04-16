@@ -215,35 +215,16 @@ export class MainScene extends Scene {
     }
   }
 
-  
-  handleRoomEntry(roomId: string) {
-    // If we're already in this room, do nothing
-    if (this.currentRoomId === roomId) return;
-    
-    console.log(`Player entered room ${roomId}`);
-    this.currentRoomId = roomId;
-  }
 
   update(time: number, delta: number) {
     if (this.gameOver) {
       return;
     }
-
-    // Update player
-    this.player.update();
-    
-    // Update enemies and their health bars
-    this.enemies.getChildren().forEach((enemy) => {
-      const enemyInstance = enemy as Enemy;
-      // Update enemy behavior
-      enemyInstance.preUpdate(time, delta);
-    });
-
   }
 
   public anyTargetableObjectsInRoom() {
     if (!this.roomManager) return false;  
-    return this.roomManager.anyTargetableObjectsInRoom(this.currentRoomId);
+    return this.roomManager.anyTargetableObjectsInRoom();
   }
 
 
