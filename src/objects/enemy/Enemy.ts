@@ -52,6 +52,7 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
 
     this.id = id; // Assign the ID
     this.config = config || null;
+    this.setDepth(1.1);
 
     // Add to scene and enable physics
     scene.add.existing(this);

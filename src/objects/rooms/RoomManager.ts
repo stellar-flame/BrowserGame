@@ -11,6 +11,7 @@ export class RoomManager {
   constructor(scene: MainScene) {
     this.scene = scene;
     this.rooms = new Map();
+
   }
 
   public initializeRooms(roomLayer: Phaser.Tilemaps.ObjectLayer): void {
@@ -161,6 +162,12 @@ export class RoomManager {
 
   public getRoom(roomId: string): Room | undefined {
     return this.rooms.get(roomId);
+  }
+
+  public anyTargetableObjectsInRoom(roomId: string): boolean {
+    const room = this.rooms.get(roomId);
+    if (!room) return false;
+    return (room.isEnemiesSpawned() &&  !room.isRoomCleared()) || room.getBarrels().length > 0;
   }
 
   public destroy(): void {

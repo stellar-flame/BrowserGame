@@ -1,122 +1,112 @@
 import { Scene, GameObjects, Physics } from 'phaser';
 import { Barrel } from './Barrel';
+import { Room } from '../rooms/Room';
+import { MainScene } from '../../scenes/MainScene';
 
 export class BarrelManager {
-  private scene: Scene;
-  private barrelGroups: Map<string, Phaser.Physics.Arcade.Group>;
-  private propsLayer: Phaser.Tilemaps.TilemapLayer | null = null;
+  private scene: MainScene;
+  private barrels: Phaser.Physics.Arcade.Group;
 
-  constructor(scene: Scene) {
+ 
+  constructor(scene: MainScene) {
     this.scene = scene;
-    this.barrelGroups = new Map();
-  }
-
-  public initializeBarrelGroups(): void {
-    // Create a group for each room
-    const rooms = ['room1', 'room2', 'room3']; // Add more rooms as needed
-    rooms.forEach(roomId => {
-      const group = this.scene.physics.add.group({
-        classType: Barrel,
-        runChildUpdate: true
-      });
-      this.barrelGroups.set(roomId, group);
+    this.barrels = this.scene.physics.add.group({
+      classType: Barrel,
+      runChildUpdate: true
     });
   }
 
-  public createBarrelsFromPropsLayer(propsLayer: Phaser.Tilemaps.TilemapLayer): void {
-    this.propsLayer = propsLayer;
-    
+  public createBarrelsFromPropsLayer(propsLayer: Phaser.Tilemaps.ObjectLayer, rooms: Map<string, Room>): void {
     // Find all barrel tiles in the props layer
-    propsLayer.forEachTile((tile) => {
-      if (tile.index === 1) { // Assuming 1 is the barrel tile index
-        const worldX = propsLayer.tileToWorldX(tile.x);
-        const worldY = propsLayer.tileToWorldY(tile.y);
-        
-        // Determine which room this barrel belongs to based on position
-        const roomId = this.getRoomIdFromPosition(worldX, worldY);
-        const group = this.barrelGroups.get(roomId);
-        
-        if (group) {
-          const barrel = group.create(worldX, worldY, 'barrel');
-          if (barrel instanceof Barrel) {
-            // Set up barrel properties
-            barrel.setDepth(0.5);
+    propsLayer.objects.forEach((obj) => {
+      if (obj.name === 'Barrels') {
+        // Ensure all required properties exist
+        if (typeof obj.x !== 'number' || 
+            typeof obj.y !== 'number' || 
+            typeof obj.width !== 'number' || 
+            typeof obj.height !== 'number') {
+          console.warn('Invalid barrel object properties:', obj);
+          return;
+        }
+
+        const roomProperty = obj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
+        const roomId = roomProperty?.value;
+        const room = rooms.get(roomId);
+        if (room) {
+          // Calculate the bounds
+          const bounds = {
+            x: obj.x,
+            y: obj.y,
+            width: obj.width,
+            height: obj.height
+          };
+
+          // Create 3-5 barrels
+          const numBarrels = Phaser.Math.Between(3, 5);
+          const barrelSize = 32; // Size of a barrel
+          const padding = 8; // Minimum space between barrels
+
+          // Calculate grid positions
+          const cols = Math.floor(bounds.width / (barrelSize + padding));
+          const rows = Math.floor(bounds.height / (barrelSize + padding));
+          
+          // Create a list of possible positions
+          const positions: {x: number, y: number}[] = [];
+          for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+              positions.push({
+                x: bounds.x + (col * (barrelSize + padding)) + barrelSize/2,
+                y: bounds.y + (row * (barrelSize + padding)) + barrelSize/2
+              });
+            }
           }
+
+          // Shuffle positions and take the number we need
+          const shuffledPositions = Phaser.Utils.Array.Shuffle(positions).slice(0, numBarrels);
+
+          // Create barrels at the selected positions
+          shuffledPositions.forEach(pos => {
+            // Create the barrel sprite
+            const barrel = new Barrel(this.scene, pos.x, pos.y);
+            
+            // Add to group
+            this.barrels.add(barrel);
+            
+            // Set properties
+            barrel.setDepth(0.5);
+            
+            // Add to room
+            room.addBarrel(barrel);
+            
+          });
         }
       }
     });
-  }
-
-  private getRoomIdFromPosition(x: number, y: number): string {
-    // Implement logic to determine room ID based on position
-    // This is a simple example - adjust based on your game's room layout
-    if (x < 800) return 'room1';
-    if (x < 1600) return 'room2';
-    return 'room3';
+    this.setupCollisions();
   }
 
   public setupCollisions(): void {
-    const playerBullets = this.scene.children.getByName('playerBullets');
-    const enemyBullets = this.scene.children.getByName('enemyBullets');
+    const player = this.scene.getPlayer();
 
-    // Set up collisions with player bullets
-    if (playerBullets instanceof Phaser.Physics.Arcade.Group) {
-      this.barrelGroups.forEach((group) => {
-        this.scene.physics.add.collider(
-          group,
-          playerBullets,
-          this.handleBulletCollision,
-          undefined,
-          this
-        );
-      });
-    }
-
-    // Set up collisions with enemy bullets
-    if (enemyBullets instanceof Phaser.Physics.Arcade.Group) {
-      this.barrelGroups.forEach((group) => {
-        this.scene.physics.add.collider(
-          group,
-          enemyBullets,
-          this.handleBulletCollision,
-          undefined,
-          this
-        );
-      });
-    }
+      this.scene.physics.add.collider(
+        this.barrels,
+        player.bullets,  
+        this.handleBulletCollision,
+        undefined,
+        this
+      );
   }
 
-  private handleBulletCollision(
-    object1: GameObjects.GameObject | Phaser.Tilemaps.Tile | Phaser.Physics.Arcade.Body | Phaser.Physics.Arcade.StaticBody,
-    object2: GameObjects.GameObject | Phaser.Tilemaps.Tile | Phaser.Physics.Arcade.Body | Phaser.Physics.Arcade.StaticBody
-  ): void {
-    if (object1 instanceof Barrel && object2 instanceof Phaser.Physics.Arcade.Sprite) {
-      if (!object1.isBarrelSmashed()) {
-        object1.smash();
-        object2.destroy();
+  private handleBulletCollision(barrel: any, bullet: any): void {
+    if (barrel instanceof Barrel && bullet instanceof Phaser.Physics.Arcade.Sprite) {
+      if (!barrel.isBarrelSmashed()) {
+        barrel.smash();
+        bullet.destroy();
       }
     }
   }
 
-  public getBarrelsInRoom(roomId: string): Phaser.Physics.Arcade.Group | undefined {
-    return this.barrelGroups.get(roomId);
-  }
-
-  public update(): void {
-    // Update logic for barrels if needed
-    this.barrelGroups.forEach((group) => {
-      group.getChildren().forEach((barrel) => {
-        if (barrel instanceof Barrel) {
-          // Add any per-frame update logic here
-        }
-      });
-    });
-  }
-
-  public destroy(): void {
-    this.barrelGroups.forEach((group) => {
-      group.destroy(true);
-    });
-    this.barrelGroups.clear();
+  public destroyBarrel(): void {
+    this.barrels.destroy(true);
   }
 } 

@@ -1,4 +1,4 @@
-import { Scene, Tilemaps } from 'phaser';
+import { Scene } from 'phaser';
 import { Enemy } from './Enemy';
 import { RangedEnemy } from './RangedEnemy';
 import { MeleeEnemy } from './MeleeEnemy';
@@ -13,7 +13,6 @@ export class EnemyFactory {
     x: number, 
     y: number, 
     id: string,
-    wallsLayer?: Tilemaps.TilemapLayer
   ): Enemy {
     const config = ENEMY_CONFIGS[type];
     

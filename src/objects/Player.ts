@@ -64,7 +64,7 @@ export class Player extends Physics.Arcade.Sprite {
     if (this.body) {
       this.body.setSize(midWidth, midHeight);
     }
-
+    this.setDepth(1);
     // Setup physics properties (cast body to Arcade.Body)
     (this.body as Physics.Arcade.Body).setCollideWorldBounds(true);
     

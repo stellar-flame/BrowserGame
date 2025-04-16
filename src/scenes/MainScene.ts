@@ -4,7 +4,6 @@ import { Enemy } from '../objects/enemy/Enemy';
 import { RangedEnemy } from '../objects/enemy/RangedEnemy';
 import { Bullet } from '../objects/weapons/Bullet';
 import { PathfindingGrid } from '../objects/pathfinding/PathfindingGrid';
-import { Room } from '../objects/rooms/Room';
 import { RoomManager } from '../objects/rooms/RoomManager';
 import { BarrelManager } from '../objects/props/BarrelManager';
 
@@ -26,12 +25,11 @@ export class MainScene extends Scene {
   
   // Managers and utilities
   private pathfindingGrid: PathfindingGrid;
-  private barrelManager: BarrelManager; 
+  private barrelManager: BarrelManager | null = null; 
   
   constructor() {
     super({ key: 'MainScene' });
     this.pathfindingGrid = PathfindingGrid.getInstance();
-    this.barrelManager = new BarrelManager(this);
     this.roomManager = new RoomManager(this);
   }
 
@@ -48,6 +46,7 @@ export class MainScene extends Scene {
     this.loadSprite('ninja-sprite', 'assets/sprites/ninja.png', 16, 32);
     this.loadSprite('arrow', 'assets/sprites/arrow.png', 32, 16);
     this.loadSprite('ninja-star', 'assets/sprites/ninja-star.png', 32, 32);
+    this.loadSprite('smashed-barrel', 'assets/sprites/smashed-barrel.png', 32, 32);
     
     // Load tiles and maps
     this.load.image('tiles-32', 'assets/tiles.png');
@@ -57,7 +56,6 @@ export class MainScene extends Scene {
     this.load.image('door-open', 'assets/sprites/door-open.png');
     this.load.image('door-closed', 'assets/sprites/door-closed.png');
     this.load.image('barrel', 'assets/sprites/barrel.png');
-    this.load.image('smashed-barrel', 'assets/sprites/smashed-barrel.png');
   }
 
   private loadSprite(name: string, path: string, frameWidth: number, frameHeight: number) {  
@@ -69,6 +67,7 @@ export class MainScene extends Scene {
 
   // Scene initialization
   create() {
+    
     console.log('Game started!');
     
     this.setupInput();
@@ -78,7 +77,7 @@ export class MainScene extends Scene {
     this.setupPhysics();
     this.setupRooms();
     this.setupPathfinding();
-    // this.setupBarrels();
+    this.setupBarrels();
     this.setupCollisions();
   
   }
@@ -157,6 +156,20 @@ export class MainScene extends Scene {
     const map = this.make.tilemap({ key: 'dungeon-map' });
     this.roomManager.initializeRooms(map.getObjectLayer('Rooms') as Phaser.Tilemaps.ObjectLayer);
     this.roomManager.setupSpawnPoints(map.getObjectLayer('Enemies') as Phaser.Tilemaps.ObjectLayer);
+  }
+
+  private setupPathfinding() {
+    if (this.wallsLayer) {
+      const map = this.make.tilemap({ key: 'dungeon-map' });
+      this.pathfindingGrid.initialize(this, map, this.wallsLayer);
+    }
+  }
+
+  private setupBarrels() {
+    this.barrelManager = new BarrelManager(this);
+    console.log('BarrelManager created:', this.barrelManager);
+    const map = this.make.tilemap({ key: 'dungeon-map' });
+    this.barrelManager.createBarrelsFromPropsLayer(map.getObjectLayer('Props') as Phaser.Tilemaps.ObjectLayer, this.roomManager.getRooms());
   }
 
   public addToMainEnemyGroup(enemy: Enemy) {
@@ -270,17 +283,6 @@ export class MainScene extends Scene {
     }
   }
 
-  private setupPathfinding() {
-    if (this.wallsLayer) {
-      const map = this.make.tilemap({ key: 'dungeon-map' });
-      this.pathfindingGrid.initialize(this, map, this.wallsLayer);
-    }
-  }
-
-  private setupBarrels() {
-    this.barrelManager.initializeBarrelGroups();
-  }
-
   
   handleRoomEntry(roomId: string) {
     // If we're already in this room, do nothing
@@ -308,9 +310,8 @@ export class MainScene extends Scene {
   }
 
   public anyTargetableObjectsInRoom() {
-    const room = this.roomManager.getRoom(this.currentRoomId);
-    if (!room) return false;
-    return room.isEnemiesSpawned() &&  !room.isRoomCleared();
+    if (!this.roomManager) return false;  
+    return this.roomManager.anyTargetableObjectsInRoom(this.currentRoomId);
   }
 
 

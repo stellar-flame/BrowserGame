@@ -3,9 +3,16 @@ import { Enemy } from '../enemy/Enemy';
 import { Door } from '../Door';
 import { EnemyFactory, EnemyType } from '../enemy/EnemyFactory';
 import { MainScene } from '../../scenes/MainScene';
+import { Barrel } from '../props/Barrel';
+
+interface BarrelSmashedEventData {
+  x: number;
+  y: number;
+  barrel: Barrel;
+}
 
 export class Room {
-private scene: MainScene;
+  private scene: MainScene;
   private id: string;
   private zone: GameObjects.Zone;
   private enemyTriggerZone: GameObjects.Zone | null = null;
@@ -15,6 +22,7 @@ private scene: MainScene;
   private isCleared: boolean = false;
   private enemiesSpawned: boolean = false;
   private spawnPoints: Array<{x: number, y: number, type: EnemyType | undefined}> = [];
+  private barrels: Barrel[] = [];
 
   constructor(
     scene: Scene,
@@ -40,6 +48,14 @@ private scene: MainScene;
     const body = this.zone.body as Physics.Arcade.Body;
     body.setAllowGravity(false);
     body.moves = false;
+
+    // Listen for barrel smashed events
+    this.scene.events.on(Barrel.SMASHED_EVENT, (data: BarrelSmashedEventData) => {
+      // Remove the smashed barrel from the room's barrel list
+      if (this.barrels.includes(data.barrel)) {
+        this.barrels.splice(this.barrels.indexOf(data.barrel), 1);
+      }
+    });
 
   }
 
@@ -123,6 +139,14 @@ private scene: MainScene;
     })
 
      this.enemiesSpawned = true;
+  }
+
+  public addBarrel(barrel: Barrel): void {
+    this.barrels.push(barrel);
+  }
+
+  public getBarrels(): Barrel[] {
+    return this.barrels;
   }
 
   public isEnemiesSpawned(): boolean {

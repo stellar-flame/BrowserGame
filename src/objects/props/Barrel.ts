@@ -5,6 +5,9 @@ export class Barrel extends Phaser.Physics.Arcade.Sprite {
   private isSmashed: boolean = false;
   private smashedFrame: number = 0;
 
+  // Event name constant for consistency
+  public static readonly SMASHED_EVENT = 'barrel-smashed';
+
   constructor(scene: Scene, x: number, y: number) {
     super(scene, x, y, 'barrel');
     
@@ -21,24 +24,15 @@ export class Barrel extends Phaser.Physics.Arcade.Sprite {
         this.body.setSize(32, 32); // Adjust size as needed
         
         // Set basic physics properties
-        this.body.setCollideWorldBounds(true);
         this.body.setBounce(0);
         
         // Enable collision with bullets
-        this.body.setCollideWorldBounds(true);
-        this.body.setImmovable(true);
-        
-        // Set collision category and mask
-        this.body.collisionCategory = 1; // Category 1 for barrels
-        this.body.collisionMask = 3;     // Collide with categories 0 and 1 (walls and bullets)
+        this.body.immovable = true;
       }
     }
     
-    // Set depth to ensure barrels are drawn above the floor but below other elements
-    this.setDepth(0.5);
-    
-    // Log for debugging
-    console.log(`Barrel created at (${x}, ${y}) with physics body:`, this.body);
+    // Set depth to ensure barrels are drawn below the Player and enemies
+    this.setDepth(0.1);
   }
   
   
@@ -59,7 +53,20 @@ export class Barrel extends Phaser.Physics.Arcade.Sprite {
       this.smashedFrame = Phaser.Math.Between(0, 2);
       this.setTexture('smashed-barrel', this.smashedFrame);
       
-      this.body.immovable = false;
+      // Disable physics and collisions
+      if (this.body) {
+        this.body.enable = false;
+        this.body.immovable = false;
+      }
+      
+      // Emit the smashed event with the barrel's position and reference
+      this.scene.events.emit(Barrel.SMASHED_EVENT, {
+        x: this.x,
+        y: this.y,
+        barrel: this
+      });
+      
+      // Disable active state to prevent further interactions
       this.setActive(false);
     }
   }
