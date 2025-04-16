@@ -171,7 +171,7 @@
                         {
                          "name":"Direction",
                          "type":"string",
-                         "value":"East"
+                         "value":"South"
                         }, 
                         {
                          "name":"Open",
@@ -181,7 +181,7 @@
                         {
                          "name":"Room",
                          "type":"string",
-                         "value":"1"
+                         "value":"2"
                         }],
                  "rotation":0,
                  "type":"",
@@ -203,12 +203,12 @@
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":766,
+                 "width":765,
                  "x":33,
                  "y":32
                 }, 
                 {
-                 "height":651,
+                 "height":647,
                  "id":93,
                  "name":"Room",
                  "properties":[
@@ -220,9 +220,9 @@
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":800,
-                 "x":800,
-                 "y":-11
+                 "width":703,
+                 "x":897,
+                 "y":-7
                 }],
          "opacity":1,
          "properties":[

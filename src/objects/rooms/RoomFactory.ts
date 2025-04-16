@@ -115,10 +115,9 @@ export class RoomFactory {
         // Get the door properties
     const isOpen = obj.properties.find((prop: { name: string; value: any }) => prop.name === 'Open')?.value === 1;
     const roomId = obj.properties.find((prop: { name: string; value: any }) => prop.name === 'Room')?.value || 'unknown';
-    const doorId = obj.properties.find((prop: { name: string; value: any }) => prop.name === 'id')?.value || 'unknown';
     const directionProp = obj.properties.find((prop: { name: string; value: any }) => prop.name === 'Direction');
     let direction = DoorDirection.East; // Default direction
-    
+    console.log('Direction:', directionProp);
     if (directionProp) {
       switch (directionProp.value) {
         case 'East':
@@ -143,7 +142,6 @@ export class RoomFactory {
       (obj.y || 0) + (obj.height || 0) / 2, // Center the door vertically
       isOpen,
       roomId,
-      doorId,
       direction
     );
     room.addDoor(door);

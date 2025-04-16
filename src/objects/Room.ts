@@ -1,6 +1,6 @@
 import { Scene, GameObjects, Physics, Types } from 'phaser';
 import { Enemy } from './enemy/Enemy';
-import { Door, DoorDirection } from './Door';
+import { Door } from './Door';
 import { EnemyFactory, EnemyType } from './enemy/EnemyFactory';
 import { MainScene } from '../scenes/MainScene';
 

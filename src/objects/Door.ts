@@ -10,18 +10,16 @@ export enum DoorDirection {
 export class Door extends GameObjects.Sprite {
   private isOpen: boolean;
   private roomId: string;
-  private doorId: string;
   private collider: Phaser.Physics.Arcade.Collider | null = null;
   private direction: DoorDirection;
 
-  constructor(scene: Scene, x: number, y: number, isOpen: boolean, roomId: string, doorId: string, direction: DoorDirection = DoorDirection.East) {
+  constructor(scene: Scene, x: number, y: number, isOpen: boolean, roomId: string,  direction: DoorDirection = DoorDirection.East) {
     // Use the appropriate texture based on door state
     const texture = isOpen ? 'door-open' : 'door-closed';
     super(scene, x, y, texture);
     
     this.isOpen = isOpen;
     this.roomId = roomId;
-    this.doorId = doorId;
     this.direction = direction;
     
     // Add to scene

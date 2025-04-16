@@ -3,7 +3,6 @@ import { Player } from '../objects/Player';
 import { Enemy } from '../objects/enemy/Enemy';
 import { RangedEnemy } from '../objects/enemy/RangedEnemy';
 import { Bullet } from '../objects/Bullet';
-import { Door } from '../objects/Door';
 import { PathfindingGrid } from '../objects/pathfinding/PathfindingGrid';
 import { BarrelManager } from '../objects/BarrelManager';
 import { Room } from '../objects/Room';
@@ -353,9 +352,6 @@ export class MainScene extends Scene {
     this.gameOver = true;
   }
 
-  
-  
-    
   
   // Getter for player
   public getPlayer(): Player {

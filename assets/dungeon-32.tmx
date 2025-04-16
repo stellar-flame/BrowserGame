@@ -167,18 +167,18 @@
   </object>
   <object id="80" name="Door" x="1280" y="608">
    <properties>
-    <property name="Direction" value="East"/>
+    <property name="Direction" value="South"/>
     <property name="Open" value="0"/>
-    <property name="Room" value="1"/>
+    <property name="Room" value="2"/>
    </properties>
    <point/>
   </object>
-  <object id="92" name="Room" x="33" y="32" width="766" height="578">
+  <object id="92" name="Room" x="33" y="32" width="765" height="578">
    <properties>
     <property name="Room" value="1"/>
    </properties>
   </object>
-  <object id="93" name="Room" x="800" y="-11" width="800" height="651">
+  <object id="93" name="Room" x="897" y="-7" width="703" height="647">
    <properties>
     <property name="Room" value="2"/>
    </properties>
