@@ -1,12 +1,12 @@
-import { Scene, Physics, Types } from 'phaser';
+import { Scene } from 'phaser';
 import { Player } from '../objects/Player';
 import { Enemy } from '../objects/enemy/Enemy';
 import { RangedEnemy } from '../objects/enemy/RangedEnemy';
-import { Bullet } from '../objects/Bullet';
+import { Bullet } from '../objects/weapons/Bullet';
 import { PathfindingGrid } from '../objects/pathfinding/PathfindingGrid';
-import { BarrelManager } from '../objects/BarrelManager';
-import { Room } from '../objects/Room';
+import { Room } from '../objects/rooms/Room';
 import { RoomFactory } from '../objects/rooms/RoomFactory';
+import { BarrelManager } from '../objects/props/BarrelManager';
 
 export class MainScene extends Scene {
   // Core game objects
@@ -26,7 +26,7 @@ export class MainScene extends Scene {
   
   // Managers and utilities
   private pathfindingGrid: PathfindingGrid;
-  private barrelManager: BarrelManager;
+  private barrelManager: BarrelManager; 
   
   constructor() {
     super({ key: 'MainScene' });
@@ -251,7 +251,7 @@ export class MainScene extends Scene {
        // For now, assume it's the current room - this might be inaccurate if enemies wander
        const currentRoom = this.rooms.get(this.currentRoomId);
        if (currentRoom) {
-        console.log(`Enemy ${enemyInstance} died in room ${currentRoom.getId()}`);  
+          console.log(`Enemy ${enemyInstance} died in room ${currentRoom.getId()}`);  
           currentRoom.checkCleared(); // Let the room handle door opening etc.
        }
        // Note: No need to remove from the group here, destroy() handles that.
@@ -305,8 +305,6 @@ export class MainScene extends Scene {
     });
 
   }
-
-  
 
   public anyTargetableObjectsInRoom() {
     const room = this.rooms.get(this.currentRoomId);

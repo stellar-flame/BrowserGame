@@ -1,8 +1,8 @@
 import { Scene, GameObjects, Physics, Types } from 'phaser';
-import { Enemy } from './enemy/Enemy';
-import { Door } from './Door';
-import { EnemyFactory, EnemyType } from './enemy/EnemyFactory';
-import { MainScene } from '../scenes/MainScene';
+import { Enemy } from '../enemy/Enemy';
+import { Door } from '../Door';
+import { EnemyFactory, EnemyType } from '../enemy/EnemyFactory';
+import { MainScene } from '../../scenes/MainScene';
 
 export class Room {
 private scene: MainScene;

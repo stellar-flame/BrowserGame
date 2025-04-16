@@ -1,5 +1,5 @@
 import { Scene, GameObjects, Physics, Types, Input } from 'phaser';
-import { Bullet } from './Bullet';
+import { Bullet } from './weapons/Bullet';
 import { HealthBar } from './HealthBar';
 
 // Extend Physics.Arcade.Sprite for physics and preUpdate

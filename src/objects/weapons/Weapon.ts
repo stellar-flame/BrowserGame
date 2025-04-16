@@ -2,7 +2,7 @@ import { Scene, Physics, Math } from 'phaser';
 import { Player } from '../Player';
 import { Enemy } from '../enemy/Enemy';
 import { RangedEnemy } from '../enemy/RangedEnemy';
-import { Bullet } from '../Bullet';
+import { Bullet } from './Bullet';
 import { WeaponConfig } from './WeaponConfigs';
 
 export class Weapon {

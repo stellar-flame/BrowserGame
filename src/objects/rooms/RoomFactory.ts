@@ -1,5 +1,5 @@
 import { Scene, Types, Physics} from "phaser";
-import { Room } from "../Room";
+import { Room } from "./Room";
 import { MainScene } from "../../scenes/MainScene";
 import { Door } from "../Door";
 import { DoorDirection } from "../Door";
