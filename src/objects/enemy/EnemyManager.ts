@@ -1,7 +1,7 @@
 import { Scene } from 'phaser';
 import { Enemy } from './Enemy';
 import { Room } from '../rooms/Room';
-import { Player } from '../Player';
+import { Player } from '../player/Player';
 import { RangedEnemy } from './RangedEnemy';
 import { Bullet } from '../weapons/Bullet';
 import { EnemyType } from './EnemyFactory';

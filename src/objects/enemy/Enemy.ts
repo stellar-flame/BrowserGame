@@ -3,7 +3,7 @@ import { HealthBar } from '../HealthBar';
 import { RangedEnemy } from './RangedEnemy';
 import { Weapon } from '../weapons/Weapon';
 import { EnemyConfig } from './EnemyConfigs';
-import { Player } from '../Player';
+import { Player } from '../player/Player';
 import { MainScene } from '../../scenes/MainScene';
 
 

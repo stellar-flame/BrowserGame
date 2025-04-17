@@ -1,9 +1,9 @@
 import { Scene, GameObjects, Physics, Types, Input } from 'phaser';
-import { Bullet } from './weapons/Bullet';
-import { HealthBar } from './HealthBar';
-import { Potion } from './items/Potion';
-import { Weapon } from './weapons/Weapon';
-import { WeaponFactory } from './weapons/WeaponFactory';
+import { Bullet } from '../weapons/Bullet'; 
+import { HealthBar } from '../HealthBar';
+import { Potion } from '../items/Potion';
+import { Weapon } from '../weapons/Weapon';
+import { WeaponFactory } from '../weapons/WeaponFactory';
 
 // Extend Physics.Arcade.Sprite for physics and preUpdate
 export class Player extends Physics.Arcade.Sprite {

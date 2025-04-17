@@ -1,6 +1,6 @@
 import { Scene } from 'phaser';
 import { Potion } from './Potion';
-import { Player } from '../Player';
+import { Player } from '../player/Player';
 import { Room } from '../rooms/Room';
 import { Barrel } from '../props/Barrel';
 
@@ -8,7 +8,6 @@ export class PotionManager {
   private scene: Scene;
   private potions: Phaser.Physics.Arcade.Group;
   private player: Player | null = null;
-  private spawnInterval: number = 30000; // 30 seconds
   private spawnTimer: Phaser.Time.TimerEvent | null = null;
   private maxPotions: number = 3;
   private roomsToSpawnPotions: string[] = ['2'];

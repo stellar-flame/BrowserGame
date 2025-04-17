@@ -1,5 +1,5 @@
 import { Scene } from 'phaser';
-import { Player } from '../objects/Player';
+import { Player } from '../objects/player/Player';
 import { Enemy } from '../objects/enemy/Enemy';
 import { Bullet } from '../objects/weapons/Bullet';
 import { PathfindingGrid } from '../objects/pathfinding/PathfindingGrid';
@@ -189,7 +189,7 @@ export class MainScene extends Scene {
     }
   }
 
-  private setupBarrels() {
+  private setupBarrels() {  
     this.barrelManager = new BarrelManager(this, this.player);
     console.log('BarrelManager created:', this.barrelManager);
     const map = this.make.tilemap({ key: 'dungeon-map' });

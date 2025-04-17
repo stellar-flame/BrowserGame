@@ -1,5 +1,5 @@
 import { EnemyFactory } from "../objects/enemy/EnemyFactory";
-import { Player } from "../objects/Player";
+import { Player } from "../objects/player/Player";
 import { EnemyType } from "../objects/enemy/EnemyFactory";
 import { EnemyManager } from "../objects/enemy/EnemyManager";
 import { Room } from "../objects/rooms/Room";

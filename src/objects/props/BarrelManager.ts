@@ -1,7 +1,7 @@
 import { Scene } from 'phaser';
 import { Barrel } from './Barrel';
 import { Room } from '../rooms/Room';
-import { Player } from '../Player';
+import { Player } from '../player/Player';
 
 export class BarrelManager {
   private scene: Scene;

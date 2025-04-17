@@ -2,7 +2,7 @@ import { Types, Physics, Scene } from "phaser";
 import { Room } from "./Room";
 import { Door } from "../Door";
 import { DoorDirection } from "../Door";
-import { Player } from "../Player";
+import { Player } from "../player/Player";
 
 export class RoomManager {
   private scene: Scene;
