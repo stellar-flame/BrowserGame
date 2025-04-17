@@ -186,6 +186,12 @@ export class Player extends Physics.Arcade.Sprite {
     this.targetCircle.moveTo(mouseX, mouseY - 10);
     this.targetCircle.lineTo(mouseX, mouseY + 10);
   }
+  public shootAtTarget(x: number, y: number) {
+    const bullet = this.bullets.get() as Bullet;
+    if (bullet) {
+      bullet.fire(this.x, this.y, Phaser.Math.Angle.Between(this.x, this.y, x, y));
+    }
+  }
   
   public teleport(x: number, y: number) {
     const body = this.body as Physics.Arcade.Body;
@@ -286,7 +292,7 @@ export class Player extends Physics.Arcade.Sprite {
     const mouseY = this.scene.input.activePointer.worldY;
     
     // Get all enemies in the scene
-    const targetableObjects = (this.scene as any).anyTargetableObjectsInRoom();
+    const targetableObjects = (this.scene as any).anyEnemiesInRoom();
     if (!targetableObjects) {
       // No enemies, don't fire
       return;

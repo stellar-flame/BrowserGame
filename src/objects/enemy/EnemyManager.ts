@@ -1,20 +1,19 @@
-import { Scene, GameObjects, Physics } from 'phaser';
+import { Scene } from 'phaser';
 import { Enemy } from './Enemy';
 import { Room } from '../rooms/Room';
-import { MainScene } from '../../scenes/MainScene';
-import { EnemyFactory, EnemyType } from './EnemyFactory';
 import { Player } from '../Player';
 import { RangedEnemy } from './RangedEnemy';
 import { Bullet } from '../weapons/Bullet';
+import { EnemyType } from './EnemyFactory';
 
 
-export class EnemyManager {
-  private scene: MainScene;
+export class EnemyManager<T extends Scene> {
+  private scene: T;
   private enemies: Phaser.Physics.Arcade.Group;
   public static readonly ENEMY_DIED = 'enemy-died';
 
 
-  constructor(scene: MainScene) {
+  constructor(scene: T) {
     this.scene = scene;
     this.enemies = this.scene.physics.add.group({
       classType: Enemy,
@@ -56,8 +55,9 @@ export class EnemyManager {
   }
 
   public setupCollisions(): void {
-    const player = this.scene.getPlayer();
-    const wallsLayer = this.scene.getWallsLayer();
+    const scene = this.scene as any;
+    const player = scene.getPlayer();
+    const wallsLayer = scene.getWallsLayer();
 
     if (wallsLayer) {
       // Enemy collisions with walls
@@ -90,16 +90,17 @@ export class EnemyManager {
   }
 
      // Helper to set up collisions for a specific enemy's bullets
- private setupEnemyBulletCollisions(enemyInstance: Enemy) {
-    const player = this.scene.getPlayer();
-    const wallsLayer = this.scene.getWallsLayer();
+ public setupEnemyBulletCollisions(enemyInstance: Enemy) {
+    const scene = this.scene as any;
+    const player = scene.getPlayer();
+    const wallsLayer = scene.getWallsLayer();
   
     if (enemyInstance instanceof RangedEnemy && enemyInstance.weapon && enemyInstance.weapon.bullets) {
          // Enemy Bullets vs Player
          this.scene.physics.add.collider(player, enemyInstance.weapon.bullets, this.handlePlayerBulletCollision, undefined, this); 
          // Enemy Bullets vs Walls
          if (wallsLayer) {
-             this.scene.physics.add.collider(enemyInstance.weapon.bullets, wallsLayer, this.scene.handleBulletPlatformCollision, undefined, this);
+             this.scene.physics.add.collider(enemyInstance.weapon.bullets, wallsLayer, scene.handleBulletPlatformCollision, undefined, this);
          }
      }
 }

@@ -9,28 +9,26 @@ import { EnemyManager } from '../objects/enemy/EnemyManager';
 
 export class MainScene extends Scene {
   // Core game objects
-  private player!: Player;
-  private enemies!: Phaser.Physics.Arcade.Group;
-  private wallsLayer: Phaser.Tilemaps.TilemapLayer | null = null;
-  private mousePointer: Phaser.Input.Pointer | null = null;
+  protected player!: Player;
+  protected wallsLayer: Phaser.Tilemaps.TilemapLayer | null = null;
+  protected mousePointer: Phaser.Input.Pointer | null = null;
   
   // Game state
-  private gameOver: boolean = false;
-  private gameOverText: Phaser.GameObjects.Text | null = null;
-  private restartText: Phaser.GameObjects.Text | null = null;
+  protected gameOver: boolean = false;
+  protected gameOverText: Phaser.GameObjects.Text | null = null;
+  protected restartText: Phaser.GameObjects.Text | null = null;
   
   // Room system
-  private currentRoomId: string = "1";
-  private roomManager: RoomManager;
+  protected roomManager: RoomManager<Scene>;
   
   // Managers and utilities
-  private pathfindingGrid: PathfindingGrid;
-  private barrelManager: BarrelManager | null = null;
-  private enemyManager: EnemyManager | null = null;
+  protected pathfindingGrid: PathfindingGrid;
+  protected barrelManager: BarrelManager<Scene> | null = null;
+  protected enemyManager: EnemyManager<Scene> | null = null;
   
  
-  constructor() {
-    super({ key: 'MainScene' });
+  constructor(key: string = 'MainScene') {
+    super({key: key}); 
     this.pathfindingGrid = PathfindingGrid.getInstance();
     this.roomManager = new RoomManager(this);
 
@@ -86,7 +84,7 @@ export class MainScene extends Scene {
     
 
     this.events.on(EnemyManager.ENEMY_DIED, (data: { enemy: Enemy }) => {
-      this.roomManager.getRoom(this.currentRoomId)?.checkCleared();
+      this.roomManager.getCurrentRoom()?.checkCleared();
     });
   }
 
@@ -157,7 +155,6 @@ export class MainScene extends Scene {
 
   private setupPhysics() {
     this.physics.world.setBounds(0, 0, 1600, 1200);
-    this.enemies = this.physics.add.group({ classType: Enemy });
   }
 
   private setupRooms() {
@@ -179,7 +176,7 @@ export class MainScene extends Scene {
     this.barrelManager.createBarrelsFromPropsLayer(map.getObjectLayer('Props') as Phaser.Tilemaps.ObjectLayer, this.roomManager.getRooms());
   }
 
-  private setupEnemies() {
+  protected setupEnemies() {
     this.enemyManager = new EnemyManager(this);
     console.log('EnemyManager created:', this.enemyManager);
     const map = this.make.tilemap({ key: 'dungeon-map' });
@@ -222,9 +219,9 @@ export class MainScene extends Scene {
     }
   }
 
-  public anyTargetableObjectsInRoom() {
+  public anyEnemiesInRoom() {
     if (!this.roomManager) return false;  
-    return this.roomManager.anyTargetableObjectsInRoom();
+    return this.roomManager.anyEnemiesInRoom();
   }
 
 
@@ -287,7 +284,7 @@ export class MainScene extends Scene {
   }
   
   // Add getter for barrel manager
-  public getBarrelManager(): BarrelManager {
+  public getBarrelManager(): BarrelManager<Scene> {
     if (!this.barrelManager) {
       throw new Error('BarrelManager not initialized');
     }
@@ -295,7 +292,10 @@ export class MainScene extends Scene {
   }
 
   // Add getter for enemy manager
-  public getEnemyManager(): EnemyManager | null {
+  public getEnemyManager(): EnemyManager<Scene> {
+    if (!this.enemyManager) {
+      throw new Error('EnemyManager not initialized');
+    }
     return this.enemyManager;
   }
 }

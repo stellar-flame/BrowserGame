@@ -1,15 +1,14 @@
-import { Scene, Types, Physics } from "phaser";
+import { Types, Physics, Scene } from "phaser";
 import { Room } from "./Room";
-import { MainScene } from "../../scenes/MainScene";
 import { Door } from "../Door";
 import { DoorDirection } from "../Door";
 
-export class RoomManager {
-  private scene: MainScene;
+export class RoomManager<T extends Scene> {
+  private scene: T;
   private rooms: Map<string, Room>;
   private currentRoom: Room | null = null;  
 
-  constructor(scene: MainScene) {
+  constructor(scene:  T) {
     this.scene = scene;
     this.rooms = new Map();
 
@@ -21,7 +20,8 @@ export class RoomManager {
         const room = this.createFromTilemapObject(roomObj);
         if (room) {
           this.rooms.set(room.getId(), room);
-          this.scene.physics.add.overlap(this.scene.getPlayer(), room.getZone(), () => {
+          const scene = this.scene as any;
+          this.scene.physics.add.overlap(scene.getPlayer(), room.getZone(), () => {
             this.handleRoomEntry(room);
           });
         }
@@ -100,8 +100,10 @@ export class RoomManager {
     (zone.body as Physics.Arcade.Body).setAllowGravity(false);
     (zone.body as Physics.Arcade.Body).moves = false;
     
-    if (this.scene.getPlayer()) {  
-      this.scene.physics.add.overlap(this.scene.getPlayer(), zone, () => {
+    const scene = this.scene as any;
+    const player = scene.getPlayer();
+    if (player) {  
+      this.scene.physics.add.overlap(player, zone, () => {
         if (!room.isRoomCleared()) {
           room.spawnEnemies();
         }
@@ -144,7 +146,8 @@ export class RoomManager {
 
     // Add collision with player if door is closed
     if (!isOpen) {
-      const collider = this.scene.physics.add.collider(this.scene.getPlayer(), door);
+      const scene = this.scene as any;
+      const collider = scene.physics.add.collider(scene.getPlayer(), door);
       door.setCollider(collider);
     }
 
@@ -183,9 +186,13 @@ export class RoomManager {
     return this.rooms.get(roomId);
   }
 
-  public anyTargetableObjectsInRoom(): boolean {
+  public getCurrentRoom(): Room | null {
+    return this.currentRoom;
+  }
+
+  public anyEnemiesInRoom(): boolean {
     if (!this.currentRoom) return false;
-    return (this.currentRoom?.isEnemiesSpawned() &&  !this.currentRoom?.isRoomCleared()) || this.currentRoom?.getBarrels().length > 0;
+    return (this.currentRoom?.isEnemiesSpawned() &&  !this.currentRoom?.isRoomCleared());
   }
 
   public destroy(): void {

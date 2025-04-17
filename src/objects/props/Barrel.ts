@@ -4,6 +4,9 @@ export class Barrel extends Phaser.Physics.Arcade.Sprite {
   private isDestroyed: boolean = false;
   private isSmashed: boolean = false;
   private smashedFrame: number = 0;
+  private isHovered: boolean = false;
+  private originalTint: number = 0xffffff;
+  private hoverTint: number = 0xffff00; // Yellow tint when hovered
 
   public static readonly SMASHED_EVENT = 'barrel-smashed';
 
@@ -32,8 +35,56 @@ export class Barrel extends Phaser.Physics.Arcade.Sprite {
     
     // Set depth to ensure barrels are drawn below the Player and enemies
     this.setDepth(0.1);
+    
+    // Set up interactive properties
+    this.setInteractive();
+    
+    // Add hover effects
+    this.on('pointerover', this.onMouseOver, this);
+    this.on('pointerout', this.onMouseOut, this);
   }
   
+  // Method to handle mouse over event
+  private onMouseOver(): void {
+    if (!this.isSmashed && !this.isDestroyed) {
+      this.isHovered = true;
+      this.setTint(this.hoverTint);
+      
+      // Add a subtle scale effect
+      this.scene.tweens.add({
+        targets: this,
+        scaleX: 1.1,
+        scaleY: 1.1,
+        duration: 100,
+        ease: 'Power2'
+      });
+
+      this.scene.time.delayedCall(100, () => {
+        const scene = this.scene as any;
+        const player = scene.getPlayer();
+        if (player) {
+          player.shootAtTarget(this.x, this.y);
+        }
+      });
+    }
+  }
+  
+  // Method to handle mouse out event
+  private onMouseOut(): void {
+    if (!this.isSmashed && !this.isDestroyed) {
+      this.isHovered = false;
+      this.clearTint();
+      
+      // Reset scale
+      this.scene.tweens.add({
+        targets: this,
+        scaleX: 1,
+        scaleY: 1,
+        duration: 100,
+        ease: 'Power2'
+      });
+    }
+  }
   
   // Method to smash the barrel
   public smash(): void {
@@ -58,6 +109,9 @@ export class Barrel extends Phaser.Physics.Arcade.Sprite {
         this.body.immovable = false;
       }
       
+      // Disable interactive properties
+      this.disableInteractive();
+      
       // Emit the smashed event with the barrel's position and reference
       this.scene.events.emit(Barrel.SMASHED_EVENT, {
         x: this.x,
@@ -78,6 +132,11 @@ export class Barrel extends Phaser.Physics.Arcade.Sprite {
   // Method to check if barrel is smashed
   public isBarrelSmashed(): boolean {
     return this.isSmashed;
+  }
+  
+  // Method to check if barrel is being hovered
+  public isBarrelHovered(): boolean {
+    return this.isHovered;
   }
   
   // Override destroy method to set flag
