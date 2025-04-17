@@ -25,7 +25,6 @@ export class Weapon {
   constructor(scene: Scene, config: WeaponConfig) {
     this.scene = scene;
     this.config = config;
-    
     // Apply configuration
     this.type = config.type;
     this.damage = config.damage;
@@ -44,6 +43,7 @@ export class Weapon {
       // Create bullet group for ranged weapons
       this.bullets = this.createBulletGroup(scene);
     }
+
   }
   
   private createBulletGroup(scene: Scene): Physics.Arcade.Group {
@@ -90,8 +90,24 @@ export class Weapon {
     }
   }
 
+  public fireInDirection(shooter: any, x: number, y: number): void {
+    if (this.type !== 'ranged' || !this.bullets) return;
+    // Check attack rate cooldown
+    const currentTime = this.scene.time.now;
+    if (currentTime - this.lastFired < this.attackRate) return;
+
+    // Get a bullet from the weapon's bullet group
+    const bullet = this.bullets.get() as Bullet;
+    if (bullet) {
+      const angle = Phaser.Math.Angle.Between(shooter.x, shooter.y, x, y);
+  
+      bullet.fire(shooter.x, shooter.y, angle);
+    }
+    this.lastFired = currentTime;
+  }
+  
   // Fire method for ranged weapons
-  public fire(shooter: RangedEnemy, target: Player): void {
+  public fireAtTarget(shooter: any, target: any): void {
     if (this.type !== 'ranged' || !this.bullets) return;
     
     // Check attack rate cooldown

@@ -57,7 +57,7 @@ export class MainScene extends Scene {
     this.load.image('door-closed', 'assets/sprites/door-closed.png');
     this.load.image('barrel', 'assets/sprites/barrel.png');
     this.load.image('potion', 'assets/sprites/potion.png');
-    this.load.image('player-bullet-1', 'assets/sprites/player-bullet.png');
+    this.load.image('player-bullet-1', 'assets/sprites/player-bullet-1.png');
 
   }
 
@@ -125,15 +125,24 @@ export class MainScene extends Scene {
     if (floorLayer) {
       floorLayer.setAlpha(1);
       floorLayer.setDepth(-1);
+      floorLayer.setPipeline('TextureTintPipeline');
+      floorLayer.setScrollFactor(1);
+      floorLayer.setCullPadding(32, 32);
     }
    
     if (floorDecorLayer) {
       floorDecorLayer.setAlpha(1);
       floorDecorLayer.setDepth(-0.5);
+      floorDecorLayer.setPipeline('TextureTintPipeline');
+      floorDecorLayer.setScrollFactor(1);
+      floorDecorLayer.setCullPadding(32, 32);
     }
    
     if (this.wallsLayer) {
       this.wallsLayer.setCollisionFromCollisionGroup();
+      this.wallsLayer.setPipeline('TextureTintPipeline');
+      this.wallsLayer.setScrollFactor(1);
+      this.wallsLayer.setCullPadding(32, 32);
     } else {
       console.error('Walls layer is null');
     }
@@ -158,7 +167,9 @@ export class MainScene extends Scene {
 
   private setupCamera() {
     this.cameras.main.setBounds(0, 0, 1600, 1200);
-    this.cameras.main.startFollow(this.player);
+    this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+    this.cameras.main.setRoundPixels(true);
+    this.cameras.main.setZoom(1);
   }
 
   private setupPhysics() {
@@ -204,7 +215,10 @@ export class MainScene extends Scene {
     // Collisions with walls
     if (this.wallsLayer) {
       this.physics.add.collider(this.player, this.wallsLayer); // Player vs Walls
-      this.physics.add.collider(this.player.bullets, this.wallsLayer, this.handleBulletPlatformCollision, undefined, this); // Player Bullets vs Walls
+
+      if (this.player.weapon.bullets) {
+        this.physics.add.collider(this.player.weapon.bullets, this.wallsLayer, this.handleBulletCollision, undefined, this); // Player Bullets vs Walls
+      }
     }
 
     // Setup enemy collisions
@@ -222,9 +236,7 @@ export class MainScene extends Scene {
     }
   }
 
-
-  // Handles collision between player bullets and walls/platforms
-  public handleBulletPlatformCollision(bullet: any, platform: any) {
+  public handleBulletCollision(bullet: any, platform: any) {
     const bulletInstance = bullet as Bullet;
     if (bulletInstance && bulletInstance.active) {
       bulletInstance.deactivate();

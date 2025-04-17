@@ -1,5 +1,9 @@
+
+export const TYPE_MELEE = 'melee';
+export const TYPE_RANGED = 'ranged';
+
 export interface WeaponConfig {
-  type: 'melee' | 'ranged';
+  type: typeof TYPE_MELEE | typeof TYPE_RANGED;
   damage: number;
   attackRate: number; // Cooldown time in milliseconds between attacks
   bulletSpeed?: number;
@@ -11,23 +15,24 @@ export interface WeaponConfig {
   maxDistance?: number;
 }
 
+
 export const WEAPON_CONFIGS = {
   ZOMBIESTRIKE: {
-    type: 'melee',
+    type: TYPE_MELEE,
     damage: 20,
     attackRate: 1000, // 1 second cooldown
     minDistance: 40,
     maxDistance: 50 
   },
   SWORD: {
-    type: 'melee',
+    type: TYPE_MELEE,
     damage: 15,
     attackRate: 1000, // 1 second cooldown
     minDistance: 50,
     maxDistance: 100
   },
   BOW: {
-    type: 'ranged',
+    type: TYPE_RANGED,
     damage: 10,
     attackRate: 667, // ~1.5 attacks per second (1000ms / 1.5)
     bulletSpeed: 300,
@@ -38,14 +43,14 @@ export const WEAPON_CONFIGS = {
     maxDistance: 200
   },
   SPEAR: {
-    type: 'melee',
+    type: TYPE_MELEE,
     damage: 20,
     attackRate: 1250, // 0.8 attacks per second (1000ms / 0.8)
     minDistance: 50,
     maxDistance: 100
   },
   NINJA_STAR: {
-    type: 'ranged',
+    type: TYPE_RANGED,
     damage: 10,
     attackRate: 2000, // 0.5 attacks per second (1000ms / 0.5)
     bulletSpeed: 400,
@@ -57,13 +62,13 @@ export const WEAPON_CONFIGS = {
     maxDistance: 200
   },
   LEVEL_1_GUN: {
-    type: 'ranged ',
+    type: TYPE_RANGED,
     damage: 10,
     attackRate: 500, // 2 attacks per second (1000ms / 2)
     bulletSpeed: 300,
     bulletSprite: 'player-bullet-1',
-    bulletWidth: 16,
-    bulletHeight: 16,
+    bulletWidth: 32,
+    bulletHeight: 32,
     minDistance: 100,
     maxDistance: 300
   }

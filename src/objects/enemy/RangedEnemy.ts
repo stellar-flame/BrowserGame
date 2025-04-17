@@ -43,7 +43,7 @@ export class RangedEnemy extends Enemy {
     
     
     // Use the weapon's fire method
-    this.weapon.fire(this, this.player);
+    this.weapon.fireAtTarget(this, this.player);
   }
   
   private checkIfShotsBlocked(): void {
@@ -110,15 +110,6 @@ export class RangedEnemy extends Enemy {
       }
     });
     
-    // Removed barrel line of sight check since enemies should not consider barrels as blocking tiles
-    
-    // Set a timer to remove the debug graphics after a longer delay
-    this.scene.time.delayedCall(500, () => {
-      if (this.debugGraphics) {
-        this.debugGraphics.destroy();
-        this.debugGraphics = null;
-      }
-    });
     
     // Only update the timer when the blocked state changes from unblocked to blocked
     if (hasBlockingTiles && !this.shotsBlocked) {

@@ -70,14 +70,16 @@ export class EnemyManager {
       );
     }
 
-    // Enemy collisions with player bullets
-    this.scene.physics.add.collider(
-      this.enemies,
-      this.player.bullets,
-      this.handleEnemyBulletCollision,
-      undefined,
-      this
-    );
+    if (this.player.weapon?.bullets) {
+      // Enemy collisions with player bullets
+      this.scene.physics.add.collider(
+        this.enemies,
+        this.player.weapon.bullets,
+        this.handleEnemyBulletCollision,
+        undefined,
+        this
+      );
+    }
 
     // Enemy overlap with player (for melee damage)
     this.scene.physics.add.overlap(
@@ -90,30 +92,30 @@ export class EnemyManager {
   }
 
      // Helper to set up collisions for a specific enemy's bullets
- public setupEnemyBulletCollisions(enemyInstance: Enemy) {
-    const wallsLayer = (this.scene as MainScene).getWallsLayer();
-  
-    if (enemyInstance instanceof RangedEnemy && enemyInstance.weapon && enemyInstance.weapon.bullets) {
-         // Enemy Bullets vs Player
+    public setupEnemyBulletCollisions(enemyInstance: Enemy) {
+        const wallsLayer = (this.scene as MainScene).getWallsLayer();
+    
+        if (enemyInstance instanceof RangedEnemy && enemyInstance.weapon && enemyInstance.weapon.bullets) {
+            // Enemy Bullets vs Player
             this.scene.physics.add.collider(this.player, enemyInstance.weapon.bullets, this.handlePlayerBulletCollision, undefined, this); 
-         // Enemy Bullets vs Walls
-         if (wallsLayer) {
-                this.scene.physics.add.collider(enemyInstance.weapon.bullets, wallsLayer, (this.scene as MainScene).handleBulletPlatformCollision, undefined, this);
-         }
-     }
-}
+            // Enemy Bullets vs Walls
+            if (wallsLayer) {
+                this.scene.physics.add.collider(enemyInstance.weapon.bullets, wallsLayer, (this.scene as MainScene).handleBulletCollision, undefined, this);
+            }
+        }
+    }
   
     // Handles collision between enemy bullets and the player
-private handlePlayerBulletCollision(player: any, bullet: any) {
-    const playerInstance = player as Player;
-    const bulletInstance = bullet as Bullet;
-    
-    if (!playerInstance.active || !bulletInstance.active) {
-      return;
-    }
+    private handlePlayerBulletCollision(player: any, bullet: any) {
+        const playerInstance = player as Player;
+        const bulletInstance = bullet as Bullet;
+        
+        if (!playerInstance.active || !bulletInstance.active) {
+        return;
+        }
 
-    playerInstance.takeDamage(bulletInstance.getDamage());
-    bulletInstance.deactivate();
+        playerInstance.takeDamage(bulletInstance.getDamage());
+        bulletInstance.deactivate();
     }
 
   private handleEnemyWallCollision(enemy: any, wall: any): void {

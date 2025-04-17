@@ -2,6 +2,8 @@ import { Scene, GameObjects, Physics, Types, Input } from 'phaser';
 import { Bullet } from './weapons/Bullet';
 import { HealthBar } from './HealthBar';
 import { Potion } from './items/Potion';
+import { Weapon } from './weapons/Weapon';
+import { WeaponFactory } from './weapons/WeaponFactory';
 
 // Extend Physics.Arcade.Sprite for physics and preUpdate
 export class Player extends Physics.Arcade.Sprite {
@@ -14,7 +16,7 @@ export class Player extends Physics.Arcade.Sprite {
     right: Input.Keyboard.Key;
   };
   private isTeleporting: boolean = false;
-  public bullets: Physics.Arcade.Group;
+  public weapon: Weapon;
   public lastFired: number = 0;
   public fireRate: number = 500; // Fire every 0.5 seconds
   
@@ -33,65 +35,33 @@ export class Player extends Physics.Arcade.Sprite {
   constructor(scene: Scene, x: number, y: number) {
     super(scene, x, y, 'player-sprite'); // Use the sprite sheet
 
-    // Create WASD keys
-    if (scene.input && scene.input.keyboard) {
-      this.wasdKeys = scene.input.keyboard.addKeys({
-        up: 'W',
-        down: 'S',
-        left: 'A',
-        right: 'D'
-      }) as {
-        up: Input.Keyboard.Key;
-        down: Input.Keyboard.Key;
-        left: Input.Keyboard.Key;
-        right: Input.Keyboard.Key;
-      };
-    } else {
-      throw new Error('Keyboard input not available');
-    }
-
-    // Set a larger display size for the sprite
-    this.setScale(1);
-
-    // Add to scene and enable physics
+    // Add to scene's display list and update list
     scene.add.existing(this);
-    scene.physics.world.enable(this); // Enable physics
-    
-    const frameWidth = this.frame.width;
-    const frameHeight = this.frame.height;
-    const midWidth = frameWidth / 2;
-    const midHeight = frameHeight / 2;
-    
-    if (this.body) {
-      this.body.setSize(midWidth, midHeight);
-    }
+    scene.physics.add.existing(this);
     this.setDepth(1);
-    // Setup physics properties (cast body to Arcade.Body)
-    (this.body as Physics.Arcade.Body).setCollideWorldBounds(true);
-    
-    // Initialize bullets group with custom appearance
-    this.bullets = scene.physics.add.group({ 
-      classType: Bullet, 
-      maxSize: 30, 
-      runChildUpdate: true,
-      createCallback: (item: Phaser.GameObjects.GameObject) => {
-        const bullet = item as Bullet;
-        // Set the bullet texture and appearance
-        bullet.setTexture('player-bullet-1'); // Use the default white texture
-        bullet.setTint(0xff0000); // Red tint for player bullets
-        bullet.setDisplaySize(6, 6); // Make it a small circle
-        bullet.setAlpha(1); // Ensure full opacity
-        bullet.setDepth(1); // Ensure bullets are drawn above the background
-        
-        // Set a smaller hit area for the bullet
-        const body = bullet.body as Phaser.Physics.Arcade.Body;
-        if (body) {
-          // Make hit area 50% of the display size
-          body.setSize(3, 3); // Half of the display size (6x6)
-        }
-      }
-    });
+    // Set up physics body
+    const body = this.body as Physics.Arcade.Body;
+    body.setCollideWorldBounds(true);
+    body.setBounce(0);
+    body.setDrag(300);
+    body.setMaxVelocity(200, 200);
 
+    // Set up input
+    this.wasdKeys = (scene.input as Input.InputPlugin).keyboard!.addKeys({
+      up: Input.Keyboard.KeyCodes.W,
+      down: Input.Keyboard.KeyCodes.S,
+      left: Input.Keyboard.KeyCodes.A,
+      right: Input.Keyboard.KeyCodes.D,
+    }) as {
+      up: Input.Keyboard.Key;
+      down: Input.Keyboard.Key;
+      left: Input.Keyboard.Key;
+      right: Input.Keyboard.Key;
+    };
+
+    // Initialize weapon with LEVEL_1_GUN configuration
+    this.weapon = WeaponFactory.createWeapon(scene, 'LEVEL_1_GUN');
+    console.log(this.weapon);
     // Create animations
     this.createAnimations(scene);
 
@@ -191,12 +161,7 @@ export class Player extends Physics.Arcade.Sprite {
     this.targetCircle.moveTo(mouseX, mouseY - 10);
     this.targetCircle.lineTo(mouseX, mouseY + 10);
   }
-  public shootAtTarget(x: number, y: number) {
-    const bullet = this.bullets.get() as Bullet;
-    if (bullet) {
-      bullet.fire(this.x, this.y, Phaser.Math.Angle.Between(this.x, this.y, x, y));
-    }
-  }
+  
 
   public teleport(x: number, y: number) {
     const body = this.body as Physics.Arcade.Body;
@@ -335,9 +300,37 @@ export class Player extends Physics.Arcade.Sprite {
     return this.isInvulnerable;
   }
 
+  public shootAtTarget(x: number, y: number) {
+    // Check fire rate before firing
+    const currentTime = this.scene.time.now;
+    if (currentTime - this.lastFired > this.fireRate) {
+      // Calculate angle to target
+      const angle = Phaser.Math.Angle.Between(this.x, this.y, x, y);
+      
+      // Get a bullet from the weapon's bullet group
+      if (this.weapon.bullets) {
+        const bullet = this.weapon.bullets.get() as Bullet;
+        if (bullet) {
+          // Calculate the center position of the player
+          const centerX = this.x;
+          const centerY = this.y - 5; // Slight upward offset
+          
+          // Fire in the direction of the target
+          bullet.fire(centerX, centerY, angle);
+        }
+      }
+      
+      this.lastFired = currentTime;
+    }
+  }
+
   public destroy(): void {
     this.healthBar.destroy();
     this.targetCircle.destroy();
+    // Deactivate all bullets when player is destroyed
+    if (this.weapon) {
+      this.weapon.deactivateAllBullets();
+    }
     super.destroy();
   }
 
@@ -352,25 +345,10 @@ export class Player extends Physics.Arcade.Sprite {
       // No enemies, don't fire
       return;
     }
-    
+
     // Calculate angle to mouse position
-    const angle = Phaser.Math.Angle.Between(this.x, this.y, mouseX, mouseY);
+    this.weapon.fireInDirection(this, mouseX, mouseY);
     
-    // Check fire rate before firing
-    const currentTime = this.scene.time.now;
-    if (currentTime - this.lastFired > this.fireRate) {
-      // Fire in the direction of the mouse
-      const bullet = this.bullets.get() as Bullet;
-      if (bullet) {
-        // Calculate the center position of the player
-        const centerX = this.x;
-        const centerY = this.y - 5; // Slight upward offset
-        
-        // Fire in the direction of the mouse
-        bullet.fire(centerX, centerY, angle);
-      }
-      this.lastFired = currentTime;
-    }
   }
   
 }

@@ -86,22 +86,22 @@ export class BarrelManager {
   }
 
   public setupCollisions(): void {
+    if (this.player.weapon.bullets) {
       this.scene.physics.add.collider(
         this.barrels,
-        this.player.bullets,  
+        this.player.weapon.bullets,  
         this.handleBulletCollision,
         undefined,
         this
       );
-
-      this.scene.physics.add.overlap(
+    }
+    this.scene.physics.add.overlap(
         this.player,
         this.barrels,
         this.handleBarrelCollision,
         undefined,
         this
       );
-      
   }
 
   private handleBulletCollision(barrel: any, bullet: any): void {

@@ -33,8 +33,9 @@ const config: Phaser.Types.Core.GameConfig = {
   pixelArt: true,
   render: {
     pixelArt: true,
-    antialias: false
-  }
+    antialias: false,
+    roundPixels: true
+  },
 };
 
 new Phaser.Game(config); 
