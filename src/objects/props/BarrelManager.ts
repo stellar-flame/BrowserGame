@@ -93,6 +93,15 @@ export class BarrelManager {
         undefined,
         this
       );
+
+      this.scene.physics.add.overlap(
+        this.player,
+        this.barrels,
+        this.handleBarrelCollision,
+        undefined,
+        this
+      );
+      
   }
 
   private handleBulletCollision(barrel: any, bullet: any): void {
@@ -100,6 +109,16 @@ export class BarrelManager {
       if (!barrel.isBarrelSmashed()) {
         barrel.smash();
         bullet.destroy();
+      }
+    }
+  }
+
+  private handleBarrelCollision(player : any, barrel: any): void {
+    console.log('handle barrel collision', player, barrel);
+    if (barrel instanceof Barrel && player instanceof Player) {
+        console.log('about to smash barrel', barrel, player);
+      if (!barrel.isBarrelSmashed()) {
+        barrel.smash();
       }
     }
   }

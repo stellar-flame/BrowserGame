@@ -1,8 +1,7 @@
 export interface WeaponConfig {
   type: 'melee' | 'ranged';
   damage: number;
-  attackSpeed: number;
-  attackRate?: number; // Cooldown time in milliseconds between attacks
+  attackRate: number; // Cooldown time in milliseconds between attacks
   bulletSpeed?: number;
   bulletSprite?: string;
   bulletWidth?: number;
@@ -16,7 +15,6 @@ export const WEAPON_CONFIGS = {
   ZOMBIESTRIKE: {
     type: 'melee',
     damage: 20,
-    attackSpeed: 1.0,
     attackRate: 1000, // 1 second cooldown
     minDistance: 40,
     maxDistance: 50 
@@ -24,7 +22,6 @@ export const WEAPON_CONFIGS = {
   SWORD: {
     type: 'melee',
     damage: 15,
-    attackSpeed: 1.0,
     attackRate: 1000, // 1 second cooldown
     minDistance: 50,
     maxDistance: 100
@@ -32,8 +29,7 @@ export const WEAPON_CONFIGS = {
   BOW: {
     type: 'ranged',
     damage: 10,
-    attackSpeed: 1.5,
-    attackRate: 1500, // 1.5 seconds cooldown
+    attackRate: 667, // ~1.5 attacks per second (1000ms / 1.5)
     bulletSpeed: 300,
     bulletSprite: 'arrow',
     bulletWidth: 32,
@@ -44,16 +40,14 @@ export const WEAPON_CONFIGS = {
   SPEAR: {
     type: 'melee',
     damage: 20,
-    attackSpeed: 0.8,
-    attackRate: 800, // 0.8 seconds cooldown
+    attackRate: 1250, // 0.8 attacks per second (1000ms / 0.8)
     minDistance: 50,
     maxDistance: 100
   },
   NINJA_STAR: {
     type: 'ranged',
     damage: 10,
-    attackSpeed: 0.5,
-    attackRate: 500, // 0.5 seconds cooldown
+    attackRate: 2000, // 0.5 attacks per second (1000ms / 0.5)
     bulletSpeed: 400,
     bulletSprite: 'ninja-star',
     bulletWidth: 32,
@@ -61,6 +55,17 @@ export const WEAPON_CONFIGS = {
     bulletSpinSpeed: 10, // 10 rotations per second
     minDistance: 100,
     maxDistance: 200
+  },
+  LEVEL_1_GUN: {
+    type: 'ranged ',
+    damage: 10,
+    attackRate: 500, // 2 attacks per second (1000ms / 2)
+    bulletSpeed: 300,
+    bulletSprite: 'player-bullet-1',
+    bulletWidth: 16,
+    bulletHeight: 16,
+    minDistance: 100,
+    maxDistance: 300
   }
 } as const;
 

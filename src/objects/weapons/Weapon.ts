@@ -7,7 +7,6 @@ import { WeaponConfig } from './WeaponConfigs';
 
 export class Weapon {
   public damage: number;
-  public attackSpeed: number;
   public attackRate: number;
   public bulletSpeed?: number;
   public bulletSprite?: string;
@@ -30,8 +29,7 @@ export class Weapon {
     // Apply configuration
     this.type = config.type;
     this.damage = config.damage;
-    this.attackSpeed = config.attackSpeed;
-    this.attackRate = config.attackRate || 1000 / this.attackSpeed; // Default to calculated from attackSpeed if not provided
+    this.attackRate = config.attackRate || 1000; // Default to 1 second cooldown if not provided
     this.minDistance = config.minDistance || this.minDistance;
     this.maxDistance = config.maxDistance || this.maxDistance;
     
@@ -58,7 +56,7 @@ export class Weapon {
         bullet.setDisplaySize(this.bulletWidth || 32, this.bulletHeight || 16);
         bullet.setOrigin(0.5, 0.5);
         bullet.setDamage(this.damage);
-        
+        bullet.setSpeed(this.bulletSpeed || 300);
         // Set a smaller hit area for the bullet
         const body = bullet.body as Phaser.Physics.Arcade.Body;
         if (body) {

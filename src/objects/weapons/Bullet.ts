@@ -29,6 +29,10 @@ export class Bullet extends Physics.Arcade.Sprite {
         this.deactivate();
     }
 
+    setSpeed(speed: number): void {
+        this.speed = speed;
+    }   
+    
     // Method to set the damage amount
     setDamage(amount: number): void {
         this.damage = amount;

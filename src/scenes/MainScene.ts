@@ -57,6 +57,7 @@ export class MainScene extends Scene {
     this.load.image('door-closed', 'assets/sprites/door-closed.png');
     this.load.image('barrel', 'assets/sprites/barrel.png');
     this.load.image('potion', 'assets/sprites/potion.png');
+    this.load.image('player-bullet-1', 'assets/sprites/player-bullet.png');
 
   }
 
@@ -88,6 +89,11 @@ export class MainScene extends Scene {
     this.events.on(EnemyManager.ENEMY_DIED, (data: { enemy: Enemy }) => {
       this.getRoomManager().getCurrentRoom()?.checkCleared();
     });
+
+
+      // Enable debug visualization
+    // this.physics.world.createDebugGraphic();
+
   }
 
   private setupInput() {

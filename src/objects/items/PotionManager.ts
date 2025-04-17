@@ -34,8 +34,6 @@ export class PotionManager {
       });
   
     
-    // Start spawn timer
-    this.startSpawnTimer();
   }
   
   
@@ -50,15 +48,6 @@ export class PotionManager {
     }
   }
   
-  // Start the spawn timer
-  private startSpawnTimer(): void {
-    this.spawnTimer = this.scene.time.addEvent({
-      delay: this.spawnInterval,
-      callback: this.spawnPotion,
-      callbackScope: this,
-      loop: true
-    });
-  }
   
   // Spawn a potion at a random spawn point
   private spawnPotion(x: number, y: number): void {

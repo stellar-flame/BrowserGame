@@ -77,7 +77,7 @@ export class Player extends Physics.Arcade.Sprite {
       createCallback: (item: Phaser.GameObjects.GameObject) => {
         const bullet = item as Bullet;
         // Set the bullet texture and appearance
-        bullet.setTexture('__WHITE'); // Use the default white texture
+        bullet.setTexture('player-bullet-1'); // Use the default white texture
         bullet.setTint(0xff0000); // Red tint for player bullets
         bullet.setDisplaySize(6, 6); // Make it a small circle
         bullet.setAlpha(1); // Ensure full opacity
@@ -246,6 +246,57 @@ export class Player extends Physics.Arcade.Sprite {
   public heal(amount: number = 10): void {
     this.currentHealth = Math.min(this.maxHealth, this.currentHealth + amount);
     this.healthBar.setHealth(this.currentHealth, this.maxHealth);
+    
+    // Visual healing effect
+    this.showHealEffect(amount);
+  }
+  
+  // Show a visual healing effect
+  private showHealEffect(amount: number): void {
+    // Flash green tint
+    this.setTint(0x00ff00);
+    this.scene.time.delayedCall(200, () => {
+      this.clearTint();
+    });
+    
+    // Create healing particles
+    const particles = this.scene.add.particles(0, 0, 'particle', {
+      x: this.x,
+      y: this.y,
+      speed: { min: 20, max: 50 },
+      scale: { start: 0.5, end: 0 },
+      lifespan: 800,
+      quantity: 10,
+      tint: 0x00ff00,
+      alpha: { start: 0.8, end: 0 },
+      blendMode: 'ADD',
+      gravityY: -50
+    });
+    
+    // Emit particles for a short duration
+    particles.explode(20, this.x, this.y);
+    
+    // Create healing text
+    const healText = this.scene.add.text(this.x, this.y - 20, `+${amount}`, {
+      fontSize: '16px',
+      color: '#00ff00',
+      fontStyle: 'bold',
+      stroke: '#000000',
+      strokeThickness: 3
+    });
+    
+    // Animate the text
+    this.scene.tweens.add({
+      targets: healText,
+      y: this.y - 40,
+      alpha: 0,
+      duration: 1000,
+      ease: 'Power2',
+      onComplete: () => {
+        healText.destroy();
+        particles.destroy();
+      }
+    });
   }
   
   // Method to handle player death
