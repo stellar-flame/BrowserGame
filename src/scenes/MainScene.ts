@@ -6,6 +6,7 @@ import { PathfindingGrid } from '../objects/pathfinding/PathfindingGrid';
 import { RoomManager } from '../objects/rooms/RoomManager';
 import { BarrelManager } from '../objects/props/BarrelManager';
 import { EnemyManager } from '../objects/enemy/EnemyManager';
+import { PotionManager } from '../objects/items/PotionManager';
 
 export class MainScene extends Scene {
   // Core game objects
@@ -19,19 +20,17 @@ export class MainScene extends Scene {
   protected restartText: Phaser.GameObjects.Text | null = null;
   
   // Room system
-  protected roomManager: RoomManager<Scene>;
+  protected roomManager: RoomManager | null = null;
   
   // Managers and utilities
   protected pathfindingGrid: PathfindingGrid;
-  protected barrelManager: BarrelManager<Scene> | null = null;
-  protected enemyManager: EnemyManager<Scene> | null = null;
-  
+  protected barrelManager: BarrelManager | null = null;
+  protected enemyManager: EnemyManager | null = null;
+  protected potionManager: PotionManager | null = null;
  
   constructor(key: string = 'MainScene') {
     super({key: key}); 
     this.pathfindingGrid = PathfindingGrid.getInstance();
-    this.roomManager = new RoomManager(this);
-
   }
 
   // Asset loading
@@ -57,6 +56,8 @@ export class MainScene extends Scene {
     this.load.image('door-open', 'assets/sprites/door-open.png');
     this.load.image('door-closed', 'assets/sprites/door-closed.png');
     this.load.image('barrel', 'assets/sprites/barrel.png');
+    this.load.image('potion', 'assets/sprites/potion.png');
+
   }
 
   private loadSprite(name: string, path: string, frameWidth: number, frameHeight: number) {  
@@ -79,12 +80,13 @@ export class MainScene extends Scene {
     this.setupRooms();
     this.setupPathfinding();
     this.setupBarrels();
+    this.setupPotions();
     this.setupEnemies();
     this.setupCollisions();
     
 
     this.events.on(EnemyManager.ENEMY_DIED, (data: { enemy: Enemy }) => {
-      this.roomManager.getCurrentRoom()?.checkCleared();
+      this.getRoomManager().getCurrentRoom()?.checkCleared();
     });
   }
 
@@ -158,6 +160,7 @@ export class MainScene extends Scene {
   }
 
   private setupRooms() {
+    this.roomManager = new RoomManager(this, this.player);
     const map = this.make.tilemap({ key: 'dungeon-map' });
     this.roomManager.initializeRooms(map.getObjectLayer('Rooms') as Phaser.Tilemaps.ObjectLayer);
   }
@@ -170,17 +173,23 @@ export class MainScene extends Scene {
   }
 
   private setupBarrels() {
-    this.barrelManager = new BarrelManager(this);
+    this.barrelManager = new BarrelManager(this, this.player);
     console.log('BarrelManager created:', this.barrelManager);
     const map = this.make.tilemap({ key: 'dungeon-map' });
-    this.barrelManager.createBarrelsFromPropsLayer(map.getObjectLayer('Props') as Phaser.Tilemaps.ObjectLayer, this.roomManager.getRooms());
+    this.barrelManager.createBarrelsFromPropsLayer(map.getObjectLayer('Props') as Phaser.Tilemaps.ObjectLayer, this.getRoomManager().getRooms());
+  }
+
+  private setupPotions() {
+    this.potionManager = new PotionManager(this, this.player);
+    console.log('PotionManager created:', this.potionManager);
+    this.potionManager.setSpawnPoints(this.getRoomManager().getRooms());
   }
 
   protected setupEnemies() {
-    this.enemyManager = new EnemyManager(this);
+    this.enemyManager = new EnemyManager(this, this.player);
     console.log('EnemyManager created:', this.enemyManager);
     const map = this.make.tilemap({ key: 'dungeon-map' });
-    this.enemyManager.createEnemiesFromSpawnLayer(map.getObjectLayer('Enemies') as Phaser.Tilemaps.ObjectLayer, this.roomManager.getRooms());
+    this.enemyManager.createEnemiesFromSpawnLayer(map.getObjectLayer('Enemies') as Phaser.Tilemaps.ObjectLayer, this.getRoomManager().getRooms());
   }
 
 
@@ -200,6 +209,10 @@ export class MainScene extends Scene {
     // Setup barrel collisions
     if (this.barrelManager) {
       this.barrelManager.setupCollisions();
+    }
+
+    if (this.potionManager) {
+      this.potionManager.setupCollisions();
     }
   }
 
@@ -284,7 +297,7 @@ export class MainScene extends Scene {
   }
   
   // Add getter for barrel manager
-  public getBarrelManager(): BarrelManager<Scene> {
+  public getBarrelManager(): BarrelManager {
     if (!this.barrelManager) {
       throw new Error('BarrelManager not initialized');
     }
@@ -292,10 +305,17 @@ export class MainScene extends Scene {
   }
 
   // Add getter for enemy manager
-  public getEnemyManager(): EnemyManager<Scene> {
+  public getEnemyManager(): EnemyManager {
     if (!this.enemyManager) {
       throw new Error('EnemyManager not initialized');
     }
     return this.enemyManager;
   }
+
+  public getRoomManager(): RoomManager {
+    if (!this.roomManager) {
+      throw new Error('RoomManager not initialized');
+    }
+    return this.roomManager;
+  } 
 }

@@ -31,7 +31,7 @@ export class EnemyTestScene extends MainScene {
     }
 
     protected setupEnemies() {
-        this.enemyManager = new EnemyManager(this);
+        this.enemyManager = new EnemyManager(this, this.player);
     }
 
     private toggleEnemyType() {

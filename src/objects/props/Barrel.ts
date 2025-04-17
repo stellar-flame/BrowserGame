@@ -1,4 +1,5 @@
 import { Scene } from 'phaser';
+import { Potion } from '../items/Potion';
 
 export class Barrel extends Phaser.Physics.Arcade.Sprite {
   private isDestroyed: boolean = false;
@@ -7,6 +8,7 @@ export class Barrel extends Phaser.Physics.Arcade.Sprite {
   private isHovered: boolean = false;
   private originalTint: number = 0xffffff;
   private hoverTint: number = 0xffff00; // Yellow tint when hovered
+  private spawnPotion: boolean = false;
 
   public static readonly SMASHED_EVENT = 'barrel-smashed';
 
@@ -99,31 +101,37 @@ export class Barrel extends Phaser.Physics.Arcade.Sprite {
         yoyo: true
       });
 
-      // Randomly choose a frame from the smashed-barrel texture (0, 1, or 2)
-      this.smashedFrame = Phaser.Math.Between(0, 2);
-      this.setTexture('smashed-barrel', this.smashedFrame);
-      
-      // Disable physics and collisions
-      if (this.body) {
-        this.body.enable = false;
-        this.body.immovable = false;
-      }
-      
-      // Disable interactive properties
-      this.disableInteractive();
-      
+    
+        // Randomly choose a frame from the smashed-barrel texture (0, 1, or 2)
+        this.smashedFrame = Phaser.Math.Between(0, 2);
+        this.setTexture('smashed-barrel', this.smashedFrame);
+
+        // Disable physics and collisions
+        if (this.body) {
+            this.body.enable = false;
+            this.body.immovable = false;
+        }
+        
+        // Disable interactive properties
+        this.disableInteractive();
+        // Disable active state to prevent further interactions
+        this.setActive(false); 
+        
       // Emit the smashed event with the barrel's position and reference
-      this.scene.events.emit(Barrel.SMASHED_EVENT, {
+     this.scene.events.emit(Barrel.SMASHED_EVENT, {
         x: this.x,
         y: this.y,
-        barrel: this
+        barrel: this,
+        spawnPotion: this.spawnPotion
       });
-      
-      // Disable active state to prevent further interactions
-      this.setActive(false);
+
     }
   }
-  
+
+  public addPotion(): void {    
+    this.spawnPotion = true;
+  }
+
   // Method to check if barrel is destroyed
   public isBarrelDestroyed(): boolean {
     return this.isDestroyed;

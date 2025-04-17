@@ -5,12 +5,6 @@ import { EnemyFactory, EnemyType } from '../enemy/EnemyFactory';
 import { MainScene } from '../../scenes/MainScene';
 import { Barrel } from '../props/Barrel';
 
-interface BarrelSmashedEventData {
-  x: number;
-  y: number;
-  barrel: Barrel;
-}
-
 export class Room {
   private scene: MainScene;
   private id: string;
@@ -53,7 +47,7 @@ export class Room {
     body.moves = false;
 
     // Listen for barrel smashed events
-    this.scene.events.on(Barrel.SMASHED_EVENT, (data: BarrelSmashedEventData) => {
+    this.scene.events.on(Barrel.SMASHED_EVENT, (data: {x: number, y: number, barrel: Barrel}) => {
       // Remove the smashed barrel from the room's barrel list
       if (this.barrels.includes(data.barrel)) {
         this.barrels.splice(this.barrels.indexOf(data.barrel), 1);

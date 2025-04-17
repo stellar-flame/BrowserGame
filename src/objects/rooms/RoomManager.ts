@@ -2,14 +2,16 @@ import { Types, Physics, Scene } from "phaser";
 import { Room } from "./Room";
 import { Door } from "../Door";
 import { DoorDirection } from "../Door";
+import { Player } from "../Player";
 
-export class RoomManager<T extends Scene> {
-  private scene: T;
+export class RoomManager {
+  private scene: Scene;
   private rooms: Map<string, Room>;
   private currentRoom: Room | null = null;  
-
-  constructor(scene:  T) {
+  private player: Player;
+  constructor(scene:  Scene, player: Player) {
     this.scene = scene;
+    this.player = player;
     this.rooms = new Map();
 
   }
@@ -20,8 +22,7 @@ export class RoomManager<T extends Scene> {
         const room = this.createFromTilemapObject(roomObj);
         if (room) {
           this.rooms.set(room.getId(), room);
-          const scene = this.scene as any;
-          this.scene.physics.add.overlap(scene.getPlayer(), room.getZone(), () => {
+          this.scene.physics.add.overlap(this.player, room.getZone(), () => {
             this.handleRoomEntry(room);
           });
         }
@@ -100,10 +101,8 @@ export class RoomManager<T extends Scene> {
     (zone.body as Physics.Arcade.Body).setAllowGravity(false);
     (zone.body as Physics.Arcade.Body).moves = false;
     
-    const scene = this.scene as any;
-    const player = scene.getPlayer();
-    if (player) {  
-      this.scene.physics.add.overlap(player, zone, () => {
+    if (this.player) {  
+      this.scene.physics.add.overlap(this.player, zone, () => {
         if (!room.isRoomCleared()) {
           room.spawnEnemies();
         }
@@ -146,8 +145,7 @@ export class RoomManager<T extends Scene> {
 
     // Add collision with player if door is closed
     if (!isOpen) {
-      const scene = this.scene as any;
-      const collider = scene.physics.add.collider(scene.getPlayer(), door);
+      const collider = this.scene.physics.add.collider(this.player, door);
       door.setCollider(collider);
     }
 

@@ -84,11 +84,9 @@ export class Weapon {
       attacker.x, attacker.y,
       target.x, target.y
     );
-    console.log('distance', distance);
     // Only attack if in range
     if (distance <= this.maxDistance) {
       // Apply damage to target
-      console.log('dealDamage', this.damage, target);
       target.takeDamage(this.damage);
       this.lastFired = currentTime;
     }

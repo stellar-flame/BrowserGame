@@ -1,6 +1,7 @@
 import { Scene, GameObjects, Physics, Types, Input } from 'phaser';
 import { Bullet } from './weapons/Bullet';
 import { HealthBar } from './HealthBar';
+import { Potion } from './items/Potion';
 
 // Extend Physics.Arcade.Sprite for physics and preUpdate
 export class Player extends Physics.Arcade.Sprite {
@@ -101,6 +102,10 @@ export class Player extends Physics.Arcade.Sprite {
     // Initialize health bar
     this.healthBar = new HealthBar(scene, this, 150, 10, true);
     this.healthBar.setHealth(this.currentHealth, this.maxHealth);
+
+    this.scene.events.on(Potion.COLLECTED_EVENT, (data: {x: number, y: number, healAmount: number}) => {
+      this.heal(data.healAmount) 
+    });
   }
 
   private createAnimations(scene: Scene) {
@@ -192,7 +197,7 @@ export class Player extends Physics.Arcade.Sprite {
       bullet.fire(this.x, this.y, Phaser.Math.Angle.Between(this.x, this.y, x, y));
     }
   }
-  
+
   public teleport(x: number, y: number) {
     const body = this.body as Physics.Arcade.Body;
     body.stop(); // Stop any velocity
@@ -214,7 +219,6 @@ export class Player extends Physics.Arcade.Sprite {
 
   // Method to take damage
   public takeDamage(amount: number = 10): void {
-    console.log('Taking damage:', amount, 'Current health:', this.currentHealth, 'Max health:', this.maxHealth);
     if (this.isInvulnerable) return;
     
     this.currentHealth = Math.max(0, this.currentHealth - amount);

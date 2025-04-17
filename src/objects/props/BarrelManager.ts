@@ -1,14 +1,16 @@
 import { Scene } from 'phaser';
 import { Barrel } from './Barrel';
 import { Room } from '../rooms/Room';
+import { Player } from '../Player';
 
-export class BarrelManager<T extends Scene> {
-  private scene: T;
+export class BarrelManager {
+  private scene: Scene;
   private barrels: Phaser.Physics.Arcade.Group;
-
+  private player: Player;
  
-  constructor(scene: T) {
+  constructor(scene: Scene, player: Player) {
     this.scene = scene;
+    this.player = player;
     this.barrels = this.scene.physics.add.group({
       classType: Barrel,
       runChildUpdate: true
@@ -84,12 +86,9 @@ export class BarrelManager<T extends Scene> {
   }
 
   public setupCollisions(): void {
-        const scene = this.scene as any;
-    const player = scene.getPlayer();
-
       this.scene.physics.add.collider(
         this.barrels,
-        player.bullets,  
+        this.player.bullets,  
         this.handleBulletCollision,
         undefined,
         this

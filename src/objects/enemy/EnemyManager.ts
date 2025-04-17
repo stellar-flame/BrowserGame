@@ -5,16 +5,18 @@ import { Player } from '../Player';
 import { RangedEnemy } from './RangedEnemy';
 import { Bullet } from '../weapons/Bullet';
 import { EnemyType } from './EnemyFactory';
+import { MainScene } from '../../scenes/MainScene';
 
 
-export class EnemyManager<T extends Scene> {
-  private scene: T;
+export class EnemyManager {
+  private scene: Scene;
   private enemies: Phaser.Physics.Arcade.Group;
   public static readonly ENEMY_DIED = 'enemy-died';
+  private player: Player;
 
-
-  constructor(scene: T) {
+  constructor(scene: Scene, player: Player) {
     this.scene = scene;
+    this.player = player;
     this.enemies = this.scene.physics.add.group({
       classType: Enemy,
       runChildUpdate: true
@@ -55,9 +57,7 @@ export class EnemyManager<T extends Scene> {
   }
 
   public setupCollisions(): void {
-    const scene = this.scene as any;
-    const player = scene.getPlayer();
-    const wallsLayer = scene.getWallsLayer();
+    const wallsLayer = (this.scene as MainScene).getWallsLayer();
 
     if (wallsLayer) {
       // Enemy collisions with walls
@@ -73,7 +73,7 @@ export class EnemyManager<T extends Scene> {
     // Enemy collisions with player bullets
     this.scene.physics.add.collider(
       this.enemies,
-      player.bullets,
+      this.player.bullets,
       this.handleEnemyBulletCollision,
       undefined,
       this
@@ -82,7 +82,7 @@ export class EnemyManager<T extends Scene> {
     // Enemy overlap with player (for melee damage)
     this.scene.physics.add.overlap(
       this.enemies,
-      player,
+      this.player,
       this.handlePlayerEnemyOverlap,
       undefined,
       this
@@ -91,16 +91,14 @@ export class EnemyManager<T extends Scene> {
 
      // Helper to set up collisions for a specific enemy's bullets
  public setupEnemyBulletCollisions(enemyInstance: Enemy) {
-    const scene = this.scene as any;
-    const player = scene.getPlayer();
-    const wallsLayer = scene.getWallsLayer();
+    const wallsLayer = (this.scene as MainScene).getWallsLayer();
   
     if (enemyInstance instanceof RangedEnemy && enemyInstance.weapon && enemyInstance.weapon.bullets) {
          // Enemy Bullets vs Player
-         this.scene.physics.add.collider(player, enemyInstance.weapon.bullets, this.handlePlayerBulletCollision, undefined, this); 
+            this.scene.physics.add.collider(this.player, enemyInstance.weapon.bullets, this.handlePlayerBulletCollision, undefined, this); 
          // Enemy Bullets vs Walls
          if (wallsLayer) {
-             this.scene.physics.add.collider(enemyInstance.weapon.bullets, wallsLayer, scene.handleBulletPlatformCollision, undefined, this);
+                this.scene.physics.add.collider(enemyInstance.weapon.bullets, wallsLayer, (this.scene as MainScene).handleBulletPlatformCollision, undefined, this);
          }
      }
 }
