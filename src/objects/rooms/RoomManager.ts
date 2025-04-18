@@ -21,7 +21,10 @@ export class RoomManager {
       roomLayer.objects.filter(obj => obj.name === "Room").forEach(roomObj => {
         const room = this.createFromTilemapObject(roomObj);
         if (room) {
-          this.rooms.set(room.getId(), room);
+          const roomId = roomObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
+
+          this.rooms.set(roomId.value, room);
+          console.log('Room added:', room.getId());
           this.scene.physics.add.overlap(this.player, room.getZone(), () => {
             this.handleRoomEntry(room);
           });

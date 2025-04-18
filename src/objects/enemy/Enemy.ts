@@ -5,6 +5,7 @@ import { Weapon } from '../weapons/Weapon';
 import { EnemyConfig } from './EnemyConfigs';
 import { Player } from '../player/Player';
 import { MainScene } from '../../scenes/MainScene';
+import { WeaponFactory } from '../weapons/WeaponFactory';
 
 
 // Extend Physics.Arcade.Sprite for physics and preUpdate/update capabilities
@@ -26,13 +27,6 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   private static animationsCreated: Map<string, boolean> = new Map();
   protected config: EnemyConfig | null = null;
 
-  // Steering behavior properties
-  protected seekWeight: number = 1.0;
-  protected avoidWeight: number = 1.5;
-  protected separationWeight: number = 0.8;
-  protected maxSteeringForce: number = 0.5;
-  protected wallAvoidanceForce: number = 50;
-  protected separationRadius: number = 50;
 
   // Add new property for path finding
   protected lastKnownPlayerPosition: { x: number, y: number } | null = null;
@@ -45,13 +39,28 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   protected pathUpdateTimer: number = 0;
   protected pathUpdateInterval: number = 1000; // Update path every second
 
- 
+  
   constructor(scene: Scene, x: number, y: number, id: string, config?: EnemyConfig) {
     // Call Sprite constructor (use __WHITE texture key for tinting)
     super(scene, x, y, '__WHITE');
 
     this.id = id; // Assign the ID
-    this.config = config || null;
+
+    // Apply configuration
+    if (config) {
+      this.setTexture(config.sprite);
+      this.setScale(config.scale);
+      this.moveSpeed = config.moveSpeed + Math.random() * 50;
+      this.health = config.maxHealth;
+      this.maxHealth = config.maxHealth;
+
+        // Initialize weapon if specified in config
+      if (config.weaponType) {
+        this.weapon = WeaponFactory.createWeapon(scene, config.weaponType);
+      } 
+      this.config = config;
+    }
+    
     this.setDepth(1.1);
 
     // Add to scene and enable physics
@@ -63,23 +72,21 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     
     // Ensure the enemy can collide with walls
     enemyBody.setCollideWorldBounds(true);
-  //  enemyBody.setBounce(0); // No bounce when hitting walls
     enemyBody.setDrag(0); // No drag to ensure they can move freely
 
-    // Apply config if provided
-    if (config) {
-      this.health = config.health || this.health;
-      this.maxHealth = config.maxHealth || this.maxHealth;
-      this.moveSpeed = config.moveSpeed || this.moveSpeed;
-    }
+    // Initialize current speed to move speed
 
     // Create health bar
     this.healthBar = new HealthBar(scene, this, 20, 2, false);
     this.healthBar.setHealth(this.health, this.maxHealth);
-
-
     // Initialize pathfinding
     this.initializePathfinding();
+
+    // Get the sprite's texture size
+    this.setHitBox();
+  
+    // Initialize animations
+    this.createAnimations(scene);
   }
 
 
@@ -234,7 +241,6 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
       const boundedX = Math.max(0, Math.min(targetX, map.width - 1));
       const boundedY = Math.max(0, Math.min(targetY, map.height - 1));
       
-      console.log(`Trying alternative path to (${boundedX}, ${boundedY})`);
       
       easystar.findPath(startX, startY, boundedX, boundedY, (path) => {
         if (path) {
@@ -244,7 +250,6 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
             y: point.y * gridSize + gridSize / 2
           }));
           
-          console.log(`Found alternative path with ${this.currentPath.length} waypoints`);
         } else {
           // Try next attempt
           attempt++;
@@ -275,7 +280,6 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     
     // Check if we're in attack range of the player
     if (this.player) {
-      
       // If we're in attack range, stop moving
       if (this.stopFollowingPath()) {
         const body = this.body as Phaser.Physics.Arcade.Body;

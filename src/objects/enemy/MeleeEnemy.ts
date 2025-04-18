@@ -1,7 +1,6 @@
-import { Scene, Tilemaps } from 'phaser';
+import { Scene } from 'phaser';
 import { Enemy } from './Enemy';
 import { EnemyConfig } from './EnemyConfigs';
-import { WeaponFactory } from '../weapons/WeaponFactory';
 import { MainScene } from '../../scenes/MainScene';
 
 export class MeleeEnemy extends Enemy {
@@ -12,23 +11,6 @@ export class MeleeEnemy extends Enemy {
  
   constructor(scene: Scene, x: number, y: number, id: string, config: EnemyConfig) {
     super(scene, x, y, id, config);
-    
-    // Apply configuration
-    this.setTexture(config.sprite);
-    this.setScale(config.scale);
-    this.moveSpeed = config.moveSpeed;
-    this.health = config.maxHealth;
-    this.maxHealth = config.maxHealth;
-    
-    // Initialize weapon if specified in config
-    if (config.weaponType) {
-      this.weapon = WeaponFactory.createWeapon(scene, config.weaponType);
-    }
-    // Get the sprite's texture size
-    this.setHitBox();
-    
-    // Initialize animations
-    this.createAnimations(scene);
   }
 
   

@@ -123,7 +123,6 @@ export class PathfindingGrid {
 
   private debugGrid(grid: number[][]): void {
     // Log the grid to console for debugging
-    console.log("Pathfinding grid:");
     let gridStr = "";
     for (let y = 0; y < grid.length; y++) {
       for (let x = 0; x < grid[y].length; x++) {
@@ -131,6 +130,5 @@ export class PathfindingGrid {
       }
       gridStr += "\n";
     }
-    console.log(gridStr);
   }
 } 

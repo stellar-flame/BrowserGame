@@ -1,4 +1,4 @@
-import { Player } from '../Player';
+import { Player } from '../player/Player';
 import { Enemy } from '../enemy/Enemy';
 import { RangedEnemy } from '../enemy/RangedEnemy';
 

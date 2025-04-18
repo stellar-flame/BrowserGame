@@ -68,4 +68,20 @@ export const ENEMY_CONFIGS = {
     },
     weaponType: 'NINJA_STAR'
   },
+  CHOMPER: {
+    type: 'melee',
+    sprite: 'chomper-sprite',
+    scale: 2,
+    moveSpeed: 100,
+    health: 30,
+    maxHealth: 30,
+    animationKey: 'chomper-walk',
+    animationConfig: {
+      startFrame: 0,
+      endFrame: 7,
+      frameRate: 8,
+      repeat: -1
+    },
+    weaponType: 'CHOMPER_BITE'
+  }
 } as const; 

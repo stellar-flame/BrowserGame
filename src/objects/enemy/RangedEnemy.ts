@@ -1,8 +1,8 @@
 import { Scene, Physics } from 'phaser';
 import { Enemy } from './Enemy';
 import { EnemyConfig } from './EnemyConfigs';
-import { WeaponFactory } from '../weapons/WeaponFactory';
 import { MainScene } from '../../scenes/MainScene';
+
 export class RangedEnemy extends Enemy {
   // Pathfinding properties
   private shotsBlocked: boolean = false;
@@ -12,21 +12,6 @@ export class RangedEnemy extends Enemy {
 
   constructor(scene: Scene, x: number, y: number, id: string, config: EnemyConfig) {
     super(scene, x, y, id, config);
-    
-    // Apply configuration
-    this.setTexture(config.sprite);
-    this.setScale(config.scale);
-    this.moveSpeed = config.moveSpeed;
-    this.health = config.maxHealth;
-    this.maxHealth = config.maxHealth;
-    
-    // Initialize weapon if specified in config
-    if (config.weaponType) {
-      this.weapon = WeaponFactory.createWeapon(scene, config.weaponType);
-    } 
-    this.setHitBox();
-    // Initialize animations
-    this.createAnimations(scene);
   }
 
 

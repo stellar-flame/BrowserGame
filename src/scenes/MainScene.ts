@@ -45,6 +45,8 @@ export class MainScene extends Scene {
     this.loadSprite('skeleton-sprite', 'assets/sprites/skeleton.png', 16, 32);
     this.loadSprite('zombie-sprite', 'assets/sprites/zombie.png', 32, 32);
     this.loadSprite('ninja-sprite', 'assets/sprites/ninja.png', 16, 32);
+    this.loadSprite('chomper-sprite', 'assets/sprites/chomper.png', 16, 32);
+   
     this.loadSprite('arrow', 'assets/sprites/arrow.png', 32, 16);
     this.loadSprite('ninja-star', 'assets/sprites/ninja-star.png', 32, 32);
     this.loadSprite('smashed-barrel', 'assets/sprites/smashed-barrel.png', 32, 32);
@@ -159,7 +161,7 @@ export class MainScene extends Scene {
       return;
     }
 
-    this.player = new Player(this, 100, 300);
+    this.player = new Player(this, 1200, 900);
     console.log('Player created:', this.player);
     
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
@@ -178,14 +180,14 @@ export class MainScene extends Scene {
   }
 
   private setupCamera() {
-    this.cameras.main.setBounds(0, 0, 1600, 1200);
+    this.cameras.main.setBounds(0, 0, 2400, 1800);
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
     this.cameras.main.setRoundPixels(true);
     this.cameras.main.setZoom(1);
   }
 
   private setupPhysics() {
-    this.physics.world.setBounds(0, 0, 1600, 1200);
+    this.physics.world.setBounds(0, 0, 2400, 1800);
   }
 
   private setupRooms() {
@@ -203,20 +205,17 @@ export class MainScene extends Scene {
 
   private setupBarrels() {  
     this.barrelManager = new BarrelManager(this, this.player);
-    console.log('BarrelManager created:', this.barrelManager);
     const map = this.make.tilemap({ key: 'dungeon-map' });
     this.barrelManager.createBarrelsFromPropsLayer(map.getObjectLayer('Props') as Phaser.Tilemaps.ObjectLayer, this.getRoomManager().getRooms());
   }
 
   private setupPotions() {
     this.potionManager = new PotionManager(this, this.player);
-    console.log('PotionManager created:', this.potionManager);
     this.potionManager.setSpawnPoints(this.getRoomManager().getRooms());
   }
 
   protected setupEnemies() {
     this.enemyManager = new EnemyManager(this, this.player);
-    console.log('EnemyManager created:', this.enemyManager);
     const map = this.make.tilemap({ key: 'dungeon-map' });
     this.enemyManager.createEnemiesFromSpawnLayer(map.getObjectLayer('Enemies') as Phaser.Tilemaps.ObjectLayer, this.getRoomManager().getRooms());
   }
@@ -233,7 +232,7 @@ export class MainScene extends Scene {
     if (this.weaponManager) {
       this.weaponManager.setupCollisions();
     }
-    
+
     // Setup enemy collisions
     if (this.enemyManager) {
       this.enemyManager.setupCollisions();
@@ -349,4 +348,11 @@ export class MainScene extends Scene {
     }
     return this.roomManager;
   } 
+
+  public getEnemiesForCurrentRoom(): Enemy[] {
+    if (!this.enemyManager) {
+      throw new Error('EnemyManager not initialized');
+    }
+    return this.getRoomManager().getCurrentRoom()?.getEnemies() || [];
+  }
 }

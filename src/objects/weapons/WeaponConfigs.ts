@@ -23,6 +23,13 @@ export const WEAPON_CONFIGS = {
     minDistance: 40,
     maxDistance: 50 
   },
+  CHOMPER_BITE: {
+    type: TYPE_MELEE,
+    damage: 10,
+    attackRate: 300, // 3 bites per second
+    minDistance: 40,
+    maxDistance: 50
+  },
   SWORD: {
     type: TYPE_MELEE,
     damage: 15,
