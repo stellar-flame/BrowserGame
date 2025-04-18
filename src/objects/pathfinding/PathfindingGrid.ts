@@ -1,4 +1,4 @@
-import { Scene, Tilemaps } from 'phaser';
+import { Scene, Tilemaps, GameObjects } from 'phaser';
 import EasyStar from 'easystarjs';
 
 export class PathfindingGrid {
@@ -8,6 +8,8 @@ export class PathfindingGrid {
   private easystar: EasyStar.js = new EasyStar.js();
   private gridSize: number = 32; // Tile size in pixels
   private bufferSize: number = 1; // Buffer size around walls
+  private gridLabels: GameObjects.Text[] = [];
+  private isCalculatingPath: boolean = false;
 
   private constructor() {}
 
@@ -35,11 +37,85 @@ export class PathfindingGrid {
     
     // Debug output
     this.debugGrid(this.bufferedGrid);
+    
+    // Draw grid labels
+    // this.drawGridLabels(scene, map.width, map.height);
   }
 
   public debugBufferedGrid(): void {
     if (this.bufferedGrid) {
       this.debugGrid(this.bufferedGrid);
+    }
+  }
+
+  public getGridX(x: number): number {
+    return Math.floor(x / this.gridSize);
+  }
+
+  public getGridY(y: number): number {
+    return Math.floor(y / this.gridSize);
+  }
+
+  public getWorldX(x: number): number {
+    return x * this.gridSize;
+  }
+
+  public getWorldY(y: number): number {
+    return y * this.gridSize;
+  }
+  
+  public setIsCalculatingPath(isCalculating: boolean): void {
+    this.isCalculatingPath = isCalculating;
+  }
+  
+  public isPathCalculationInProgress(): boolean {
+    return this.isCalculatingPath;
+  }
+  
+  private drawGridLabels(scene: Scene, width: number, height: number): void {
+    // Clear any existing labels
+    this.clearGridLabels();
+    
+    // Create new labels
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        // Calculate world position for the label
+        const worldX = this.getWorldX(x) + this.gridSize / 2;
+        const worldY = this.getWorldY(y) + this.gridSize / 2;
+        
+        // Create the label text
+        const label = scene.add.text(worldX, worldY, `${x},${y}`, {
+          fontSize: '10px',
+          color: '#ffffff',
+          backgroundColor: '#000000',
+          padding: { x: 2, y: 2 }
+        });
+        
+        // Center the text
+        label.setOrigin(0.5);
+        
+        // Set depth to ensure labels are visible
+        label.setDepth(10);
+        
+        // Store the label for later reference
+        this.gridLabels.push(label);
+      }
+    }
+  }
+  
+  public clearGridLabels(): void {
+    // Remove all existing labels
+    this.gridLabels.forEach(label => label.destroy());
+    this.gridLabels = [];
+  }
+  
+  public toggleGridLabels(scene: Scene): void {
+    if (this.gridLabels.length > 0) {
+      this.clearGridLabels();
+    } else if (this.bufferedGrid) {
+      const width = this.getGridWidth();
+      const height = this.getGridHeight();
+      this.drawGridLabels(scene, width, height);
     }
   }
 
@@ -130,5 +206,13 @@ export class PathfindingGrid {
       }
       gridStr += "\n";
     }
+  }
+
+  public getGridWidth(): number {
+    return this.bufferedGrid ? this.bufferedGrid[0].length : 0;
+  }
+  
+  public getGridHeight(): number {
+    return this.bufferedGrid ? this.bufferedGrid.length : 0;
   }
 } 

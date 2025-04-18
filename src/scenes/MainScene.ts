@@ -8,6 +8,7 @@ import { BarrelManager } from '../objects/props/BarrelManager';
 import { EnemyManager } from '../objects/enemy/EnemyManager';
 import { PotionManager } from '../objects/items/PotionManager';
 import { WeaponManager } from '../objects/weapons/WeaponManager';
+import { MovementManager } from '../objects/enemy/MovementManager';
 
 export class MainScene extends Scene {
   // Core game objects
@@ -29,6 +30,8 @@ export class MainScene extends Scene {
   protected enemyManager: EnemyManager | null = null;
   protected potionManager: PotionManager | null = null;
   protected weaponManager: WeaponManager | null = null;
+  protected movementManager: MovementManager | null = null;
+
   constructor(key: string = 'MainScene') {
     super({key: key}); 
     this.pathfindingGrid = PathfindingGrid.getInstance();
@@ -92,6 +95,15 @@ export class MainScene extends Scene {
     this.setupEnemies();
     this.setupCollisions();
     
+    // Add keyboard shortcut to toggle grid labels
+    if (this.input && this.input.keyboard) {
+      this.input.keyboard.on('keydown-G', () => {
+        // Toggle grid labels
+        if (this.pathfindingGrid) {
+          this.pathfindingGrid.toggleGridLabels(this);
+        }
+      });
+    }
 
     this.events.on(EnemyManager.ENEMY_DIED, (data: { enemy: Enemy }) => {
       this.getRoomManager().getCurrentRoom()?.checkCleared();
@@ -215,6 +227,7 @@ export class MainScene extends Scene {
   }
 
   protected setupEnemies() {
+    this.movementManager = new MovementManager(this, this.player);
     this.enemyManager = new EnemyManager(this, this.player);
     const map = this.make.tilemap({ key: 'dungeon-map' });
     this.enemyManager.createEnemiesFromSpawnLayer(map.getObjectLayer('Enemies') as Phaser.Tilemaps.ObjectLayer, this.getRoomManager().getRooms());
@@ -259,6 +272,10 @@ export class MainScene extends Scene {
   update(time: number, delta: number) {
     if (this.gameOver) {
       return;
+    }
+    if (this.movementManager) {
+      this.movementManager.updateFlankingPoints(this.getEnemiesForCurrentRoom());
+      this.movementManager.assignFlankingPointsToEnemies(this.getEnemiesForCurrentRoom());
     }
   }
 

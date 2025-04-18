@@ -4,11 +4,15 @@ import { EnemyType } from "../objects/enemy/EnemyFactory";
 import { EnemyManager } from "../objects/enemy/EnemyManager";
 import { Room } from "../objects/rooms/Room";
 import { MainScene } from "./MainScene";
+import { MovementManager } from "../objects/enemy/MovementManager";
 
 
 export class EnemyTestScene extends MainScene {
-    private enemyType: EnemyType = 'ZOMBIE'; // Default enemy type to spawn
-    private enemyTypeText!: Phaser.GameObjects.Text;
+
+    private index: number = 0;
+    private count: number = 0;
+    private enemyTypes: string[] = ['ZOMBIE', 'SKELETON', 'NINJA', 'CHOMPER'];
+    private enemyType: string = this.enemyTypes[this.index];
 
     constructor() {
         super('EnemyTestScene');
@@ -31,42 +35,27 @@ export class EnemyTestScene extends MainScene {
     }
 
     protected setupEnemies() {
+        this.movementManager = new MovementManager(this, this.player);
         this.enemyManager = new EnemyManager(this, this.player);
     }
 
     private toggleEnemyType() {
-        switch (this.enemyType) {
-            case 'ZOMBIE':
-                this.enemyType = 'SKELETON';
-                break;
-            case 'SKELETON':
-                this.enemyType = 'NINJA';
-                break;
-            case 'NINJA':
-                this.enemyType = 'ZOMBIE';
-                break;
-        }
-        this.enemyTypeText.setText(`Enemy Type: ${this.enemyType}`);
+        this.index = (this.index + 1) % this.enemyTypes.length;
+        this.enemyType = this.enemyTypes[this.index];
     }
 
     private spawnEnemy(player: Player) {
+        this.count++;
+        
         if (!this.enemyManager) {
             throw new Error('EnemyManager not initialized');
         }
         const x = 1100;
         const y = 300
         // Create enemy based on current type
-        const enemy = EnemyFactory.createEnemy(
-            this,
-            this.enemyType,
-            x,
-            y,
-            `enemy_${this.enemyManager.getEnemies().getLength()}`
-        );
 
-        enemy.setPlayer(player);
-
-        this.events.emit(Room.ENEMY_CREATED, { enemy });
-        console.log(`Spawned ${this.enemyType} enemy at (${x}, ${y})`);
+        this.getRoomManager()?.getCurrentRoom()?._testSpawnEnemies(x, y, this.enemyType as EnemyType, this.count.toString());
+       
+         console.log(`Spawned ${this.enemyType} enemy at (${x}, ${y})`);
     }
 }

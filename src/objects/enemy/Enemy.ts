@@ -1,6 +1,5 @@
 import { Scene, Physics } from 'phaser';
 import { HealthBar } from '../HealthBar';
-import { RangedEnemy } from './RangedEnemy';
 import { Weapon } from '../weapons/Weapon';
 import { EnemyConfig } from './EnemyConfigs';
 import { Player } from '../player/Player';
@@ -33,12 +32,15 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   protected stuckTimer: number = 0;
   protected isStuck: boolean = false;
   protected alternativeDirection: { x: number, y: number } | null = null;
+  protected lastPosition: { x: number, y: number } | null = null;
+  protected minMovementDistance: number = 5; // Minimum distance to consider as movement
 
   protected pathfindingEnabled: boolean = false;
   protected currentPath: Array<{x: number, y: number}> = [];
+  protected currentPathIndex: number = 0;
   protected pathUpdateTimer: number = 0;
   protected pathUpdateInterval: number = 1000; // Update path every second
-
+  protected targetPoint: {x: number, y: number} | null = null;
   
   constructor(scene: Scene, x: number, y: number, id: string, config?: EnemyConfig) {
     // Call Sprite constructor (use __WHITE texture key for tinting)
@@ -87,6 +89,9 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   
     // Initialize animations
     this.createAnimations(scene);
+
+    // Initialize last position
+    this.lastPosition = { x, y };
   }
 
 
@@ -99,6 +104,10 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
       // Enable pathfinding
       this.pathfindingEnabled = true;
     }
+  }
+
+  public setTargetPoint(point: {x: number, y: number}): void {
+    this.targetPoint = point;
   }
   
   protected setHitBox() {
@@ -141,180 +150,12 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     }
   }
 
-  protected findPathToPlayer(): void {
-    if (!this.pathfindingEnabled) return;
-    
-    const mainScene = this.scene as MainScene;
-    if (!this.player) return;
-    
-    const pathfindingGrid = mainScene.getPathfindingGrid();
-    const easystar = pathfindingGrid.getEasyStar();
-    const gridSize = pathfindingGrid.getGridSize();
-    
-    // Convert world coordinates to tile coordinates
-    const startX = Math.floor(this.x / gridSize);
-    const startY = Math.floor(this.y / gridSize);
-    const endX = Math.floor(this.player.x / gridSize);
-    const endY = Math.floor(this.player.y / gridSize);
-    
-
-    // Check if we already have a path to the player's current position
-    const hasPathToCurrentPosition = this.lastKnownPlayerPosition && 
-      this.lastKnownPlayerPosition.x === this.player.x && 
-      this.lastKnownPlayerPosition.y === this.player.y &&
-      this.currentPath.length > 0;
-    
-    // Only recalculate path if:
-    // 1. We don't have a path to the player's current position, or
-    // 2. The player has moved significantly
-    if (!hasPathToCurrentPosition) {
-      // Store current player position
-      this.lastKnownPlayerPosition = { x: this.player.x, y: this.player.y };
-      
-      // Find path to player
-      easystar.findPath(startX, startY, endX, endY, (path) => {
-        if (path) {
-          // Convert tile coordinates to world coordinates
-          this.currentPath = path.map(point => ({
-            x: point.x * gridSize + gridSize / 2,
-            y: point.y * gridSize + gridSize / 2
-          }));
-          
-          // Remove the first point if it's too close to the enemy
-          if (this.currentPath.length > 0) {
-            const firstPoint = this.currentPath[0];
-            const dx = firstPoint.x - this.x;
-            const dy = firstPoint.y - this.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            
-            if (distance < 5) {
-              this.currentPath.shift();
-            }
-          }
-        } else {
-          // If no path found, try to find a path to a point closer to the player
-          console.log("No path found to player, trying alternative path");
-          this.findAlternativePath(startX, startY, endX, endY);
-        }
-      });
-      easystar.calculate();
-    }
-  }
-
-  private findAlternativePath(startX: number, startY: number, endX: number, endY: number): void {
-    const mainScene = this.scene as MainScene;
-    const pathfindingGrid = mainScene.getPathfindingGrid();
-    const easystar = pathfindingGrid.getEasyStar();
-    const gridSize = pathfindingGrid.getGridSize();
-    
-    // Try to find a path to a point closer to the player
-    // This helps when there's no direct path but we can get closer
-    
-    // Calculate direction vector from start to end
-    const dx = endX - startX;
-    const dy = endY - startY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    // Normalize direction vector
-    const dirX = dx / distance;
-    const dirY = dy / distance;
-    
-    // Try points at increasing distances along the direction vector
-    const maxAttempts = 5;
-    let attempt = 0;
-    
-    const tryPath = () => {
-      if (attempt >= maxAttempts) {
-        console.log("Failed to find any path after multiple attempts");
-        return;
-      }
-      
-      // Calculate a point at increasing distance
-      const attemptDistance = Math.min(distance * 0.5, (attempt + 1) * 5);
-      const targetX = Math.floor(startX + dirX * attemptDistance);
-      const targetY = Math.floor(startY + dirY * attemptDistance);
-      
-      // Ensure target is within map bounds
-      const map = (this.scene as MainScene).getTilemap();
-      if (!map) return;
-      
-      const boundedX = Math.max(0, Math.min(targetX, map.width - 1));
-      const boundedY = Math.max(0, Math.min(targetY, map.height - 1));
-      
-      
-      easystar.findPath(startX, startY, boundedX, boundedY, (path) => {
-        if (path) {
-          // Convert tile coordinates to world coordinates
-          this.currentPath = path.map(point => ({
-            x: point.x * gridSize + gridSize / 2,
-            y: point.y * gridSize + gridSize / 2
-          }));
-          
-        } else {
-          // Try next attempt
-          attempt++;
-          tryPath();
-        }
-      });
-      easystar.calculate();
-    };
-    
-    tryPath();
-  }
-  
-  protected followPath(): void {
-    if (this.currentPath.length === 0) return;
-    // Get the next waypoint
-    const nextWaypoint = this.currentPath[0];
-    
-    // Calculate direction to the waypoint
-    const dx = nextWaypoint.x - this.x;
-    const dy = nextWaypoint.y - this.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    // If we're close enough to the waypoint, move to the next one
-    if (distance < 5) {
-      this.currentPath.shift();
-      return;
-    }
-    
-    // Check if we're in attack range of the player
-    if (this.player) {
-      // If we're in attack range, stop moving
-      if (this.stopFollowingPath()) {
-        const body = this.body as Phaser.Physics.Arcade.Body;
-        body.setVelocity(0, 0);
-        return;
-      }
-    }
-    
-    // Move towards the waypoint
-    const angle = Math.atan2(dy, dx);
-    const body = this.body as Phaser.Physics.Arcade.Body;
-    
-    // Apply velocity with some smoothing for more natural movement
-    const targetVx = Math.cos(angle) * this.moveSpeed;
-    const targetVy = Math.sin(angle) * this.moveSpeed;
-    
-    // Smooth the velocity change
-    const smoothingFactor = 0.1;
-    const currentVx = body.velocity.x;
-    const currentVy = body.velocity.y;
-    
-    const newVx = currentVx + (targetVx - currentVx) * smoothingFactor;
-    const newVy = currentVy + (targetVy - currentVy) * smoothingFactor;
-    
-    body.setVelocity(newVx, newVy);
-  }
-
-  protected stopFollowingPath(): boolean {
-    return false;
-  }
 
   // Update method to handle movement and shooting logic
   preUpdate(time: number, delta: number) {
     super.preUpdate(time, delta);
     if (!this.body) return;
+    
     
     // Play the walk animation only if animation config exists
     if (this.shouldPlayAnimation()) {
@@ -329,7 +170,7 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     }
     
     // Handle movement
-    this.updateMovement();
+    this.updateMovement(delta);
     
     // Check if it's time to attack
     if (this.canAttack()) {
@@ -340,17 +181,94 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     this.healthBar.update();
   }
 
-  // Type guard to check if this is a RangedEnemy
-  protected isRangedEnemy(): this is RangedEnemy {
-    return false;
-  }
 
   // Method to update enemy movement
-  protected abstract updateMovement(): void;
+  protected updateMovement(delta: number): void {
+    if (!this.pathfindingEnabled || !this.targetPoint || !this.body) return;
+    const mainScene = this.scene as MainScene;
+    const pathfindingGrid = mainScene.getPathfindingGrid();
+   
+    // console.log('targetPoint', this.targetPoint, 'currentPath', this.currentPath);
+
+    if (this.currentPathIndex >= this.currentPath.length) {
+      this.currentPathIndex = 0;
+      this.currentPath = [];
+    }
+
+    // Update pathUpdateTimer
+    this.pathUpdateTimer += delta;
+
+    // Only calculate a new path if we don't have one or if the update interval has elapsed
+    if ((!this.currentPath || this.currentPath.length === 0) && this.pathUpdateTimer >= this.pathUpdateInterval) {
+        this.currentPathIndex = 0;
+        const easystar = pathfindingGrid.getEasyStar();
+        const startX = pathfindingGrid.getGridX(this.x);
+        const startY = pathfindingGrid.getGridY(this.y);
+        const endX = pathfindingGrid.getGridX(this.targetPoint.x);
+        const endY = pathfindingGrid.getGridY(this.targetPoint.y);
+
+        easystar.findPath(startX, startY, endX, endY, path => {
+          if (path && path.length > 0) {
+            this.currentPath = path;
+          }
+        });
+        easystar.calculate();
+        
+        // Reset the timer after calculating a new path
+        this.pathUpdateTimer = 0;
+    }
+      
+    if (this.currentPath && this.currentPath.length > 0) {
+        const targetNode = this.currentPath[this.currentPathIndex];
+        const targetWorldX = pathfindingGrid.getWorldX(targetNode.x);
+        const targetWorldY = pathfindingGrid.getWorldY(targetNode.y);
+
+        const dx = targetWorldX - this.x;
+        const dy = targetWorldY - this.y;
+        const distance = Math.hypot(dx, dy);
+
+        // If we're close enough to the target node, move to the next one
+        if (distance < 5) {
+          this.currentPathIndex++;
+          console.log('currentPathIndex', this.currentPathIndex, this.currentPath.length);
+          // If we've reached the end of the path, stop moving
+          if (this.currentPathIndex >= this.currentPath.length) {
+            if (this.body instanceof Phaser.Physics.Arcade.Body) {
+              console.log('stopping movement');
+              this.body.setVelocity(0, 0);
+            }
+            return;
+          }
+        } else {
+          // Calculate the angle to the target
+          const angle = Math.atan2(dy, dx);
+          
+          // Set velocity based on the angle and move speed
+          const vx = Math.cos(angle) * this.moveSpeed;
+          const vy = Math.sin(angle) * this.moveSpeed;
+          
+          // Apply the velocity to the physics body
+          if (this.body instanceof Phaser.Physics.Arcade.Body) {
+            this.body.setVelocity(vx, vy);
+          }
+        }
+    } else {
+      // If there's no path, stop moving
+      if (this.body instanceof Phaser.Physics.Arcade.Body) {
+        this.body.setVelocity(0, 0);
+      }
+    }   
+  }
+  
 
   // Method to set player reference
   public setPlayer(player: Player): void {
     this.player = player;
+  }
+
+  // Method to get the current target point
+  public getTargetPoint(): {x: number, y: number} | null {
+    return this.targetPoint;
   }
 
   // Method to take damage
@@ -365,7 +283,6 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     this.scene.time.delayedCall(100, () => {
       this.clearTint();
     });
-    
     if (this.health <= 0) {
       this.die();
     }
@@ -433,8 +350,6 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     return distance >= this.weapon.minDistance && distance <= this.weapon.maxDistance;
   }
 
-  // Abstract method to be implemented by subclasses for specific movement behavior
-  protected abstract handleMovement(distance: number, angle: number, body: Phaser.Physics.Arcade.Body): void;
 
   public handleWallCollision(): void {
     // Stop movement and change direction when hitting a wall
@@ -453,4 +368,5 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
       this.body.velocity.y *= -1;
     }
   }
+
 }

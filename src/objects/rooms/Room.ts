@@ -103,6 +103,7 @@ export class Room {
     return this.doors;
   }
 
+
   public spawnEnemies(): void {
     if (this.enemiesSpawned || this.isCleared) {
       return;
@@ -127,7 +128,7 @@ export class Room {
         point.type,
         point.x,
         point.y,
-        `enemy_${this.id}_${index}`
+        index.toString()
       );
       
       // Set player reference and ensure enemy is initialized
@@ -191,4 +192,23 @@ export class Room {
     this.enemies = [];
     this.zone.destroy();
   }
+
+  public _testSpawnEnemies(x: number, y: number, type: EnemyType | undefined, id: string): void {
+    const enemy = EnemyFactory.createEnemy(
+      this.scene,
+      type as EnemyType,
+      x,
+      y,
+      id
+    );
+    
+    // Set player reference and ensure enemy is initialized
+    enemy.setPlayer(this.scene.getPlayer());
+    
+    // Add to room's enemy list
+    this.enemies.push(enemy);
+    
+    // Emit event with properly initialized enemy
+    this.scene.events.emit(Room.ENEMY_CREATED, { enemy });
+}
 } 

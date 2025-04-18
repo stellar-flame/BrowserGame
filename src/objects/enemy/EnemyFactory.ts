@@ -17,15 +17,10 @@ export class EnemyFactory {
   ): Enemy {
     const config = ENEMY_CONFIGS[type];
     
-    const offsetForX = Math.random() * 50;
-    const offsetForY = Math.random() * 50;
-    const newX = x + offsetForX;
-    const newY = y + offsetForY;
- 
     if (config.type === 'melee') {
-      return new MeleeEnemy(scene, newX, newY, id, config);
+      return new MeleeEnemy(scene, x, y, id, config);
     } else {
-      return new RangedEnemy(scene, newX, newY, id, config);
+      return new RangedEnemy(scene, x, y, id, config);
     }
   }
 
