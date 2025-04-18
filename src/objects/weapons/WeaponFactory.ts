@@ -5,6 +5,6 @@ import { WEAPON_CONFIGS, WeaponConfig, WeaponType } from './WeaponConfigs';
 export class WeaponFactory {
   static createWeapon(scene: Scene, type: WeaponType): Weapon {
     const config = WEAPON_CONFIGS[type];
-    return new Weapon(scene, config as WeaponConfig);
+    return new Weapon(scene, type, config as WeaponConfig);
   }
 } 

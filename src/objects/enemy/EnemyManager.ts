@@ -6,7 +6,8 @@ import { RangedEnemy } from './RangedEnemy';
 import { Bullet } from '../weapons/Bullet';
 import { EnemyType } from './EnemyFactory';
 import { MainScene } from '../../scenes/MainScene';
-
+import { WeaponUpgrade } from '../weapons/WeaponUpgrade';
+import { WeaponManager } from '../weapons/WeaponManager';
 
 export class EnemyManager {
   private scene: Scene;
@@ -28,6 +29,10 @@ export class EnemyManager {
         this.enemies.add(data.enemy);
         this.setupEnemyBulletCollisions(data.enemy);
       }
+    });
+
+    scene.events.on(WeaponManager.SWAPPED_EVENT, (data: {weaponUpgrade: WeaponUpgrade}) => {
+      this.setupPlayerBulletCollisions();
     });
   }
 
@@ -59,23 +64,14 @@ export class EnemyManager {
   public setupCollisions(): void {
     const wallsLayer = (this.scene as MainScene).getWallsLayer();
 
+    this.setupPlayerBulletCollisions();
+
     if (wallsLayer) {
       // Enemy collisions with walls
       this.scene.physics.add.collider(
         this.enemies,
         wallsLayer,
         this.handleEnemyWallCollision,
-        undefined,
-        this
-      );
-    }
-
-    if (this.player.weapon?.bullets) {
-      // Enemy collisions with player bullets
-      this.scene.physics.add.collider(
-        this.enemies,
-        this.player.weapon.bullets,
-        this.handleEnemyBulletCollision,
         undefined,
         this
       );
@@ -89,6 +85,20 @@ export class EnemyManager {
       undefined,
       this
     );
+  }
+
+  private setupPlayerBulletCollisions(): void {
+    const currentWeapon = this.player.weapon;
+
+    if (currentWeapon?.bullets) {
+      this.scene.physics.add.collider(
+        this.enemies,
+        currentWeapon.bullets,
+        this.handleEnemyBulletCollision,
+        undefined,
+        this
+      );
+    }
   }
 
      // Helper to set up collisions for a specific enemy's bullets
@@ -106,17 +116,17 @@ export class EnemyManager {
     }
   
     // Handles collision between enemy bullets and the player
-    private handlePlayerBulletCollision(player: any, bullet: any) {
-        const playerInstance = player as Player;
-        const bulletInstance = bullet as Bullet;
-        
-        if (!playerInstance.active || !bulletInstance.active) {
-        return;
-        }
+  private handlePlayerBulletCollision(player: any, bullet: any) {
+      const playerInstance = player as Player;
+      const bulletInstance = bullet as Bullet;
+      
+      if (!playerInstance.active || !bulletInstance.active) {
+      return;
+      }
 
-        playerInstance.takeDamage(bulletInstance.getDamage());
-        bulletInstance.deactivate();
-    }
+      playerInstance.takeDamage(bulletInstance.getDamage());
+      bulletInstance.deactivate();
+  }
 
   private handleEnemyWallCollision(enemy: any, wall: any): void {
     if (enemy instanceof Enemy) {

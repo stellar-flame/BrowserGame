@@ -7,6 +7,7 @@ import { RoomManager } from '../objects/rooms/RoomManager';
 import { BarrelManager } from '../objects/props/BarrelManager';
 import { EnemyManager } from '../objects/enemy/EnemyManager';
 import { PotionManager } from '../objects/items/PotionManager';
+import { WeaponManager } from '../objects/weapons/WeaponManager';
 
 export class MainScene extends Scene {
   // Core game objects
@@ -27,7 +28,7 @@ export class MainScene extends Scene {
   protected barrelManager: BarrelManager | null = null;
   protected enemyManager: EnemyManager | null = null;
   protected potionManager: PotionManager | null = null;
- 
+  protected weaponManager: WeaponManager | null = null;
   constructor(key: string = 'MainScene') {
     super({key: key}); 
     this.pathfindingGrid = PathfindingGrid.getInstance();
@@ -47,6 +48,7 @@ export class MainScene extends Scene {
     this.loadSprite('arrow', 'assets/sprites/arrow.png', 32, 16);
     this.loadSprite('ninja-star', 'assets/sprites/ninja-star.png', 32, 32);
     this.loadSprite('smashed-barrel', 'assets/sprites/smashed-barrel.png', 32, 32);
+    this.loadSprite('weapon-upgrade', 'assets/sprites/weapon-upgrade.png', 32, 32);
     
     // Load tiles and maps
     this.load.image('tiles-32', 'assets/tiles.png');
@@ -59,6 +61,8 @@ export class MainScene extends Scene {
     this.load.image('potion', 'assets/sprites/potion.png');
     this.load.image('player-bullet-1', 'assets/sprites/player-bullet-1.png');
 
+    // Load sound effects
+    // this.load.audio('weapon-upgrade', 'assets/sounds/weapon-upgrade.mp3');
   }
 
   private loadSprite(name: string, path: string, frameWidth: number, frameHeight: number) {  
@@ -76,6 +80,7 @@ export class MainScene extends Scene {
     this.setupInput();
     this.setupMap();
     this.setupPlayer();
+    this.setupWeaponManager();
     this.setupCamera();
     this.setupPhysics();
     this.setupRooms();
@@ -163,6 +168,13 @@ export class MainScene extends Scene {
     
     
     this.events.on('playerDied', this.handlePlayerDeath, this);
+
+  }
+
+  private setupWeaponManager() {
+    this.weaponManager = new WeaponManager(this, this.player);
+    const map = this.make.tilemap({ key: 'dungeon-map' });
+    this.weaponManager.setupWeaponUpgrades(map.getObjectLayer('Items') as Phaser.Tilemaps.ObjectLayer);
   }
 
   private setupCamera() {
@@ -216,11 +228,12 @@ export class MainScene extends Scene {
     if (this.wallsLayer) {
       this.physics.add.collider(this.player, this.wallsLayer); // Player vs Walls
 
-      if (this.player.weapon.bullets) {
-        this.physics.add.collider(this.player.weapon.bullets, this.wallsLayer, this.handleBulletCollision, undefined, this); // Player Bullets vs Walls
-      }
     }
 
+    if (this.weaponManager) {
+      this.weaponManager.setupCollisions();
+    }
+    
     // Setup enemy collisions
     if (this.enemyManager) {
       this.enemyManager.setupCollisions();

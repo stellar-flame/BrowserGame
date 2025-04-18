@@ -1,4 +1,3 @@
-
 export const TYPE_MELEE = 'melee';
 export const TYPE_RANGED = 'ranged';
 
@@ -61,7 +60,7 @@ export const WEAPON_CONFIGS = {
     minDistance: 100,
     maxDistance: 200
   },
-  LEVEL_1_GUN: {
+  STARTER_GUN: {
     type: TYPE_RANGED,
     damage: 10,
     attackRate: 500, // 2 attacks per second (1000ms / 2)
@@ -71,7 +70,24 @@ export const WEAPON_CONFIGS = {
     bulletHeight: 32,
     minDistance: 100,
     maxDistance: 300
+  },
+  LEVEL_1_GUN: {
+    type: TYPE_RANGED,
+    damage: 20,
+    attackRate: 250, // 4 attacks per second (1000ms / 4)
+    bulletSpeed: 300,
+    bulletSprite: 'player-bullet-1',
+    bulletWidth: 32,
+    bulletHeight: 32,
+    minDistance: 100,
+    maxDistance: 300
   }
 } as const;
+
+
+
+export const WEAPON_UPGRADE= {
+  '1': 'LEVEL_1_GUN'
+}
 
 export type WeaponType = keyof typeof WEAPON_CONFIGS; 

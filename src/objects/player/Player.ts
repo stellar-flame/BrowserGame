@@ -60,7 +60,7 @@ export class Player extends Physics.Arcade.Sprite {
     };
 
     // Initialize weapon with LEVEL_1_GUN configuration
-    this.weapon = WeaponFactory.createWeapon(scene, 'LEVEL_1_GUN');
+    this.weapon = WeaponFactory.createWeapon(scene, 'STARTER_GUN');
     console.log(this.weapon);
     // Create animations
     this.createAnimations(scene);

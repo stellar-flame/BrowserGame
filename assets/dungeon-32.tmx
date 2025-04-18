@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="50" height="40" tilewidth="32" tileheight="32" infinite="0" nextlayerid="13" nextobjectid="95">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="50" height="40" tilewidth="32" tileheight="32" infinite="0" nextlayerid="15" nextobjectid="96">
  <editorsettings>
   <export target="dungeon-32.tmj" format="json"/>
  </editorsettings>
@@ -349,9 +349,17 @@
     <property name="Room" value="1"/>
    </properties>
   </object>
-  <object id="94" name="Weapon" x="1200" y="686">
+ </objectgroup>
+ <objectgroup id="14" name="Items">
+  <object id="94" name="WeaponUpgrade" x="1200" y="686">
    <properties>
-    <property name="Level" value="2"/>
+    <property name="Level" value="1"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="95" name="WeaponUpgrade" x="105" y="256">
+   <properties>
+    <property name="Level" value="1"/>
    </properties>
    <point/>
   </object>

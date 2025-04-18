@@ -1,5 +1,4 @@
 import { Scene } from 'phaser';
-import { Potion } from '../items/Potion';
 
 export class Barrel extends Phaser.Physics.Arcade.Sprite {
   private isDestroyed: boolean = false;

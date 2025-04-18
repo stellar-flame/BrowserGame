@@ -648,17 +648,28 @@
                  "width":126.150781127285,
                  "x":446.855881403107,
                  "y":515.29650392876
-                }, 
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":14,
+         "name":"Items",
+         "objects":[
                 {
                  "height":0,
                  "id":94,
-                 "name":"Weapon",
+                 "name":"WeaponUpgrade",
                  "point":true,
                  "properties":[
                         {
                          "name":"Level",
                          "type":"string",
-                         "value":"2"
+                         "value":"1"
                         }],
                  "rotation":0,
                  "type":"",
@@ -666,6 +677,24 @@
                  "width":0,
                  "x":1200,
                  "y":686
+                }, 
+                {
+                 "height":0,
+                 "id":95,
+                 "name":"WeaponUpgrade",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"Level",
+                         "type":"string",
+                         "value":"1"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":105,
+                 "y":256
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -673,8 +702,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":13,
- "nextobjectid":95,
+ "nextlayerid":15,
+ "nextobjectid":96,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",

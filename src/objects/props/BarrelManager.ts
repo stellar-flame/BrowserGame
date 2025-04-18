@@ -2,7 +2,8 @@ import { Scene } from 'phaser';
 import { Barrel } from './Barrel';
 import { Room } from '../rooms/Room';
 import { Player } from '../player/Player';
-
+import { WeaponUpgrade } from '../weapons/WeaponUpgrade';
+import { WeaponManager } from '../weapons/WeaponManager';
 export class BarrelManager {
   private scene: Scene;
   private barrels: Phaser.Physics.Arcade.Group;
@@ -14,6 +15,10 @@ export class BarrelManager {
     this.barrels = this.scene.physics.add.group({
       classType: Barrel,
       runChildUpdate: true
+    });
+
+    this.scene.events.on(WeaponManager.SWAPPED_EVENT, (data: {weaponUpgrade: WeaponUpgrade}) => {
+      this.setupPlayerBulletCollisions();
     });
   }
 
@@ -85,16 +90,23 @@ export class BarrelManager {
     });
   }
 
+  public setupPlayerBulletCollisions(): void {
+    const currentWeapon = this.player.weapon;
+
+    if (currentWeapon?.bullets) {
+        this.scene.physics.add.collider(
+          this.barrels,
+          currentWeapon.bullets,  
+          this.handleBulletCollision,
+          undefined,
+          this
+        );
+      }
+    
+  }
+
   public setupCollisions(): void {
-    if (this.player.weapon.bullets) {
-      this.scene.physics.add.collider(
-        this.barrels,
-        this.player.weapon.bullets,  
-        this.handleBulletCollision,
-        undefined,
-        this
-      );
-    }
+    this.setupPlayerBulletCollisions();
     this.scene.physics.add.overlap(
         this.player,
         this.barrels,
@@ -114,9 +126,7 @@ export class BarrelManager {
   }
 
   private handleBarrelCollision(player : any, barrel: any): void {
-    console.log('handle barrel collision', player, barrel);
     if (barrel instanceof Barrel && player instanceof Player) {
-        console.log('about to smash barrel', barrel, player);
       if (!barrel.isBarrelSmashed()) {
         barrel.smash();
       }

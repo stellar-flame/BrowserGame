@@ -2,7 +2,7 @@ import { Scene, Physics, Math } from 'phaser';
 import { Player } from '../player/Player';
 import { Enemy } from '../enemy/Enemy';
 import { Bullet } from './Bullet';
-import { WeaponConfig } from './WeaponConfigs';
+import { WeaponConfig, WeaponType } from './WeaponConfigs';
 
 export class Weapon {
   public damage: number;
@@ -16,13 +16,15 @@ export class Weapon {
   public bullets?: Physics.Arcade.Group;
   public minDistance: number = 50;
   public maxDistance: number = 200;
+  public weaponType: WeaponType;
   
   private scene: Scene;
   private config: WeaponConfig;
   private lastFired: number = 0;
 
-  constructor(scene: Scene, config: WeaponConfig) {
+  constructor(scene: Scene, weaponType: WeaponType, config: WeaponConfig) {
     this.scene = scene;
+    this.weaponType = weaponType;
     this.config = config;
     // Apply configuration
     this.type = config.type;
@@ -153,5 +155,29 @@ export class Weapon {
         (bullet as Bullet).deactivate();
       });
     }
+  }
+
+  public getDamage(): number {
+    return this.damage;
+  }
+
+  public getFireRate(): number {
+    return this.attackRate;
+  }
+
+  public getRange(): number {
+    return this.maxDistance;
+  }
+
+  public setDamage(damage: number): void {
+    this.damage = damage;
+  }
+
+  public setFireRate(fireRate: number): void {
+    this.attackRate = fireRate;
+  }
+
+  public setRange(range: number): void {
+    this.maxDistance = range;
   }
 } 
