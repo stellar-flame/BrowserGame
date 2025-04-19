@@ -11,11 +11,11 @@ export class Room {
   private zone: GameObjects.Zone;
   private enemyTriggerZone: GameObjects.Zone | null = null;
   private enemies: Enemy[] = [];
- 
+
   private doors: Door[] = [];
   private isCleared: boolean = false;
   private enemiesSpawned: boolean = false;
-  private spawnPoints: Array<{x: number, y: number, type: EnemyType | undefined}> = [];
+  private spawnPoints: Array<{ x: number, y: number, type: EnemyType | undefined }> = [];
   private barrels: Barrel[] = [];
 
   public static readonly ENEMY_CREATED = 'enemy-created';
@@ -31,7 +31,7 @@ export class Room {
   ) {
     this.scene = scene as MainScene;
     this.id = id;
-    
+
     // Create the room zone
     this.zone = scene.add.zone(
       x + (width / 2),
@@ -39,7 +39,7 @@ export class Room {
       width,
       height
     );
-    
+
     // Enable physics on the zone
     scene.physics.world.enable(this.zone);
     const body = this.zone.body as Physics.Arcade.Body;
@@ -47,12 +47,13 @@ export class Room {
     body.moves = false;
 
     // Listen for barrel smashed events
-    this.scene.events.on(Barrel.SMASHED_EVENT, (data: {x: number, y: number, barrel: Barrel}) => {
+    this.scene.events.on(Barrel.SMASHED_EVENT, (data: { x: number, y: number, barrel: Barrel }) => {
       // Remove the smashed barrel from the room's barrel list
       if (this.barrels.includes(data.barrel)) {
         this.barrels.splice(this.barrels.indexOf(data.barrel), 1);
       }
     });
+
 
   }
 
@@ -62,19 +63,19 @@ export class Room {
 
 
   public setupEnemies(obj: Phaser.Types.Tilemaps.TiledObject) {
-      // Ensure position properties exist
-      if (typeof obj.x !== 'number' || typeof obj.y !== 'number') {
-        console.warn('Invalid enemy object position:', obj);
-        return;
-      }
-      
-      // Add spawn point
-      this.spawnPoints.push({
-        x: obj.x,
-        y: obj.y,
-        type: this.getEnemyTypeFromProperties(obj.properties)
-      });
-    
+    // Ensure position properties exist
+    if (typeof obj.x !== 'number' || typeof obj.y !== 'number') {
+      console.warn('Invalid enemy object position:', obj);
+      return;
+    }
+
+    // Add spawn point
+    this.spawnPoints.push({
+      x: obj.x,
+      y: obj.y,
+      type: this.getEnemyTypeFromProperties(obj.properties)
+    });
+
   }
 
   // Helper method to get enemy type from properties
@@ -110,7 +111,7 @@ export class Room {
     }
 
     console.log(`Spawning enemies in room ${this.id}`);
-    
+
     // Clear any existing enemies
     this.enemies = [];
 
@@ -121,8 +122,8 @@ export class Room {
         return;
       }
 
-      console.log('Spawning enemy:', point.type);
-      
+      console.log('Spawning enemy:', point.type, index);
+
       const enemy = EnemyFactory.createEnemy(
         this.scene,
         point.type,
@@ -130,13 +131,13 @@ export class Room {
         point.y,
         index.toString()
       );
-      
+
       // Set player reference and ensure enemy is initialized
       enemy.setPlayer(this.scene.getPlayer());
-      
+
       // Add to room's enemy list
       this.enemies.push(enemy);
-      
+
       // Emit event with properly initialized enemy
       this.scene.events.emit(Room.ENEMY_CREATED, { enemy });
     });
@@ -201,14 +202,14 @@ export class Room {
       y,
       id
     );
-    
+
     // Set player reference and ensure enemy is initialized
     enemy.setPlayer(this.scene.getPlayer());
-    
+
     // Add to room's enemy list
     this.enemies.push(enemy);
-    
+
     // Emit event with properly initialized enemy
     this.scene.events.emit(Room.ENEMY_CREATED, { enemy });
-}
+  }
 } 

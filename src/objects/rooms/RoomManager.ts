@@ -3,16 +3,21 @@ import { Room } from "./Room";
 import { Door } from "../Door";
 import { DoorDirection } from "../Door";
 import { Player } from "../player/Player";
+import { Enemy } from "../enemy/Enemy";
+import { EnemyManager } from "../enemy/EnemyManager";
 
 export class RoomManager {
   private scene: Scene;
   private rooms: Map<string, Room>;
-  private currentRoom: Room | null = null;  
+  private currentRoom: Room | null = null;
   private player: Player;
-  constructor(scene:  Scene, player: Player) {
+  constructor(scene: Scene, player: Player) {
     this.scene = scene;
     this.player = player;
     this.rooms = new Map();
+    this.scene.events.on(EnemyManager.ENEMY_DIED, (data: { enemy: Enemy }) => {
+      this.getCurrentRoom()?.checkCleared();
+    });
 
   }
 
@@ -61,18 +66,18 @@ export class RoomManager {
       console.warn('Room object missing Room property');
       return null;
     }
-    
+
     const roomId = roomProperty.value;
     console.log('Creating room with ID:', roomId);
-    
-    if (typeof roomObj.x !== 'number' || 
-        typeof roomObj.y !== 'number' || 
-        typeof roomObj.width !== 'number' || 
-        typeof roomObj.height !== 'number') {
+
+    if (typeof roomObj.x !== 'number' ||
+      typeof roomObj.y !== 'number' ||
+      typeof roomObj.width !== 'number' ||
+      typeof roomObj.height !== 'number') {
       console.warn('Invalid room object properties:', roomObj);
       return null;
     }
-    
+
     return new Room(
       this.scene,
       roomId,
@@ -84,16 +89,16 @@ export class RoomManager {
   }
 
   private setupEnemyTrigger(obj: Phaser.Types.Tilemaps.TiledObject, room: Room): void {
-    if (typeof obj.x !== 'number' || 
-        typeof obj.y !== 'number' || 
-        typeof obj.width !== 'number' || 
-        typeof obj.height !== 'number') {
+    if (typeof obj.x !== 'number' ||
+      typeof obj.y !== 'number' ||
+      typeof obj.width !== 'number' ||
+      typeof obj.height !== 'number') {
       console.warn('Invalid trigger object properties:', obj);
       return;
     }
-    
+
     const zone = this.scene.add.zone(
-      obj.x + (obj.width / 2), 
+      obj.x + (obj.width / 2),
       obj.y + (obj.height / 2),
       obj.width,
       obj.height
@@ -103,15 +108,15 @@ export class RoomManager {
     this.scene.physics.world.enable(zone);
     (zone.body as Physics.Arcade.Body).setAllowGravity(false);
     (zone.body as Physics.Arcade.Body).moves = false;
-    
-    if (this.player) {  
+
+    if (this.player) {
       this.scene.physics.add.overlap(this.player, zone, () => {
         if (!room.isRoomCleared()) {
           room.spawnEnemies();
         }
       });
     }
-    console.log('Enemy trigger zone created:', zone);   
+    console.log('Enemy trigger zone created:', zone);
   }
 
   private setupDoor(obj: Phaser.Types.Tilemaps.TiledObject, room: Room): void {
@@ -136,7 +141,7 @@ export class RoomManager {
           break;
       }
     }
-    
+
     const door = new Door(
       this.scene,
       (obj.x || 0) + (obj.width || 0) / 2,
@@ -159,7 +164,7 @@ export class RoomManager {
     enemiesLayer.objects.forEach(enemyObj => {
       const roomProperty = enemyObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
       if (!roomProperty) return;
-      
+
       const roomId = roomProperty.value as string;
       console.log('Room ID:', roomId);
 
@@ -174,7 +179,7 @@ export class RoomManager {
   private handleRoomEntry(room: Room) {
     // If we're already in this room, do nothing
     if (this.currentRoom === room) return;
-    
+
     console.log(`Player entered room ${room.getId()}`);
     this.currentRoom = room;
   }
@@ -193,7 +198,7 @@ export class RoomManager {
 
   public anyEnemiesInRoom(): boolean {
     if (!this.currentRoom) return false;
-    return (this.currentRoom?.isEnemiesSpawned() &&  !this.currentRoom?.isRoomCleared());
+    return (this.currentRoom?.isEnemiesSpawned() && !this.currentRoom?.isRoomCleared());
   }
 
   public destroy(): void {

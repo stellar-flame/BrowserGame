@@ -28,10 +28,11 @@ export class EnemyManager {
       if (data.enemy && data.enemy.body) {
         this.enemies.add(data.enemy);
         this.setupEnemyBulletCollisions(data.enemy);
+        data.enemy.setMovementManager((this.scene as MainScene).getMovementManager());
       }
     });
 
-    scene.events.on(WeaponManager.SWAPPED_EVENT, (data: {weaponUpgrade: WeaponUpgrade}) => {
+    scene.events.on(WeaponManager.SWAPPED_EVENT, (data: { weaponUpgrade: WeaponUpgrade }) => {
       this.setupPlayerBulletCollisions();
     });
   }
@@ -41,29 +42,29 @@ export class EnemyManager {
     spawnLayer.objects.forEach((obj) => {
 
       console.log('Enemy spawn object:', obj);
-        // Ensure all required properties exist
-        if (typeof obj.x !== 'number' || 
-            typeof obj.y !== 'number') {
-          console.warn('Invalid enemy spawn object properties:', obj);
-          return;
+      // Ensure all required properties exist
+      if (typeof obj.x !== 'number' ||
+        typeof obj.y !== 'number') {
+        console.warn('Invalid enemy spawn object properties:', obj);
+        return;
+      }
+
+      const roomProperty = obj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
+      const roomId = roomProperty?.value;
+      const room = rooms.get(roomId);
+
+      if (room) {
+        // Get enemy type from properties
+        const typeProperty = obj.properties?.find((p: { name: string; value: string }) => p.name === 'Type');
+        const enemyType = typeProperty?.value?.toUpperCase() as EnemyType;
+        const quantityProperty = obj.properties?.find((p: { name: string; value: string }) => p.name === 'Quantity');
+        // Add spawn point to room
+        for (let i = 0; i < parseInt(quantityProperty?.value || '1'); i++) {
+          room.addSpawnPoint(obj.x, obj.y, enemyType);
         }
 
-        const roomProperty = obj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
-        const roomId = roomProperty?.value;
-        const room = rooms.get(roomId);
-        
-        if (room) {
-          // Get enemy type from properties
-          const typeProperty = obj.properties?.find((p: { name: string; value: string }) => p.name === 'Type');
-          const enemyType = typeProperty?.value?.toUpperCase() as EnemyType;
-          const quantityProperty = obj.properties?.find((p: { name: string; value: string }) => p.name === 'Quantity');
-          // Add spawn point to room
-          for (let i = 0; i < parseInt(quantityProperty?.value || '1'); i++) {
-            room.addSpawnPoint(obj.x, obj.y, enemyType);
-          }
-
-          console.log('Spawn point added:', obj.x, obj.y, enemyType);
-        }
+        console.log('Spawn point added:', obj.x, obj.y, enemyType);
+      }
     });
   }
 
@@ -107,31 +108,31 @@ export class EnemyManager {
     }
   }
 
-     // Helper to set up collisions for a specific enemy's bullets
-    public setupEnemyBulletCollisions(enemyInstance: Enemy) {
-        const wallsLayer = (this.scene as MainScene).getWallsLayer();
-    
-        if (enemyInstance instanceof RangedEnemy && enemyInstance.weapon && enemyInstance.weapon.bullets) {
-            // Enemy Bullets vs Player
-            this.scene.physics.add.collider(this.player, enemyInstance.weapon.bullets, this.handlePlayerBulletCollision, undefined, this); 
-            // Enemy Bullets vs Walls
-            if (wallsLayer) {
-                this.scene.physics.add.collider(enemyInstance.weapon.bullets, wallsLayer, (this.scene as MainScene).handleBulletCollision, undefined, this);
-            }
-        }
-    }
-  
-    // Handles collision between enemy bullets and the player
-  private handlePlayerBulletCollision(player: any, bullet: any) {
-      const playerInstance = player as Player;
-      const bulletInstance = bullet as Bullet;
-      
-      if (!playerInstance.active || !bulletInstance.active) {
-      return;
-      }
+  // Helper to set up collisions for a specific enemy's bullets
+  public setupEnemyBulletCollisions(enemyInstance: Enemy) {
+    const wallsLayer = (this.scene as MainScene).getWallsLayer();
 
-      playerInstance.takeDamage(bulletInstance.getDamage());
-      bulletInstance.deactivate();
+    if (enemyInstance instanceof RangedEnemy && enemyInstance.weapon && enemyInstance.weapon.bullets) {
+      // Enemy Bullets vs Player
+      this.scene.physics.add.collider(this.player, enemyInstance.weapon.bullets, this.handlePlayerBulletCollision, undefined, this);
+      // Enemy Bullets vs Walls
+      if (wallsLayer) {
+        this.scene.physics.add.collider(enemyInstance.weapon.bullets, wallsLayer, (this.scene as MainScene).handleBulletCollision, undefined, this);
+      }
+    }
+  }
+
+  // Handles collision between enemy bullets and the player
+  private handlePlayerBulletCollision(player: any, bullet: any) {
+    const playerInstance = player as Player;
+    const bulletInstance = bullet as Bullet;
+
+    if (!playerInstance.active || !bulletInstance.active) {
+      return;
+    }
+
+    playerInstance.takeDamage(bulletInstance.getDamage());
+    bulletInstance.deactivate();
   }
 
   private handleEnemyWallCollision(enemy: any, wall: any): void {
@@ -144,14 +145,14 @@ export class EnemyManager {
   private handleEnemyBulletCollision(enemy: any, bullet: any): void {
     const enemyInstance = enemy as Enemy;
     const bulletInstance = bullet as Bullet;
-    
+
     if (!enemyInstance.active || !bulletInstance.active) {
       return;
     }
-    
+
     bulletInstance.deactivate();
     enemyInstance.takeDamage(bulletInstance.getDamage());
-    
+
     this.scene.events.emit(EnemyManager.ENEMY_DIED, {
       enemy: enemyInstance
     });
@@ -160,8 +161,8 @@ export class EnemyManager {
   private handlePlayerEnemyOverlap(player: any, enemy: any): void {
     const playerInstance = player as Player;
     const enemyInstance = enemy as Enemy;
-  
-    
+
+
     if (enemyInstance.active && !(enemyInstance instanceof RangedEnemy) && enemyInstance.weapon) {
       enemyInstance.weapon.dealDamage(enemyInstance, playerInstance);
     }

@@ -15,15 +15,15 @@ export class MainScene extends Scene {
   protected player!: Player;
   protected wallsLayer: Phaser.Tilemaps.TilemapLayer | null = null;
   protected mousePointer: Phaser.Input.Pointer | null = null;
-  
+
   // Game state
   protected gameOver: boolean = false;
   protected gameOverText: Phaser.GameObjects.Text | null = null;
   protected restartText: Phaser.GameObjects.Text | null = null;
-  
+
   // Room system
   protected roomManager: RoomManager | null = null;
-  
+
   // Managers and utilities
   protected pathfindingGrid: PathfindingGrid;
   protected barrelManager: BarrelManager | null = null;
@@ -33,7 +33,7 @@ export class MainScene extends Scene {
   protected movementManager: MovementManager | null = null;
 
   constructor(key: string = 'MainScene') {
-    super({key: key}); 
+    super({ key: key });
     this.pathfindingGrid = PathfindingGrid.getInstance();
   }
 
@@ -49,16 +49,16 @@ export class MainScene extends Scene {
     this.loadSprite('zombie-sprite', 'assets/sprites/zombie.png', 32, 32);
     this.loadSprite('ninja-sprite', 'assets/sprites/ninja.png', 16, 32);
     this.loadSprite('chomper-sprite', 'assets/sprites/chomper.png', 16, 32);
-   
+
     this.loadSprite('arrow', 'assets/sprites/arrow.png', 32, 16);
     this.loadSprite('ninja-star', 'assets/sprites/ninja-star.png', 32, 32);
     this.loadSprite('smashed-barrel', 'assets/sprites/smashed-barrel.png', 32, 32);
     this.loadSprite('weapon-upgrade', 'assets/sprites/weapon-upgrade.png', 32, 32);
-    
+
     // Load tiles and maps
     this.load.image('tiles-32', 'assets/tiles.png');
     this.load.tilemapTiledJSON('dungeon-map', 'assets/dungeon-32.tmj');
-    
+
     // Load props
     this.load.image('door-open', 'assets/sprites/door-open.png');
     this.load.image('door-closed', 'assets/sprites/door-closed.png');
@@ -70,7 +70,7 @@ export class MainScene extends Scene {
     // this.load.audio('weapon-upgrade', 'assets/sounds/weapon-upgrade.mp3');
   }
 
-  private loadSprite(name: string, path: string, frameWidth: number, frameHeight: number) {  
+  private loadSprite(name: string, path: string, frameWidth: number, frameHeight: number) {
     this.load.spritesheet(name, path, {
       frameWidth: frameWidth,
       frameHeight: frameHeight
@@ -79,9 +79,9 @@ export class MainScene extends Scene {
 
   // Scene initialization
   create() {
-    
+
     console.log('Game started!');
-    
+
     this.setupInput();
     this.setupMap();
     this.setupPlayer();
@@ -94,23 +94,25 @@ export class MainScene extends Scene {
     this.setupPotions();
     this.setupEnemies();
     this.setupCollisions();
-    
+
     // Add keyboard shortcut to toggle grid labels
     if (this.input && this.input.keyboard) {
       this.input.keyboard.on('keydown-G', () => {
-        // Toggle grid labels
         if (this.pathfindingGrid) {
           this.pathfindingGrid.toggleGridLabels(this);
         }
       });
+
+      // Add keyboard shortcut to toggle buffered grid visualization
+      this.input.keyboard.on('keydown-B', () => {
+        if (this.pathfindingGrid) {
+          this.pathfindingGrid.toggleBufferedGridVisualization(this);
+        }
+      });
     }
 
-    this.events.on(EnemyManager.ENEMY_DIED, (data: { enemy: Enemy }) => {
-      this.getRoomManager().getCurrentRoom()?.checkCleared();
-    });
 
-
-      // Enable debug visualization
+    // Enable debug visualization
     // this.physics.world.createDebugGraphic();
 
   }
@@ -131,7 +133,7 @@ export class MainScene extends Scene {
   private setupMap() {
     const map = this.make.tilemap({ key: 'dungeon-map' });
     const tileset = map.addTilesetImage('tiles-32', 'tiles-32');
-    
+
     if (!tileset) {
       console.error('Failed to load tilesets');
       return;
@@ -140,7 +142,7 @@ export class MainScene extends Scene {
     const floorLayer = map.createLayer('Floor', tileset, 0, 0);
     const floorDecorLayer = map.createLayer('FloorDecor', tileset, 0, 0);
     this.wallsLayer = map.createLayer('Walls', tileset, 0, 0);
-   
+
     if (floorLayer) {
       floorLayer.setAlpha(1);
       floorLayer.setDepth(-1);
@@ -148,7 +150,7 @@ export class MainScene extends Scene {
       floorLayer.setScrollFactor(1);
       floorLayer.setCullPadding(32, 32);
     }
-   
+
     if (floorDecorLayer) {
       floorDecorLayer.setAlpha(1);
       floorDecorLayer.setDepth(-0.5);
@@ -156,7 +158,7 @@ export class MainScene extends Scene {
       floorDecorLayer.setScrollFactor(1);
       floorDecorLayer.setCullPadding(32, 32);
     }
-   
+
     if (this.wallsLayer) {
       this.wallsLayer.setCollisionFromCollisionGroup();
       this.wallsLayer.setPipeline('TextureTintPipeline');
@@ -173,14 +175,14 @@ export class MainScene extends Scene {
       return;
     }
 
-    this.player = new Player(this, 1400, 700);
+    this.player = new Player(this, 100, 300);
     console.log('Player created:', this.player);
-    
+
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
     playerBody.setSize(32, 32);
     playerBody.setOffset(16, 16);
-    
-    
+
+
     this.events.on('playerDied', this.handlePlayerDeath, this);
 
   }
@@ -215,7 +217,7 @@ export class MainScene extends Scene {
     }
   }
 
-  private setupBarrels() {  
+  private setupBarrels() {
     this.barrelManager = new BarrelManager(this, this.player);
     const map = this.make.tilemap({ key: 'dungeon-map' });
     this.barrelManager.createBarrelsFromPropsLayer(map.getObjectLayer('Props') as Phaser.Tilemaps.ObjectLayer, this.getRoomManager().getRooms());
@@ -280,7 +282,7 @@ export class MainScene extends Scene {
   }
 
   public anyEnemiesInRoom() {
-    if (!this.roomManager) return false;  
+    if (!this.roomManager) return false;
     return this.roomManager.anyEnemiesInRoom();
   }
 
@@ -288,51 +290,51 @@ export class MainScene extends Scene {
   // Handle player death
   private handlePlayerDeath(): void {
     if (this.gameOver) return;
-    
+
     // Stop all movement
     this.player.setVelocity(0, 0);
-    
+
     // Disable player controls
     this.player.setActive(false);
-    
+
     // Get camera center position
     const cameraCenterX = this.cameras.main.scrollX + this.cameras.main.width / 2;
     const cameraCenterY = this.cameras.main.scrollY + this.cameras.main.height / 2;
-    
+
     // Create a semi-transparent overlay at the center of the screen
     const overlay = this.add.rectangle(cameraCenterX, cameraCenterY, 300, 200, 0x000000, 0.7);
     overlay.setOrigin(0.5);
     overlay.setDepth(100); // Ensure it's above other elements
-    
+
     // Show game over text at the center of the screen
-    this.gameOverText = this.add.text(cameraCenterX, cameraCenterY - 30, 'GAME OVER', { 
-      fontSize: '64px', 
+    this.gameOverText = this.add.text(cameraCenterX, cameraCenterY - 30, 'GAME OVER', {
+      fontSize: '64px',
       color: '#ff0000',
       fontFamily: 'Arial'
     }).setOrigin(0.5).setDepth(101);
-    
+
     // Add restart instruction
-    this.restartText = this.add.text(cameraCenterX, cameraCenterY + 30, 'Press R to restart', { 
-      fontSize: '32px', 
+    this.restartText = this.add.text(cameraCenterX, cameraCenterY + 30, 'Press R to restart', {
+      fontSize: '32px',
       color: '#ffffff',
       fontFamily: 'Arial'
     }).setOrigin(0.5).setDepth(101);
-    
+
     // Set game over flag
     this.gameOver = true;
   }
 
-  
+
   // Getter for player
   public getPlayer(): Player {
     return this.player;
   }
-  
+
   // Getter for walls layer
   public getWallsLayer(): Phaser.Tilemaps.TilemapLayer | null {
     return this.wallsLayer;
   }
-  
+
   // Getter for tilemap
   public getTilemap(): Phaser.Tilemaps.Tilemap | null {
     return this.make.tilemap({ key: 'dungeon-map' });
@@ -342,7 +344,7 @@ export class MainScene extends Scene {
   public getPathfindingGrid(): PathfindingGrid {
     return this.pathfindingGrid;
   }
-  
+
   // Add getter for barrel manager
   public getBarrelManager(): BarrelManager {
     if (!this.barrelManager) {
@@ -364,12 +366,19 @@ export class MainScene extends Scene {
       throw new Error('RoomManager not initialized');
     }
     return this.roomManager;
-  } 
+  }
 
   public getEnemiesForCurrentRoom(): Enemy[] {
     if (!this.enemyManager) {
       throw new Error('EnemyManager not initialized');
     }
     return this.getRoomManager().getCurrentRoom()?.getEnemies() || [];
+  }
+
+  public getMovementManager(): MovementManager {
+    if (!this.movementManager) {
+      throw new Error('MovementManager not initialized');
+    }
+    return this.movementManager;
   }
 }
