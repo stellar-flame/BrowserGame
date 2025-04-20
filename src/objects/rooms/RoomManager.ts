@@ -4,7 +4,7 @@ import { Door } from "../Door";
 import { DoorDirection } from "../Door";
 import { Player } from "../player/Player";
 import { Enemy } from "../enemy/Enemy";
-import { EnemyManager } from "../enemy/EnemyManager";
+
 
 export class RoomManager {
   private scene: Scene;
@@ -15,8 +15,9 @@ export class RoomManager {
     this.scene = scene;
     this.player = player;
     this.rooms = new Map();
-    this.scene.events.on(EnemyManager.ENEMY_DIED, (data: { enemy: Enemy }) => {
+    this.scene.events.on(Enemy.ENEMY_DIED, (data: { enemy: Enemy }) => {
       this.getCurrentRoom()?.checkCleared();
+      this.getCurrentRoom()?.removeEnemy(data.enemy as Enemy);
     });
 
   }

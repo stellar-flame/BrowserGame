@@ -9,18 +9,14 @@ export class RangedEnemy extends Enemy {
     super(scene, x, y, id, config);
   }
 
-  protected canAttack(): boolean {
-    return this.isInAttackRange();
-  }
 
   protected performAttack(): void {
     if (!this.weapon || !this.player) return;
-    
-    
+
     // Use the weapon's fire method
     this.weapon.fireAtTarget(this, this.player);
   }
-  
+
 
   // Keep the public fire method for backward compatibility
   public fire(): void {
@@ -32,7 +28,7 @@ export class RangedEnemy extends Enemy {
     if (this.weapon) {
       this.weapon.deactivateAllBullets();
     }
-    
+
     super.die();
   }
 

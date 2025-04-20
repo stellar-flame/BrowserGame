@@ -12,7 +12,6 @@ import { WeaponManager } from '../weapons/WeaponManager';
 export class EnemyManager {
   private scene: Scene;
   private enemies: Phaser.Physics.Arcade.Group;
-  public static readonly ENEMY_DIED = 'enemy-died';
   private player: Player;
 
   constructor(scene: Scene, player: Player) {
@@ -28,7 +27,6 @@ export class EnemyManager {
       if (data.enemy && data.enemy.body) {
         this.enemies.add(data.enemy);
         this.setupEnemyBulletCollisions(data.enemy);
-        data.enemy.setMovementManager((this.scene as MainScene).getMovementManager());
       }
     });
 
@@ -152,10 +150,6 @@ export class EnemyManager {
 
     bulletInstance.deactivate();
     enemyInstance.takeDamage(bulletInstance.getDamage());
-
-    this.scene.events.emit(EnemyManager.ENEMY_DIED, {
-      enemy: enemyInstance
-    });
   }
 
   private handlePlayerEnemyOverlap(player: any, enemy: any): void {

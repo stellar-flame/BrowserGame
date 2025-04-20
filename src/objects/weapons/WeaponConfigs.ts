@@ -18,21 +18,21 @@ export interface WeaponConfig {
 export const WEAPON_CONFIGS = {
   ZOMBIESTRIKE: {
     type: TYPE_MELEE,
-    damage: 0,
+    damage: 20,
     attackRate: 1000, // 1 second cooldown
     minDistance: 40,
     maxDistance: 50
   },
   CHOMPER_BITE: {
     type: TYPE_MELEE,
-    damage: 0,
+    damage: 10,
     attackRate: 300, // 3 bites per second
     minDistance: 40,
     maxDistance: 50
   },
   SWORD: {
     type: TYPE_MELEE,
-    damage: 0,
+    damage: 15,
     attackRate: 1000, // 1 second cooldown
     minDistance: 50,
     maxDistance: 100
@@ -50,14 +50,14 @@ export const WEAPON_CONFIGS = {
   },
   SPEAR: {
     type: TYPE_MELEE,
-    damage: 0,
+    damage: 20,
     attackRate: 1250, // 0.8 attacks per second (1000ms / 0.8)
     minDistance: 50,
     maxDistance: 100
   },
   NINJA_STAR: {
     type: TYPE_RANGED,
-    damage: 0,
+    damage: 10,
     attackRate: 2000, // 0.5 attacks per second (1000ms / 0.5)
     bulletSpeed: 400,
     bulletSprite: 'ninja-star',

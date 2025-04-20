@@ -54,7 +54,6 @@ export class Room {
       }
     });
 
-
   }
 
   public setEnemyTriggerZone(zone: GameObjects.Zone) {
@@ -187,6 +186,10 @@ export class Room {
 
   public getEnemies(): Enemy[] {
     return this.enemies;
+  }
+
+  public removeEnemy(enemy: Enemy): void {
+    this.enemies.splice(this.enemies.indexOf(enemy), 1);
   }
 
   public destroy(): void {

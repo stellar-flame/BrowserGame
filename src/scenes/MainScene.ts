@@ -277,7 +277,6 @@ export class MainScene extends Scene {
     }
     if (this.movementManager) {
       this.movementManager.updateFlankingPoints(this.getEnemiesForCurrentRoom());
-      this.movementManager.assignFlankingPointsToEnemies(this.getEnemiesForCurrentRoom());
     }
   }
 
