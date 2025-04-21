@@ -58,7 +58,7 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
 
       // Initialize weapon if specified in config
       if (config.weaponType) {
-        this.weapon = WeaponFactory.createWeapon(scene, config.weaponType);
+        this.weapon = WeaponFactory.createEnemyWeapon(scene, config.weaponType);
       }
       this.config = config;
     }

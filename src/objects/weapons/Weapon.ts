@@ -17,22 +17,25 @@ export class Weapon {
   public minDistance: number = 50;
   public maxDistance: number = 200;
   public weaponType: WeaponType;
-  
   private scene: Scene;
-  private config: WeaponConfig;
+  public config: WeaponConfig;
   private lastFired: number = 0;
+  public displayConfig?: WeaponConfig['displayConfig'] | null;
 
-  constructor(scene: Scene, weaponType: WeaponType, config: WeaponConfig) {
+  constructor(scene: Scene, type: WeaponType, config: WeaponConfig) {
     this.scene = scene;
-    this.weaponType = weaponType;
+
+    this.weaponType = type;
+
     this.config = config;
+    this.displayConfig = config.displayConfig || null;
     // Apply configuration
     this.type = config.type;
     this.damage = config.damage;
     this.attackRate = config.attackRate || 1000; // Default to 1 second cooldown if not provided
     this.minDistance = config.minDistance || this.minDistance;
     this.maxDistance = config.maxDistance || this.maxDistance;
-    
+
     // Set bullet properties for ranged weapons
     if (this.type === 'ranged') {
       this.bulletSpeed = config.bulletSpeed || 300;
@@ -40,16 +43,16 @@ export class Weapon {
       this.bulletWidth = config.bulletWidth || 32;
       this.bulletHeight = config.bulletHeight || 16;
       this.bulletSpinSpeed = config.bulletSpinSpeed || 0;
-      
+
       // Create bullet group for ranged weapons
       this.bullets = this.createBulletGroup(scene);
     }
 
   }
-  
+
   private createBulletGroup(scene: Scene): Physics.Arcade.Group {
-    return scene.physics.add.group({ 
-      classType: Bullet, 
+    return scene.physics.add.group({
+      classType: Bullet,
       maxSize: 10,
       createCallback: (item: Phaser.GameObjects.GameObject) => {
         const bullet = item as Bullet;
@@ -73,11 +76,11 @@ export class Weapon {
   // Deal damage method for melee weapons
   public dealDamage(attacker: Player | Enemy, target: Player | Enemy): void {
     if (this.type !== 'melee') return;
-    
+
     // Check attack rate cooldown
     const currentTime = this.scene.time.now;
     if (currentTime - this.lastFired < this.attackRate) return;
-    
+
     // Calculate distance to target
     const distance = Phaser.Math.Distance.Between(
       attacker.x, attacker.y,
@@ -101,24 +104,24 @@ export class Weapon {
     const bullet = this.bullets.get() as Bullet;
     if (bullet) {
       const angle = Phaser.Math.Angle.Between(shooter.x, shooter.y, x, y);
-  
+
       bullet.fire(shooter.x, shooter.y, angle);
     }
     this.lastFired = currentTime;
   }
-  
+
   // Fire method for ranged weapons
   public fireAtTarget(shooter: any, target: any): void {
     if (this.type !== 'ranged' || !this.bullets) return;
-    
+
     // Check attack rate cooldown
     const currentTime = this.scene.time.now;
     if (currentTime - this.lastFired < this.attackRate) return;
-    
+
     // Get target position
     const targetX = target.x;
     const targetY = target.y;
-    
+
     // Calculate angle to target
     const angle = Phaser.Math.Angle.Between(
       shooter.x,
@@ -131,7 +134,7 @@ export class Weapon {
     const bullet = this.bullets.get() as Bullet;
     if (bullet) {
       bullet.fire(shooter.x, shooter.y, angle);
-      
+
       // Apply spinning animation if specified
       if (this.bulletSpinSpeed !== undefined && this.bulletSpinSpeed !== 0) {
         // Add a tween to continuously rotate the bullet
@@ -144,10 +147,10 @@ export class Weapon {
         });
       }
     }
-     
+
     this.lastFired = currentTime;
   }
-  
+
   // Method to deactivate all bullets (used when enemy dies)
   public deactivateAllBullets(): void {
     if (this.bullets) {

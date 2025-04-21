@@ -175,7 +175,8 @@ export class MainScene extends Scene {
       return;
     }
 
-    this.player = new Player(this, 100, 300);
+    // this.player = new Player(this, 100, 300);
+    this.player = new Player(this, 1400, 700);
     console.log('Player created:', this.player);
 
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
