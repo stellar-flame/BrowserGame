@@ -72,7 +72,7 @@ export const ENEMY_CONFIGS = {
     type: 'melee',
     sprite: 'chomper-sprite',
     scale: 2,
-    moveSpeed: 100,
+    moveSpeed: 130,
     health: 30,
     maxHealth: 30,
     animationKey: 'chomper-walk',

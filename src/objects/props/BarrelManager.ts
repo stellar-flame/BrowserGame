@@ -8,7 +8,7 @@ export class BarrelManager {
   private scene: Scene;
   private barrels: Phaser.Physics.Arcade.Group;
   private player: Player;
- 
+
   constructor(scene: Scene, player: Player) {
     this.scene = scene;
     this.player = player;
@@ -17,7 +17,7 @@ export class BarrelManager {
       runChildUpdate: true
     });
 
-    this.scene.events.on(WeaponManager.SWAPPED_EVENT, (data: {weaponUpgrade: WeaponUpgrade}) => {
+    this.scene.events.on(WeaponManager.SWAPPED_EVENT, (data: { weaponUpgrade: WeaponUpgrade }) => {
       this.setupPlayerBulletCollisions();
     });
   }
@@ -27,10 +27,10 @@ export class BarrelManager {
     propsLayer.objects.forEach((obj) => {
       if (obj.name === 'Barrels') {
         // Ensure all required properties exist
-        if (typeof obj.x !== 'number' || 
-            typeof obj.y !== 'number' || 
-            typeof obj.width !== 'number' || 
-            typeof obj.height !== 'number') {
+        if (typeof obj.x !== 'number' ||
+          typeof obj.y !== 'number' ||
+          typeof obj.width !== 'number' ||
+          typeof obj.height !== 'number') {
           console.warn('Invalid barrel object properties:', obj);
           return;
         }
@@ -55,14 +55,14 @@ export class BarrelManager {
           // Calculate grid positions
           const cols = Math.floor(bounds.width / (barrelSize + padding));
           const rows = Math.floor(bounds.height / (barrelSize + padding));
-          
+
           // Create a list of possible positions
-          const positions: {x: number, y: number}[] = [];
+          const positions: { x: number, y: number }[] = [];
           for (let row = 0; row < rows; row++) {
             for (let col = 0; col < cols; col++) {
               positions.push({
-                x: bounds.x + (col * (barrelSize + padding)) + barrelSize/2,
-                y: bounds.y + (row * (barrelSize + padding)) + barrelSize/2
+                x: bounds.x + (col * (barrelSize + padding)) + barrelSize / 2,
+                y: bounds.y + (row * (barrelSize + padding)) + barrelSize / 2
               });
             }
           }
@@ -74,16 +74,16 @@ export class BarrelManager {
           shuffledPositions.forEach(pos => {
             // Create the barrel sprite
             const barrel = new Barrel(this.scene, pos.x, pos.y);
-            
+
             // Add to group
             this.barrels.add(barrel);
-            
+
             // Set properties
             barrel.setDepth(0.5);
-            
+
             // Add to room
             room.addBarrel(barrel);
-            
+
           });
         }
       }
@@ -94,38 +94,37 @@ export class BarrelManager {
     const currentWeapon = this.player.weapon;
 
     if (currentWeapon?.bullets) {
-        this.scene.physics.add.collider(
-          this.barrels,
-          currentWeapon.bullets,  
-          this.handleBulletCollision,
-          undefined,
-          this
-        );
-      }
-    
+      this.scene.physics.add.collider(
+        this.barrels,
+        currentWeapon.bullets,
+        this.handleBulletCollision,
+        undefined,
+        this
+      );
+    }
+
   }
 
   public setupCollisions(): void {
     this.setupPlayerBulletCollisions();
     this.scene.physics.add.overlap(
-        this.player,
-        this.barrels,
-        this.handleBarrelCollision,
-        undefined,
-        this
-      );
+      this.player,
+      this.barrels,
+      this.handleBarrelCollision,
+      undefined,
+      this
+    );
   }
 
   private handleBulletCollision(barrel: any, bullet: any): void {
     if (barrel instanceof Barrel && bullet instanceof Phaser.Physics.Arcade.Sprite) {
       if (!barrel.isBarrelSmashed()) {
         barrel.smash();
-        bullet.destroy();
       }
     }
   }
 
-  private handleBarrelCollision(player : any, barrel: any): void {
+  private handleBarrelCollision(player: any, barrel: any): void {
     if (barrel instanceof Barrel && player instanceof Player) {
       if (!barrel.isBarrelSmashed()) {
         barrel.smash();

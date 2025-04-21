@@ -46,7 +46,7 @@ export class Barrel extends Phaser.Physics.Arcade.Sprite {
 
   // Method to handle mouse over event
   private onMouseOver(): void {
-    if (!this.isSmashed && !this.isDestroyed) {
+    if (!this.isSmashed) {
       this.isHovered = true;
       this.setTint(this.hoverTint);
 

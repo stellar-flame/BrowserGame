@@ -39,7 +39,7 @@ export const WEAPON_CONFIGS = {
   },
   BOW: {
     type: TYPE_RANGED,
-    damage: 0,
+    damage: 15,
     attackRate: 667, // ~1.5 attacks per second (1000ms / 1.5)
     bulletSpeed: 300,
     bulletSprite: 'arrow',

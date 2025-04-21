@@ -35,11 +35,12 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   protected lastPosition: { x: number, y: number } | null = null;
 
   protected pathfindingEnabled: boolean = false;
-  public currentPath: Array<{ x: number, y: number }> = [];
-  public currentPathIndex: number = 0;
+  protected currentPath: Array<{ x: number, y: number }> = [];
+  protected currentPathIndex: number = 0;
   protected pathUpdateTimer: number = 0;
   protected pathUpdateInterval: number = 1000; // Update path every second
   public static readonly ENEMY_DIED = 'enemy-died';
+  public static readonly TARGET_REACHED = 'target-reached';
 
   constructor(scene: Scene, x: number, y: number, id: string, config?: EnemyConfig) {
     // Call Sprite constructor (use __WHITE texture key for tinting)
@@ -186,13 +187,10 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     const mainScene = this.scene as MainScene;
     const pathfindingGrid = mainScene.getPathfindingGrid();
 
-    if (this.currentPathIndex >= this.currentPath.length) {
-      this.currentPathIndex = 0;
-      this.currentPath = [];
-    }
 
     if (this.currentPath && this.currentPath.length > 0) {
       const targetNode = this.currentPath[this.currentPathIndex];
+      console.log('enemy: moving to', targetNode, this.currentPathIndex, this.currentPath.length, this.id);
       const targetWorldX = pathfindingGrid.getWorldX(targetNode.x);
       const targetWorldY = pathfindingGrid.getWorldY(targetNode.y);
 
@@ -207,11 +205,16 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
       // If we're close enough to the target node, move to the next one
       if (distance < 5 || !isWalkable) {
         this.currentPathIndex++;
+        console.log('enemy: reached node', targetNode, this.currentPathIndex, this.currentPath.length, this.id);
+
         // If we've reached the end of the path, stop moving
         if (this.currentPathIndex >= this.currentPath.length) {
           if (this.body instanceof Phaser.Physics.Arcade.Body) {
             console.log('enemy: stopping movement');
             this.body.setVelocity(0, 0);
+            this.currentPathIndex = 0;
+            this.currentPath = [];
+            this.scene.events.emit(Enemy.TARGET_REACHED, { enemy: this });
           }
           return;
         }
@@ -225,7 +228,6 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
 
         // Apply the velocity to the physics body
         if (this.body instanceof Phaser.Physics.Arcade.Body) {
-          console.log('enemy: moving', vx, vy);
           this.body.setVelocity(vx, vy);
         }
       }
@@ -237,6 +239,14 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     }
   }
 
+  public setPath(path: Array<{ x: number, y: number }>): void {
+    this.currentPath = path;
+    this.currentPathIndex = 0;
+  }
+
+  public getPath(): Array<{ x: number, y: number }> {
+    return this.currentPath;
+  }
 
   // Method to set player reference
   public setPlayer(player: Player): void {

@@ -19,6 +19,11 @@ export class MovementManager {
         this.scene = scene;
         this.player = player;
         this.pathfindingGrid = (this.scene as MainScene).getPathfindingGrid();
+        this.scene.events.on(Enemy.TARGET_REACHED, this.onTargetReached, this);
+    }
+
+    private onTargetReached(data: { enemy: Enemy }): void {
+        this.targetReachedEnemies.add(data.enemy.id);
     }
 
 
@@ -26,8 +31,7 @@ export class MovementManager {
         if (enemies.length === 0) return;
         const currentTime = Date.now();
 
-
-        if (currentTime - this.lastFlankingUpdate > this.flankingUpdateInterval) {
+        if (currentTime - this.lastFlankingUpdate > this.flankingUpdateInterval || this.targetReachedEnemies.size > 0) {
             console.log('*************************** Updating flanking points');
             this.targetReachedEnemies.clear();
             this.lastFlankingUpdate = currentTime;
@@ -78,7 +82,7 @@ export class MovementManager {
                 const pathPromise = new Promise<boolean>((resolve) => {
                     easystar.findPath(enemyTileX, enemyTileY, pointTileX, pointTileY, (path) => {
                         if (path && path.length > 0) {
-                            enemy.currentPath = path;
+                            enemy.setPath(path);
                             resolve(true);
                         }
                         else {
@@ -91,7 +95,7 @@ export class MovementManager {
                 const hasPath = await pathPromise;
                 if (hasPath) {
                     assignedEnemies.add(enemy);
-                    console.log('^^^^^^^^^^^^^^^^^^^ movement manager: Path found for enemy', enemy.id, enemy.currentPath);
+                    console.log('^^^^^^^^^^^^^^^^^^^ movement manager: Path found for enemy', enemy.id, enemy.getPath());
                     return true;
                 }
             }
