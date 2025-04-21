@@ -71,13 +71,22 @@ export class WeaponManager {
   }
 
   private onEnterUpgradeArea(player: any, upgrade: any): void {
-    const newWeapon = upgrade.swapWeapon(player.weapon);
+    if (!this.player) return;
+
+    // Get the new weapon from the upgrade
+    const weaponUpgrade = upgrade as WeaponUpgrade;
+    const newWeapon = weaponUpgrade.swapWeapon(this.player.weapon);
     if (newWeapon) {
-      player.weapon = newWeapon;
-      this.setupCollisions();
+      // Update the player's weapon
+      this.player.swapWeapon(newWeapon);
+
+      // Create upgrade effect
       this.createPlayerUpgradeEffect();
+
+      // Emit weapon swapped event
       this.scene.events.emit(WeaponManager.SWAPPED_EVENT, {
-        weaponUpgrade: upgrade
+        oldWeapon: this.player.weapon,
+        newWeapon: newWeapon
       });
     }
   }

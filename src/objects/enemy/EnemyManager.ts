@@ -39,7 +39,6 @@ export class EnemyManager {
     // Find all enemy spawn points in the spawn layer
     spawnLayer.objects.forEach((obj) => {
 
-      console.log('Enemy spawn object:', obj);
       // Ensure all required properties exist
       if (typeof obj.x !== 'number' ||
         typeof obj.y !== 'number') {
@@ -60,8 +59,6 @@ export class EnemyManager {
         for (let i = 0; i < parseInt(quantityProperty?.value || '1'); i++) {
           room.addSpawnPoint(obj.x, obj.y, enemyType);
         }
-
-        console.log('Spawn point added:', obj.x, obj.y, enemyType);
       }
     });
   }

@@ -109,7 +109,6 @@ export class Room {
       return;
     }
 
-    console.log(`Spawning enemies in room ${this.id}`);
 
     // Clear any existing enemies
     this.enemies = [];
@@ -121,7 +120,6 @@ export class Room {
         return;
       }
 
-      console.log('Spawning enemy:', point.type, index);
 
       const enemy = EnemyFactory.createEnemy(
         this.scene,

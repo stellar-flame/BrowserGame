@@ -92,7 +92,6 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
 
     // Initialize last position
     this.lastPosition = { x, y };
-    console.log('Enemy created', this.id);
   }
 
 
@@ -190,7 +189,6 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
 
     if (this.currentPath && this.currentPath.length > 0) {
       const targetNode = this.currentPath[this.currentPathIndex];
-      console.log('enemy: moving to', targetNode, this.currentPathIndex, this.currentPath.length, this.id);
       const targetWorldX = pathfindingGrid.getWorldX(targetNode.x);
       const targetWorldY = pathfindingGrid.getWorldY(targetNode.y);
 
@@ -205,7 +203,6 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
       // If we're close enough to the target node, move to the next one
       if (distance < 5 || !isWalkable) {
         this.currentPathIndex++;
-        console.log('enemy: reached node', targetNode, this.currentPathIndex, this.currentPath.length, this.id);
 
         // If we've reached the end of the path, stop moving
         if (this.currentPathIndex >= this.currentPath.length) {

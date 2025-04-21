@@ -4,9 +4,7 @@ import { HealthBar } from '../HealthBar';
 import { Potion } from '../items/Potion';
 import { Weapon } from '../weapons/Weapon';
 import { WeaponFactory } from '../weapons/WeaponFactory';
-import { WeaponManager } from '../weapons/WeaponManager';
-import { WeaponConfig, OWNER_PLAYER } from '../weapons/WeaponConfigs';
-import { WeaponUpgrade } from '../weapons/WeaponUpgrade';
+import { WeaponOverlay } from '../weapons/WeaponOverlay';
 
 // Extend Physics.Arcade.Sprite for physics and preUpdate
 export class Player extends Physics.Arcade.Sprite {
@@ -34,6 +32,7 @@ export class Player extends Physics.Arcade.Sprite {
   private targetRadius: number = 20;
 
   private healthBar: HealthBar;
+  private weaponOverlay: WeaponOverlay;
 
   constructor(scene: Scene, x: number, y: number) {
     super(scene, x, y, 'player-sprite'); // Use the sprite sheet
@@ -73,6 +72,10 @@ export class Player extends Physics.Arcade.Sprite {
     // Initialize health bar
     this.healthBar = new HealthBar(scene, this, 150, 10, true);
     this.healthBar.setHealth(this.currentHealth, this.maxHealth);
+
+    // Initialize weapon overlay
+    this.weaponOverlay = new WeaponOverlay(scene);
+    this.weaponOverlay.updateWeapon(this.weapon);
 
     this.scene.events.on(Potion.COLLECTED_EVENT, (data: { x: number, y: number, healAmount: number }) => {
       this.heal(data.healAmount)
@@ -338,14 +341,20 @@ export class Player extends Physics.Arcade.Sprite {
     }
   }
 
-  public destroy(): void {
+  public swapWeapon(newWeapon: Weapon): void {
+    this.weapon = newWeapon;
+    this.weaponOverlay.updateWeapon(this.weapon);
+  }
+
+  public destroy(fromScene?: boolean): void {
+    this.weaponOverlay.destroy();
     this.healthBar.destroy();
     this.targetCircle.destroy();
     // Deactivate all bullets when player is destroyed
     if (this.weapon) {
       this.weapon.deactivateAllBullets();
     }
-    super.destroy();
+    super.destroy(fromScene);
   }
 
   private handleAutoTargeting(): void {
