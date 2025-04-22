@@ -6,7 +6,7 @@ import { PathfindingGrid } from '../objects/pathfinding/PathfindingGrid';
 import { RoomManager } from '../objects/rooms/RoomManager';
 import { BarrelManager } from '../objects/props/BarrelManager';
 import { EnemyManager } from '../objects/enemy/EnemyManager';
-import { PotionManager } from '../objects/items/PotionManager';
+import { ItemManager } from '../objects/items/ItemManager';
 import { WeaponManager } from '../objects/weapons/WeaponManager';
 import { MovementManager } from '../objects/enemy/MovementManager';
 
@@ -28,7 +28,7 @@ export class MainScene extends Scene {
   protected pathfindingGrid: PathfindingGrid;
   protected barrelManager: BarrelManager | null = null;
   protected enemyManager: EnemyManager | null = null;
-  protected potionManager: PotionManager | null = null;
+  protected itemManager: ItemManager | null = null;
   protected weaponManager: WeaponManager | null = null;
   protected movementManager: MovementManager | null = null;
 
@@ -64,6 +64,7 @@ export class MainScene extends Scene {
     this.load.image('door-closed', 'assets/sprites/door-closed.png');
     this.load.image('barrel', 'assets/sprites/barrel.png');
     this.load.image('potion', 'assets/sprites/potion.png');
+    this.load.image('powerup', 'assets/sprites/powerup.png');
     this.load.image('player-bullet-1', 'assets/sprites/player-bullet-1.png');
 
     // Load sound effects
@@ -225,8 +226,8 @@ export class MainScene extends Scene {
   }
 
   private setupPotions() {
-    this.potionManager = new PotionManager(this, this.player);
-    this.potionManager.setSpawnPoints(this.getRoomManager().getRooms());
+    this.itemManager = new ItemManager(this, this.player);
+    this.itemManager.setSpawnPoints(this.getRoomManager().getRooms());
   }
 
   protected setupEnemies() {
@@ -259,8 +260,8 @@ export class MainScene extends Scene {
       this.barrelManager.setupCollisions();
     }
 
-    if (this.potionManager) {
-      this.potionManager.setupCollisions();
+    if (this.itemManager) {
+      this.itemManager.setupCollisions();
     }
   }
 

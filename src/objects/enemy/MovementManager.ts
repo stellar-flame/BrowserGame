@@ -32,7 +32,6 @@ export class MovementManager {
         const currentTime = Date.now();
 
         if (currentTime - this.lastFlankingUpdate > this.flankingUpdateInterval || this.targetReachedEnemies.size > 0) {
-            console.log('*************************** Updating flanking points');
             this.targetReachedEnemies.clear();
             this.lastFlankingUpdate = currentTime;
             this.calculateFlankingPoints(enemies.filter(enemy => enemy instanceof RangedEnemy), 100);
@@ -43,7 +42,6 @@ export class MovementManager {
     public async calculateFlankingPoints(enemies: Enemy[], radius: number) {
         if (enemies.length === 0) return;
 
-        console.log('calculating flanking points:', enemies.length, radius);
         const numberOfPoints = Math.max(8, enemies.length * 4 + 4, 10);
 
         // Generate all possible points around the player
@@ -56,7 +54,6 @@ export class MovementManager {
                 points.push({ x, y });
             }
         }
-        console.log('movement manager: Found', points.length, 'points');
 
         // Keep track of which points have been assigned
         const assignedEnemies = new Set<Enemy>();
@@ -95,7 +92,6 @@ export class MovementManager {
                 const hasPath = await pathPromise;
                 if (hasPath) {
                     assignedEnemies.add(enemy);
-                    console.log('^^^^^^^^^^^^^^^^^^^ movement manager: Path found for enemy', enemy.id, enemy.getPath());
                     return true;
                 }
             }

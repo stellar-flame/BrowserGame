@@ -5,7 +5,7 @@ import { Potion } from '../items/Potion';
 import { Weapon } from '../weapons/Weapon';
 import { WeaponFactory } from '../weapons/WeaponFactory';
 import { WeaponOverlay } from '../weapons/WeaponOverlay';
-
+import { Powerup } from '../items/Powerup';
 // Extend Physics.Arcade.Sprite for physics and preUpdate
 export class Player extends Physics.Arcade.Sprite {
   // Removed redundant body declaration, it's inherited
@@ -33,6 +33,12 @@ export class Player extends Physics.Arcade.Sprite {
 
   private healthBar: HealthBar;
   private weaponOverlay: WeaponOverlay;
+  private speedBoostTimer: Phaser.Time.TimerEvent | null = null;
+  private speedBoostTrail: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
+  private floatingImage: Phaser.GameObjects.Image | null = null;
+
+  public moveSpeed: number = 160; // Base movement speed
+  public isSpeedBoosted: boolean = false;
 
   constructor(scene: Scene, x: number, y: number) {
     super(scene, x, y, 'player-sprite'); // Use the sprite sheet
@@ -78,8 +84,15 @@ export class Player extends Physics.Arcade.Sprite {
     this.weaponOverlay.updateWeapon(this.weapon);
 
     this.scene.events.on(Potion.COLLECTED_EVENT, (data: { x: number, y: number, healAmount: number }) => {
-      this.heal(data.healAmount)
+      this.heal(data.healAmount);
+      this.showFloatingImage('potion');
     });
+
+    this.scene.events.on(Powerup.COLLECTED_EVENT, (data: { x: number, y: number, speedBoost: number }) => {
+      this.applySpeedBoost(data.speedBoost);
+      this.showFloatingImage('powerup');
+    });
+
     this.createAnimations(scene);
 
   }
@@ -113,8 +126,6 @@ export class Player extends Physics.Arcade.Sprite {
   preUpdate(time: number, delta: number) {
     super.preUpdate(time, delta);
 
-
-
     // Skip movement if teleporting
     if (this.isTeleporting) {
       return;
@@ -129,18 +140,18 @@ export class Player extends Physics.Arcade.Sprite {
     let isMoving = false;
 
     if (this.wasdKeys.left.isDown) {
-      body.setVelocityX(-160);
+      body.setVelocityX(-this.moveSpeed);
       this.flipX = true; // Flip the sprite horizontally
       isMoving = true;
     } else if (this.wasdKeys.right.isDown) {
-      body.setVelocityX(160);
+      body.setVelocityX(this.moveSpeed);
       this.flipX = false; // Flip the sprite horizontally
       isMoving = true;
     } else if (this.wasdKeys.up.isDown) {
-      body.setVelocityY(-160);
+      body.setVelocityY(-this.moveSpeed);
       isMoving = true;
     } else if (this.wasdKeys.down.isDown) {
-      body.setVelocityY(160);
+      body.setVelocityY(this.moveSpeed);
       isMoving = true;
     }
 
@@ -231,6 +242,61 @@ export class Player extends Physics.Arcade.Sprite {
 
     // Visual healing effect
     this.showHealEffect(amount);
+  }
+
+
+  private applySpeedBoost(boostAmount: number): void {
+    this.moveSpeed *= boostAmount;
+    this.isSpeedBoosted = true;
+    console.log('*************************** speed boost applied:', boostAmount);
+    // Add visual effects
+    this.setTint(0x00ffff); // Cyan tint
+    this.createSpeedBoostTrail();
+
+    // Clear any existing timer
+    if (this.speedBoostTimer) {
+      this.speedBoostTimer.destroy();
+    }
+
+    this.speedBoostTimer = this.scene.time.addEvent({
+      delay: 5000,
+      callback: () => {
+        this.moveSpeed -= boostAmount;
+        this.isSpeedBoosted = false;
+        this.clearTint();
+        if (this.speedBoostTrail) {
+          this.speedBoostTrail.destroy();
+          this.speedBoostTrail = null;
+        }
+      }
+    });
+  }
+
+  private createSpeedBoostTrail(): void {
+    if (this.speedBoostTrail) {
+      this.speedBoostTrail.destroy();
+    }
+
+    this.speedBoostTrail = this.scene.add.particles(0, 0, 'particle', {
+      follow: this,
+      scale: { start: 0.8, end: 0 },  // Increased start scale
+      alpha: { start: 0.8, end: 0 },  // Increased start alpha
+      speed: 0,
+      lifespan: 800,  // Increased lifespan
+      quantity: 2,    // Increased quantity
+      frequency: 25,  // Decreased frequency for more particles
+      blendMode: 'ADD',
+      emitting: true,
+      gravityY: 0,
+      tint: 0x00ffff //cyan
+    });
+
+    // Set depth to be behind player but above background
+    this.speedBoostTrail.setDepth(this.depth - 0.1);
+
+    // Start emitting immediately
+    this.speedBoostTrail.start();
+    console.log('*************************** speed boost trail created');
   }
 
   // Show a visual healing effect
@@ -350,11 +416,20 @@ export class Player extends Physics.Arcade.Sprite {
     this.weaponOverlay.destroy();
     this.healthBar.destroy();
     this.targetCircle.destroy();
+    if (this.speedBoostTrail) {
+      this.speedBoostTrail.destroy();
+    }
+    if (this.floatingImage) {
+      this.floatingImage.destroy();
+    }
     // Deactivate all bullets when player is destroyed
     if (this.weapon) {
       this.weapon.deactivateAllBullets();
     }
     super.destroy(fromScene);
+    if (this.speedBoostTimer) {
+      this.speedBoostTimer.destroy();
+    }
   }
 
   private handleAutoTargeting(): void {
@@ -372,5 +447,33 @@ export class Player extends Physics.Arcade.Sprite {
     // Calculate angle to mouse position
     this.weapon.fireInDirection(this, mouseX, mouseY);
 
+  }
+
+  private showFloatingImage(texture: string): void {
+    // Remove any existing floating image
+    if (this.floatingImage) {
+      this.floatingImage.destroy();
+      this.floatingImage = null;
+    }
+
+    // Create a new floating image above the player
+    this.floatingImage = this.scene.add.image(this.x, this.y - 30, texture);
+    this.floatingImage.setScale(0.8);
+    this.floatingImage.setDepth(this.depth + 1); // Ensure it's above the player
+
+    // Add a floating animation
+    this.scene.tweens.add({
+      targets: this.floatingImage,
+      y: this.y - 50,
+      alpha: 0,
+      duration: 1500,
+      ease: 'Power2',
+      onComplete: () => {
+        if (this.floatingImage) {
+          this.floatingImage.destroy();
+          this.floatingImage = null;
+        }
+      }
+    });
   }
 }

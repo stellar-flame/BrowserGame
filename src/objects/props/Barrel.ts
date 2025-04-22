@@ -1,11 +1,13 @@
 import { Scene } from 'phaser';
-
+import { ItemType } from '../items/ItemType';
 export class Barrel extends Phaser.Physics.Arcade.Sprite {
   private isDestroyed: boolean = false;
   private isSmashed: boolean = false;
   private isHovered: boolean = false;
   private hoverTint: number = 0xffff00; // Yellow tint when hovered
   private spawnPotion: boolean = false;
+  private spawnPowerup: boolean = false;
+  private itemType: ItemType | null = null;
 
   public static readonly SMASHED_EVENT = 'barrel-smashed';
 
@@ -128,7 +130,8 @@ export class Barrel extends Phaser.Physics.Arcade.Sprite {
         x: this.x,
         y: this.y,
         barrel: this,
-        spawnPotion: this.spawnPotion
+        spawnPotion: this.spawnPotion,
+        spawnPowerup: this.spawnPowerup
       });
 
       // Destroy the barrel after a short delay
@@ -139,8 +142,12 @@ export class Barrel extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
-  public addPotion(): void {
-    this.spawnPotion = true;
+  public addItem(itemType: ItemType): void {
+    this.itemType = itemType;
+  }
+
+  public getItemType(): ItemType | null {
+    return this.itemType;
   }
 
   // Method to check if barrel is destroyed
