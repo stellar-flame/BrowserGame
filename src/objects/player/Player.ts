@@ -437,12 +437,6 @@ export class Player extends Physics.Arcade.Sprite {
     const mouseX = this.scene.input.activePointer.worldX;
     const mouseY = this.scene.input.activePointer.worldY;
 
-    // Get all enemies in the scene
-    const targetableObjects = (this.scene as any).anyEnemiesInRoom();
-    if (!targetableObjects) {
-      // No enemies, don't fire
-      return;
-    }
 
     // Calculate angle to mouse position
     this.weapon.fireInDirection(this, mouseX, mouseY);

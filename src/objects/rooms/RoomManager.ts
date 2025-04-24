@@ -16,8 +16,8 @@ export class RoomManager {
     this.player = player;
     this.rooms = new Map();
     this.scene.events.on(Enemy.ENEMY_DIED, (data: { enemy: Enemy }) => {
-      this.getCurrentRoom()?.checkCleared();
       this.getCurrentRoom()?.removeEnemy(data.enemy as Enemy);
+      this.getCurrentRoom()?.checkCleared();
     });
 
   }
@@ -59,6 +59,8 @@ export class RoomManager {
     } else {
       console.warn("No 'Rooms' layer found in map");
     }
+
+
   }
 
   private createFromTilemapObject(roomObj: Types.Tilemaps.TiledObject): Room | null {
@@ -112,8 +114,8 @@ export class RoomManager {
 
     if (this.player) {
       this.scene.physics.add.overlap(this.player, zone, () => {
-        if (!room.isRoomCleared()) {
-          room.spawnEnemies();
+        if (room.isCreated()) {
+          room.triggerRoom();
         }
       });
     }
@@ -161,21 +163,6 @@ export class RoomManager {
     room.addDoor(door);
   }
 
-  public setupSpawnPoints(enemiesLayer: Phaser.Tilemaps.ObjectLayer): void {
-    enemiesLayer.objects.forEach(enemyObj => {
-      const roomProperty = enemyObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
-      if (!roomProperty) return;
-
-      const roomId = roomProperty.value as string;
-      console.log('Room ID:', roomId);
-
-      const room = this.rooms.get(roomId);
-      if (room) {
-        room.setupEnemies(enemyObj);
-      }
-    });
-  }
-
 
   private handleRoomEntry(room: Room) {
     // If we're already in this room, do nothing
@@ -197,10 +184,6 @@ export class RoomManager {
     return this.currentRoom;
   }
 
-  public anyEnemiesInRoom(): boolean {
-    if (!this.currentRoom) return false;
-    return (this.currentRoom?.isEnemiesSpawned() && !this.currentRoom?.isRoomCleared());
-  }
 
   public destroy(): void {
     this.rooms.forEach(room => room.destroy());

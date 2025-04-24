@@ -161,7 +161,7 @@
          "name":"Rooms",
          "objects":[
                 {
-                 "height":431.80846515605,
+                 "height":431.808,
                  "id":34,
                  "name":"EnemyTrigger",
                  "properties":[
@@ -173,12 +173,12 @@
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":479.692176143651,
-                 "x":131.680205215904,
-                 "y":108.593415989739
+                 "width":479.692,
+                 "x":131.68,
+                 "y":108.593
                 }, 
                 {
-                 "height":464.876678947769,
+                 "height":464.877,
                  "id":44,
                  "name":"EnemyTrigger",
                  "properties":[
@@ -190,9 +190,9 @@
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":250.187880699106,
-                 "x":1156.22374775202,
-                 "y":46.025183386562
+                 "width":250.188,
+                 "x":1156.22,
+                 "y":46.0252
                 }, 
                 {
                  "height":0,
@@ -342,51 +342,15 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"Room",
+                         "name":"MaxSpawns",
                          "type":"string",
-                         "value":"1"
+                         "value":"3"
                         }, 
                         {
-                         "name":"Type",
+                         "name":"Quantity",
                          "type":"string",
-                         "value":"SKELETON"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":519.880290722531,
-                 "y":147.926464300983
-                }, 
-                {
-                 "height":0,
-                 "id":41,
-                 "name":"Skeleton",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"1"
+                         "value":"3"
                         }, 
-                        {
-                         "name":"Type",
-                         "type":"string",
-                         "value":"SKELETON"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":528.430953398888,
-                 "y":308.678922616503
-                }, 
-                {
-                 "height":0,
-                 "id":43,
-                 "name":"Skeleton",
-                 "point":true,
-                 "properties":[
                         {
                          "name":"Room",
                          "type":"string",
@@ -401,54 +365,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":528.430953398888,
-                 "y":489.95297135528
-                }, 
-                {
-                 "height":0,
-                 "id":47,
-                 "name":"Ninja",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"2"
-                        }, 
-                        {
-                         "name":"Type",
-                         "type":"string",
-                         "value":"NINJA"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1482,
-                 "y":243
-                }, 
-                {
-                 "height":0,
-                 "id":50,
-                 "name":"Ninja",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"2"
-                        }, 
-                        {
-                         "name":"Type",
-                         "type":"string",
-                         "value":"NINJA"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1484,
-                 "y":358
+                 "x":315,
+                 "y":297
                 }, 
                 {
                  "height":0,
@@ -457,6 +375,16 @@
                  "point":true,
                  "properties":[
                         {
+                         "name":"MaxSpawns",
+                         "type":"string",
+                         "value":"2"
+                        }, 
+                        {
+                         "name":"Quantity",
+                         "type":"string",
+                         "value":"2"
+                        }, 
+                        {
                          "name":"Room",
                          "type":"string",
                          "value":"2"
@@ -470,31 +398,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1481,
-                 "y":200
-                }, 
-                {
-                 "height":0,
-                 "id":52,
-                 "name":"Zombie",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"2"
-                        }, 
-                        {
-                         "name":"Type",
-                         "type":"string",
-                         "value":"ZOMBIE"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1486,
-                 "y":407
+                 "x":1318,
+                 "y":214
                 }, 
                 {
                  "height":0,
@@ -503,28 +408,15 @@
                  "point":true,
                  "properties":[
                         {
-                         "name":"Room",
+                         "name":"MaxSpawns",
                          "type":"string",
                          "value":"2"
                         }, 
                         {
-                         "name":"Type",
+                         "name":"Quantity",
                          "type":"string",
-                         "value":"NINJA"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1422,
-                 "y":127
-                }, 
-                {
-                 "height":0,
-                 "id":103,
-                 "name":"Ninja",
-                 "point":true,
-                 "properties":[
+                         "value":"3"
+                        }, 
                         {
                          "name":"Room",
                          "type":"string",
@@ -539,54 +431,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1420,
-                 "y":442
-                }, 
-                {
-                 "height":0,
-                 "id":104,
-                 "name":"Chomper",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"3"
-                        }, 
-                        {
-                         "name":"Type",
-                         "type":"string",
-                         "value":"CHOMPER"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1885,
-                 "y":728
-                }, 
-                {
-                 "height":0,
-                 "id":105,
-                 "name":"Chomper",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"3"
-                        }, 
-                        {
-                         "name":"Type",
-                         "type":"string",
-                         "value":"CHOMPER"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1894,
-                 "y":774
+                 "x":1191,
+                 "y":215
                 }, 
                 {
                  "height":0,
@@ -608,8 +454,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1512.431,
-                 "y":726.679
+                 "x":1703,
+                 "y":908
                 }, 
                 {
                  "height":0,
@@ -631,261 +477,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1517,
-                 "y":864
-                }, 
-                {
-                 "height":0,
-                 "id":113,
-                 "name":"Chomper",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"3"
-                        }, 
-                        {
-                         "name":"Type",
-                         "type":"string",
-                         "value":"CHOMPER"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1581,
-                 "y":934
-                }, 
-                {
-                 "height":0,
-                 "id":111,
-                 "name":"Chomper",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"3"
-                        }, 
-                        {
-                         "name":"Type",
-                         "type":"string",
-                         "value":"CHOMPER"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1493,
-                 "y":970
-                }, 
-                {
-                 "height":0,
-                 "id":110,
-                 "name":"Chomper",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"3"
-                        }, 
-                        {
-                         "name":"Type",
-                         "type":"string",
-                         "value":"CHOMPER"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1575,
-                 "y":1061
-                }, 
-                {
-                 "height":0,
-                 "id":109,
-                 "name":"Chomper",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"3"
-                        }, 
-                        {
-                         "name":"Type",
-                         "type":"string",
-                         "value":"CHOMPER"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1655,
-                 "y":1069
-                }, 
-                {
-                 "height":0,
-                 "id":108,
-                 "name":"Chomper",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"3"
-                        }, 
-                        {
-                         "name":"Type",
-                         "type":"string",
-                         "value":"CHOMPER"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1726,
-                 "y":1089
-                }, 
-                {
-                 "height":0,
-                 "id":106,
-                 "name":"Chomper",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"3"
-                        }, 
-                        {
-                         "name":"Type",
-                         "type":"string",
-                         "value":"CHOMPER"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1841,
-                 "y":1054
-                }, 
-                {
-                 "height":0,
-                 "id":107,
-                 "name":"Chomper",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"3"
-                        }, 
-                        {
-                         "name":"Type",
-                         "type":"string",
-                         "value":"CHOMPER"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1925,
-                 "y":1085
-                }, 
-                {
-                 "height":0,
-                 "id":115,
-                 "name":"Chomper",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"3"
-                        }, 
-                        {
-                         "name":"Type",
-                         "type":"string",
-                         "value":"CHOMPER"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1776,
-                 "y":995
-                }, 
-                {
-                 "height":0,
-                 "id":114,
-                 "name":"Chomper",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"3"
-                        }, 
-                        {
-                         "name":"Type",
-                         "type":"string",
-                         "value":"CHOMPER"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1684,
-                 "y":996
-                }, 
-                {
-                 "height":0,
-                 "id":118,
-                 "name":"Skeleton",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"3"
-                        }, 
-                        {
-                         "name":"Type",
-                         "type":"string",
-                         "value":"SKELETON"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1813.43,
-                 "y":732.679
-                }, 
-                {
-                 "height":0,
-                 "id":117,
-                 "name":"Skeleton",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"Room",
-                         "type":"string",
-                         "value":"3"
-                        }, 
-                        {
-                         "name":"Type",
-                         "type":"string",
-                         "value":"SKELETON"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1698.43,
-                 "y":1047.679
+                 "x":1590,
+                 "y":921
                 }],
          "opacity":1,
          "properties":[
@@ -1012,7 +605,7 @@
                  "y":429
                 }, 
                 {
-                 "height":57.3414532303792,
+                 "height":57.3415,
                  "id":91,
                  "name":"Barrels",
                  "properties":[
@@ -1021,12 +614,12 @@
                          "type":"string",
                          "value":"1"
                         }],
-                 "rotation":359.411137130083,
+                 "rotation":359.411,
                  "type":"",
                  "visible":true,
-                 "width":126.150781127285,
-                 "x":446.855881403107,
-                 "y":515.29650392876
+                 "width":126.151,
+                 "x":446.856,
+                 "y":515.297
                 }, 
                 {
                  "height":51,
@@ -1055,7 +648,7 @@
                          "type":"string",
                          "value":"3"
                         }],
-                 "rotation":359.588921451612,
+                 "rotation":359.589,
                  "type":"",
                  "visible":true,
                  "width":124,
@@ -1131,8 +724,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":15,
- "nextobjectid":123,
+ "nextlayerid":16,
+ "nextobjectid":126,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",

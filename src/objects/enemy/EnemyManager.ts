@@ -8,6 +8,7 @@ import { EnemyType } from './EnemyFactory';
 import { MainScene } from '../../scenes/MainScene';
 import { WeaponUpgrade } from '../weapons/WeaponUpgrade';
 import { WeaponManager } from '../weapons/WeaponManager';
+import { EnemySpawner } from './EnemySpawner';
 
 export class EnemyManager {
   private scene: Scene;
@@ -23,7 +24,7 @@ export class EnemyManager {
     });
 
     // Listen for enemy created events
-    this.scene.events.on(Room.ENEMY_CREATED, (data: { enemy: Enemy }) => {
+    this.scene.events.on(EnemySpawner.ENEMY_CREATED, (data: { enemy: Enemy }) => {
       if (data.enemy && data.enemy.body) {
         this.enemies.add(data.enemy);
         this.setupEnemyBulletCollisions(data.enemy);
@@ -55,10 +56,11 @@ export class EnemyManager {
         const typeProperty = obj.properties?.find((p: { name: string; value: string }) => p.name === 'Type');
         const enemyType = typeProperty?.value?.toUpperCase() as EnemyType;
         const quantityProperty = obj.properties?.find((p: { name: string; value: string }) => p.name === 'Quantity');
+        const maxSpawnsProperty = obj.properties?.find((p: { name: string; value: string }) => p.name === 'MaxSpawns');
+
         // Add spawn point to room
-        for (let i = 0; i < parseInt(quantityProperty?.value || '1'); i++) {
-          room.addSpawnPoint(obj.x, obj.y, enemyType);
-        }
+        room.addEnemyType(enemyType, parseInt(quantityProperty?.value || '1'));
+        room.setMaxSpawns(parseInt(maxSpawnsProperty?.value || '1'));
       }
     });
   }
@@ -156,12 +158,6 @@ export class EnemyManager {
 
     if (enemyInstance.active && !(enemyInstance instanceof RangedEnemy) && enemyInstance.weapon) {
       enemyInstance.weapon.dealDamage(enemyInstance, playerInstance);
-    }
-  }
-
-  public spawnEnemyInRoom(room: Room): void {
-    if (!room.isEnemiesSpawned() && !room.isRoomCleared()) {
-      room.spawnEnemies();
     }
   }
 

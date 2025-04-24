@@ -85,7 +85,7 @@ export const WEAPON_CONFIGS = {
     type: TYPE_RANGED,
     owner: OWNER_PLAYER,
     damage: 10,
-    attackRate: 500, // 2 attacks per second (1000ms / 2)
+    attackRate: 300, // 2 attacks per second (1000ms / 2)
     bulletSpeed: 300,
     bulletSprite: 'player-bullet-1',
     bulletWidth: 32,
@@ -100,7 +100,7 @@ export const WEAPON_CONFIGS = {
     type: TYPE_RANGED,
     owner: OWNER_PLAYER,
     damage: 20,
-    attackRate: 250, // 4 attacks per second (1000ms / 4)
+    attackRate: 150, // 4 attacks per second (1000ms / 4)
     bulletSpeed: 300,
     bulletSprite: 'player-bullet-1',
     bulletWidth: 32,

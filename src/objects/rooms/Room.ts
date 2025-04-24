@@ -5,21 +5,29 @@ import { EnemyFactory, EnemyType } from '../enemy/EnemyFactory';
 import { MainScene } from '../../scenes/MainScene';
 import { Barrel } from '../props/Barrel';
 
+export enum RoomState {
+  CREATED = 'CREATED',
+  TRIGGERED = 'TRIGGERED',
+  SPAWNING = 'SPAWNING',
+  ENEMIES_DEAD = 'ENEMIES_DEAD',
+  ROOM_CLEARED = 'ROOM_CLEARED'
+}
+
 export class Room {
   private scene: MainScene;
   private id: string;
   private zone: GameObjects.Zone;
   private enemyTriggerZone: GameObjects.Zone | null = null;
   private enemies: Enemy[] = [];
-
   private doors: Door[] = [];
-  private isCleared: boolean = false;
-  private enemiesSpawned: boolean = false;
-  private spawnPoints: Array<{ x: number, y: number, type: EnemyType | undefined }> = [];
   private barrels: Barrel[] = [];
+  private enemyTypes: Array<{ type: EnemyType, count: number }> = [];
+  private maxSpawns: number = 3;
+  private numberOfSpawns: number = 0;
+  private state: RoomState = RoomState.CREATED;
 
   public static readonly ENEMY_CREATED = 'enemy-created';
-
+  public static readonly ROOM_STATE_CHANGED = 'room-state-changed';
 
   constructor(
     scene: Scene,
@@ -56,31 +64,14 @@ export class Room {
 
   }
 
+  public getEnemyTypes(): Array<{ type: EnemyType, count: number }> {
+    return this.enemyTypes;
+  }
+
   public setEnemyTriggerZone(zone: GameObjects.Zone) {
     this.enemyTriggerZone = zone;
   }
 
-
-  public setupEnemies(obj: Phaser.Types.Tilemaps.TiledObject) {
-    // Ensure position properties exist
-    if (typeof obj.x !== 'number' || typeof obj.y !== 'number') {
-      console.warn('Invalid enemy object position:', obj);
-      return;
-    }
-
-    // Add spawn point
-    this.spawnPoints.push({
-      x: obj.x,
-      y: obj.y,
-      type: this.getEnemyTypeFromProperties(obj.properties)
-    });
-
-  }
-
-  // Helper method to get enemy type from properties
-  private getEnemyTypeFromProperties(properties: any[] | undefined): EnemyType | undefined {
-    return properties?.find(p => p.name === 'Type')?.value?.toUpperCase() as EnemyType | undefined;
-  }
 
   public getId(): string {
     return this.id;
@@ -91,9 +82,6 @@ export class Room {
     return this.zone;
   }
 
-  public addSpawnPoint(x: number, y: number, type: EnemyType | undefined): void {
-    this.spawnPoints.push({ x, y, type });
-  }
 
   public addDoor(door: Door): void {
     this.doors.push(door);
@@ -103,43 +91,24 @@ export class Room {
     return this.doors;
   }
 
+  public addEnemy(enemy: Enemy): void {
+    this.enemies.push(enemy);
+  }
 
-  public spawnEnemies(): void {
-    if (this.enemiesSpawned || this.isCleared) {
-      return;
+
+  public triggerRoom(): void {
+    if (this.state === RoomState.CREATED) {
+      this.setState(RoomState.TRIGGERED);
     }
+  }
+
+  public isRoomTriggered(): boolean {
+    return this.state === RoomState.TRIGGERED || this.state === RoomState.ENEMIES_DEAD;
+  }
 
 
-    // Clear any existing enemies
-    this.enemies = [];
-
-    // Spawn new enemies at each spawn point
-    this.spawnPoints.forEach((point, index) => {
-      if (!point.type) {
-        console.log(`Skipping enemy spawn point ${index} in room ${this.id} - no type specified`);
-        return;
-      }
-
-
-      const enemy = EnemyFactory.createEnemy(
-        this.scene,
-        point.type,
-        point.x,
-        point.y,
-        index.toString()
-      );
-
-      // Set player reference and ensure enemy is initialized
-      enemy.setPlayer(this.scene.getPlayer());
-
-      // Add to room's enemy list
-      this.enemies.push(enemy);
-
-      // Emit event with properly initialized enemy
-      this.scene.events.emit(Room.ENEMY_CREATED, { enemy });
-    });
-
-    this.enemiesSpawned = true;
+  public isCreated(): boolean {
+    return this.state === RoomState.CREATED;
   }
 
   public addBarrel(barrel: Barrel): void {
@@ -150,24 +119,35 @@ export class Room {
     return this.barrels;
   }
 
-  public isEnemiesSpawned(): boolean {
-    return this.enemiesSpawned;
+  public setMaxSpawns(maxSpawns: number): void {
+    this.maxSpawns = maxSpawns;
   }
 
+
+  public addEnemyType(enemyType: EnemyType, quantity: number): void {
+    this.enemyTypes.push({ type: enemyType, count: quantity });
+  }
+
+
   public checkCleared(): boolean {
-    if (!this.enemiesSpawned) {
+    if (this.state !== RoomState.SPAWNING) {
       return false;
     }
 
-    const allEnemiesDead = this.enemies.every(enemy => enemy.isEnemyDead());
-    if (allEnemiesDead && !this.isCleared) {
-      this.isCleared = true;
-      this.openDoors();
-      this.enemies = [];
-      return true;
+    const allEnemiesDead = this.enemies.length === 0;
+    if (allEnemiesDead) {
+      this.setState(RoomState.ENEMIES_DEAD);
+
+      console.log('Number of spawns', this.numberOfSpawns, 'Max spawns', this.maxSpawns);
+      if (this.numberOfSpawns >= this.maxSpawns) {
+        this.setState(RoomState.ROOM_CLEARED);
+        this.openDoors();
+        this.enemies = [];
+        return true;
+      }
     }
 
-    return this.isCleared;
+    return false;
   }
 
   private openDoors(): void {
@@ -179,7 +159,7 @@ export class Room {
   }
 
   public isRoomCleared(): boolean {
-    return this.isCleared;
+    return this.state === RoomState.ROOM_CLEARED;
   }
 
   public getEnemies(): Enemy[] {
@@ -211,6 +191,26 @@ export class Room {
     this.enemies.push(enemy);
 
     // Emit event with properly initialized enemy
-    this.scene.events.emit(Room.ENEMY_CREATED, { enemy });
+    // this.scene.events.emit(Room.ENEMY_CREATED, { enemy });
   }
+
+  public getState(): RoomState {
+    return this.state;
+  }
+
+  public setState(newState: RoomState): void {
+    if (this.state !== newState) {
+      console.log('Setting state of room', this.id, 'to', newState);
+      this.state = newState;
+      this.scene.events.emit(Room.ROOM_STATE_CHANGED, { room: this, state: newState });
+      if (newState === RoomState.SPAWNING) {
+        this.numberOfSpawns++;
+      }
+    }
+  }
+
+  public canSpawnEnemies(): boolean {
+    return this.state === RoomState.TRIGGERED || this.state === RoomState.ENEMIES_DEAD;
+  }
+
 } 

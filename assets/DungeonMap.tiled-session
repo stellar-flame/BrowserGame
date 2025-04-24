@@ -10,7 +10,7 @@
     "fileStates": {
         "": {
             "scaleInDock": 1,
-            "scaleInEditor": 1
+            "scaleInEditor": 0.97
         },
         "/Users/hava/dungeon-tiles.tsx": {
             "scaleInDock": 1,
@@ -24,19 +24,22 @@
             "scaleInEditor": 1.77
         },
         "dungeon-32.tmx": {
+            "expandedGroupLayers": [
+                13
+            ],
             "expandedObjectLayers": [
                 4,
                 5
             ],
-            "scale": 1.1695,
-            "selectedLayer": 2,
+            "scale": 1.02,
+            "selectedLayer": 1,
             "viewCenter": {
-                "x": 236.4258230012826,
-                "y": 149.20906370243694
+                "x": 1155.8823529411764,
+                "y": 613.2352941176471
             }
         },
         "dungeon-32.tmx#tiles-32": {
-            "scaleInDock": 1
+            "scaleInDock": 1.4025
         },
         "dungeon-tiles.tsx": {
             "scaleInDock": 1,
@@ -76,6 +79,7 @@
         "dungeon-32.tmx"
     ],
     "project": "DungeonMap.tiled-project",
+    "property.type": "string",
     "recentFiles": [
         "dungeon-32.tmx",
         "dungeon.tmx",
