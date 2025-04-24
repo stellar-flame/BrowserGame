@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="75" height="40" tilewidth="32" tileheight="32" infinite="0" nextlayerid="15" nextobjectid="123">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="75" height="40" tilewidth="32" tileheight="32" infinite="0" nextlayerid="16" nextobjectid="126">
  <editorsettings>
   <export target="dungeon-32.tmj" format="json"/>
  </editorsettings>
@@ -168,8 +168,8 @@
 0,0,0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,0,0,0,0,0,0,0,0,35,36,36,36,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,0,0,0,0,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,18,19,19,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,0,0,0,0,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,19,19,19,19,19,18,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,19,36,36,36,36,0,0,0,0,0,0,0,0,0,36,36,36,36,0,0,0,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,19,19,19,19,19,18,0,0,0,35,0,0,0,0,0,0,0,0,36,36,36,36,36,0,0,0,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,19,36,36,36,36,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,36,36,36,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -233,12 +233,12 @@
    </properties>
    <point/>
   </object>
-  <object id="92" name="Room" x="33" y="32" width="765" height="578">
+  <object id="92" name="Room" x="64" y="63" width="699" height="514">
    <properties>
     <property name="Room" value="1"/>
    </properties>
   </object>
-  <object id="93" name="Room" x="897" y="-7" width="703" height="647">
+  <object id="93" name="Room" x="802" y="32" width="767" height="573">
    <properties>
     <property name="Room" value="2"/>
    </properties>
@@ -259,171 +259,48 @@
    <property name="EnemyType" value="Ranged"/>
    <property name="Room" value="1"/>
   </properties>
-  <object id="35" name="Skeleton" x="519.88" y="147.926">
+  <object id="35" name="Skeleton" x="315" y="297">
    <properties>
+    <property name="MaxSpawns" value="3"/>
+    <property name="Quantity" value="3"/>
     <property name="Room" value="1"/>
     <property name="Type" value="SKELETON"/>
    </properties>
    <point/>
   </object>
-  <object id="41" name="Skeleton" x="528.431" y="308.679">
+  <object id="51" name="Zombie" x="1318" y="214">
    <properties>
-    <property name="Room" value="1"/>
-    <property name="Type" value="SKELETON"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="43" name="Skeleton" x="528.431" y="489.953">
-   <properties>
-    <property name="Room" value="1"/>
-    <property name="Type" value="SKELETON"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="47" name="Ninja" x="1482" y="243">
-   <properties>
-    <property name="Room" value="2"/>
-    <property name="Type" value="NINJA"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="50" name="Ninja" x="1484" y="358">
-   <properties>
-    <property name="Room" value="2"/>
-    <property name="Type" value="NINJA"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="51" name="Zombie" x="1481" y="200">
-   <properties>
+    <property name="MaxSpawns" value="2"/>
+    <property name="Quantity" value="2"/>
     <property name="Room" value="2"/>
     <property name="Type" value="ZOMBIE"/>
    </properties>
    <point/>
   </object>
-  <object id="52" name="Zombie" x="1486" y="407">
+  <object id="102" name="Ninja" x="1191" y="215">
    <properties>
-    <property name="Room" value="2"/>
-    <property name="Type" value="ZOMBIE"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="102" name="Ninja" x="1422" y="127">
-   <properties>
+    <property name="MaxSpawns" value="2"/>
+    <property name="Quantity" value="3"/>
     <property name="Room" value="2"/>
     <property name="Type" value="NINJA"/>
    </properties>
    <point/>
   </object>
-  <object id="103" name="Ninja" x="1420" y="442">
+  <object id="116" name="Skeleton" x="1703" y="908">
    <properties>
-    <property name="Room" value="2"/>
-    <property name="Type" value="NINJA"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="104" name="Chomper" x="1885" y="728">
-   <properties>
-    <property name="Room" value="3"/>
-    <property name="Type" value="CHOMPER"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="105" name="Chomper" x="1894" y="774">
-   <properties>
-    <property name="Room" value="3"/>
-    <property name="Type" value="CHOMPER"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="116" name="Skeleton" x="1512.43" y="726.679">
-   <properties>
+    <property name="MaxSpawns" value="3"/>
+    <property name="Quantity" value="1"/>
     <property name="Room" value="3"/>
     <property name="Type" value="SKELETON"/>
    </properties>
    <point/>
   </object>
-  <object id="112" name="Chomper" x="1517" y="864">
+  <object id="112" name="Chomper" x="1590" y="921">
    <properties>
+    <property name="MaxSpawns" value="3"/>
+    <property name="Quantity" value="3"/>
     <property name="Room" value="3"/>
     <property name="Type" value="CHOMPER"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="113" name="Chomper" x="1581" y="934">
-   <properties>
-    <property name="Room" value="3"/>
-    <property name="Type" value="CHOMPER"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="111" name="Chomper" x="1493" y="970">
-   <properties>
-    <property name="Room" value="3"/>
-    <property name="Type" value="CHOMPER"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="110" name="Chomper" x="1575" y="1061">
-   <properties>
-    <property name="Room" value="3"/>
-    <property name="Type" value="CHOMPER"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="109" name="Chomper" x="1655" y="1069">
-   <properties>
-    <property name="Room" value="3"/>
-    <property name="Type" value="CHOMPER"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="108" name="Chomper" x="1726" y="1089">
-   <properties>
-    <property name="Room" value="3"/>
-    <property name="Type" value="CHOMPER"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="106" name="Chomper" x="1841" y="1054">
-   <properties>
-    <property name="Room" value="3"/>
-    <property name="Type" value="CHOMPER"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="107" name="Chomper" x="1925" y="1085">
-   <properties>
-    <property name="Room" value="3"/>
-    <property name="Type" value="CHOMPER"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="115" name="Chomper" x="1776" y="995">
-   <properties>
-    <property name="Room" value="3"/>
-    <property name="Type" value="CHOMPER"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="114" name="Chomper" x="1684" y="996">
-   <properties>
-    <property name="Room" value="3"/>
-    <property name="Type" value="CHOMPER"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="118" name="Skeleton" x="1813.43" y="732.679">
-   <properties>
-    <property name="Room" value="3"/>
-    <property name="Type" value="SKELETON"/>
-   </properties>
-   <point/>
-  </object>
-  <object id="117" name="Skeleton" x="1698.43" y="1047.68">
-   <properties>
-    <property name="Room" value="3"/>
-    <property name="Type" value="SKELETON"/>
    </properties>
    <point/>
   </object>

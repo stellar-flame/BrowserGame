@@ -4,6 +4,7 @@ import { Door } from '../Door';
 import { EnemyFactory, EnemyType } from '../enemy/EnemyFactory';
 import { MainScene } from '../../scenes/MainScene';
 import { Barrel } from '../props/Barrel';
+import { EnemySpawner } from '../enemy/EnemySpawner';
 
 export enum RoomState {
   CREATED = 'CREATED',
@@ -25,9 +26,10 @@ export class Room {
   private maxSpawns: number = 3;
   private numberOfSpawns: number = 0;
   private state: RoomState = RoomState.CREATED;
+  private enemySpawner: EnemySpawner | null = null;
+  private workingSpawnPoint: { x: number, y: number } | null = null;
 
-  public static readonly ENEMY_CREATED = 'enemy-created';
-  public static readonly ROOM_STATE_CHANGED = 'room-state-changed';
+
 
   constructor(
     scene: Scene,
@@ -62,6 +64,27 @@ export class Room {
       }
     });
 
+    this.scene.events.on(Enemy.ENEMY_DIED, (data: { enemy: Enemy }) => {
+      if (this.enemies.includes(data.enemy)) {
+        this.removeEnemy(data.enemy);
+        this.checkCleared();
+      }
+    });
+
+  }
+  public setWorkingSpawnPoint(x: number, y: number): void {
+    if (!this.workingSpawnPoint) {
+      this.workingSpawnPoint = { x, y };
+    }
+  }
+
+  public getWorkingSpawnPoint(): { x: number, y: number } | null {
+    return this.workingSpawnPoint;
+  }
+
+
+  public inRoom(x: number, y: number): boolean {
+    return this.zone.getBounds().contains(x, y);
   }
 
   public getEnemyTypes(): Array<{ type: EnemyType, count: number }> {
@@ -202,11 +225,24 @@ export class Room {
     if (this.state !== newState) {
       console.log('Setting state of room', this.id, 'to', newState);
       this.state = newState;
-      this.scene.events.emit(Room.ROOM_STATE_CHANGED, { room: this, state: newState });
       if (newState === RoomState.SPAWNING) {
         this.numberOfSpawns++;
       }
+      else {
+        const enemySpawner = this.getEnemySpawner();
+        if (enemySpawner && this.canSpawnEnemies()) {
+          enemySpawner.spawnEnemies();
+        }
+      }
     }
+  }
+
+
+  public getEnemySpawner(): EnemySpawner | null {
+    if (!this.enemySpawner) {
+      this.enemySpawner = new EnemySpawner(this.scene, this.scene.getPlayer(), this);
+    }
+    return this.enemySpawner;
   }
 
   public canSpawnEnemies(): boolean {

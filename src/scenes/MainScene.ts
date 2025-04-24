@@ -9,8 +9,7 @@ import { EnemyManager } from '../objects/enemy/EnemyManager';
 import { ItemManager } from '../objects/items/ItemManager';
 import { WeaponManager } from '../objects/weapons/WeaponManager';
 import { MovementManager } from '../objects/enemy/MovementManager';
-import { EnemySpawner } from '../objects/enemy/EnemySpawner';
-import { Room } from '../objects/rooms/Room';
+
 export class MainScene extends Scene {
   // Core game objects
   protected player!: Player;
@@ -32,7 +31,6 @@ export class MainScene extends Scene {
   protected itemManager: ItemManager | null = null;
   protected weaponManager: WeaponManager | null = null;
   protected movementManager: MovementManager | null = null;
-  protected enemySpawner: EnemySpawner | null = null;
 
   constructor(key: string = 'MainScene') {
     super({ key: key });
@@ -237,7 +235,6 @@ export class MainScene extends Scene {
     this.enemyManager = new EnemyManager(this, this.player);
     const map = this.make.tilemap({ key: 'dungeon-map' });
     this.enemyManager.createEnemiesFromSpawnLayer(map.getObjectLayer('Enemies') as Phaser.Tilemaps.ObjectLayer, this.getRoomManager().getRooms());
-    this.enemySpawner = new EnemySpawner(this, this.player);
   }
 
 
@@ -281,7 +278,7 @@ export class MainScene extends Scene {
       return;
     }
     if (this.movementManager) {
-      this.movementManager.updateFlankingPoints(this.getEnemiesForCurrentRoom());
+      this.movementManager.updateFlankingPoints(this.getEnemyManager().getEnemies());
     }
   }
 
@@ -367,12 +364,6 @@ export class MainScene extends Scene {
     return this.roomManager;
   }
 
-  public getEnemiesForCurrentRoom(): Enemy[] {
-    if (!this.enemyManager) {
-      throw new Error('EnemyManager not initialized');
-    }
-    return this.getRoomManager().getCurrentRoom()?.getEnemies() || [];
-  }
 
   public getMovementManager(): MovementManager {
     if (!this.movementManager) {

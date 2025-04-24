@@ -3,7 +3,6 @@ import { Room } from "./Room";
 import { Door } from "../Door";
 import { DoorDirection } from "../Door";
 import { Player } from "../player/Player";
-import { Enemy } from "../enemy/Enemy";
 
 
 export class RoomManager {
@@ -15,10 +14,6 @@ export class RoomManager {
     this.scene = scene;
     this.player = player;
     this.rooms = new Map();
-    this.scene.events.on(Enemy.ENEMY_DIED, (data: { enemy: Enemy }) => {
-      this.getCurrentRoom()?.removeEnemy(data.enemy as Enemy);
-      this.getCurrentRoom()?.checkCleared();
-    });
 
   }
 
@@ -179,11 +174,6 @@ export class RoomManager {
   public getRoom(roomId: string): Room | undefined {
     return this.rooms.get(roomId);
   }
-
-  public getCurrentRoom(): Room | null {
-    return this.currentRoom;
-  }
-
 
   public destroy(): void {
     this.rooms.forEach(room => room.destroy());

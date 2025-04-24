@@ -5,7 +5,7 @@ import { MainScene } from "../../scenes/MainScene";
 import { PathfindingGrid } from "../pathfinding/PathfindingGrid";
 import { RangedEnemy } from "./RangedEnemy";
 import { MeleeEnemy } from "./MeleeEnemy";
-
+import { EnemySpawner } from "../enemy/EnemySpawner";
 export class MovementManager {
     private scene: Scene;
     private player: Player;
@@ -13,6 +13,7 @@ export class MovementManager {
     private targetReachedEnemies: Set<string> = new Set();
     private lastFlankingUpdate: number = -2000;
     private flankingUpdateInterval: number = 2000; // Update flanking points every 2 seconds
+    private enemyCreated: boolean = false;
 
 
     constructor(scene: Scene, player: Player) {
@@ -20,6 +21,9 @@ export class MovementManager {
         this.player = player;
         this.pathfindingGrid = (this.scene as MainScene).getPathfindingGrid();
         this.scene.events.on(Enemy.TARGET_REACHED, this.onTargetReached, this);
+        this.scene.events.on(EnemySpawner.ENEMY_CREATED, (data: { enemy: Enemy }) => {
+            this.enemyCreated = true;
+        }, this);
     }
 
     private onTargetReached(data: { enemy: Enemy }): void {
@@ -31,7 +35,8 @@ export class MovementManager {
         if (enemies.length === 0) return;
         const currentTime = Date.now();
 
-        if (currentTime - this.lastFlankingUpdate > this.flankingUpdateInterval || this.targetReachedEnemies.size > 0) {
+        if (this.enemyCreated || currentTime - this.lastFlankingUpdate > this.flankingUpdateInterval || this.targetReachedEnemies.size > 0) {
+            this.enemyCreated = false;
             this.targetReachedEnemies.clear();
             this.lastFlankingUpdate = currentTime;
             this.calculateFlankingPoints(enemies.filter(enemy => enemy instanceof RangedEnemy), 100);
@@ -59,11 +64,19 @@ export class MovementManager {
         const assignedEnemies = new Set<Enemy>();
 
         points.sort(() => Math.random() - 0.5);
+        let pointsToRemove: { x: number, y: number }[] = [];
 
-        while (assignedEnemies.size < enemies.length) {
+        while (assignedEnemies.size < enemies.length && points.length > 0) {
             for (const point of points) {
-                await this.findPathForEnemy(enemies, point, assignedEnemies);
+                const found = await this.findPathForEnemy(enemies, point, assignedEnemies);
+                if (!found) {
+                    pointsToRemove.push(point);
+                }
             }
+            for (const point of pointsToRemove) {
+                points.splice(points.indexOf(point), 1);
+            }
+            pointsToRemove = [];
         }
     }
 

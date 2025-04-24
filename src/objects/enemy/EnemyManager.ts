@@ -165,7 +165,7 @@ export class EnemyManager {
     this.enemies.destroy(true);
   }
 
-  public getEnemies(): Phaser.Physics.Arcade.Group {
-    return this.enemies;
+  public getEnemies(): Enemy[] {
+    return this.enemies.getChildren() as Enemy[];
   }
 } 
