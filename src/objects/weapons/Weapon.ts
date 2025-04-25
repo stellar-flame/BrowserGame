@@ -53,7 +53,7 @@ export class Weapon {
   private createBulletGroup(scene: Scene): Physics.Arcade.Group {
     return scene.physics.add.group({
       classType: Bullet,
-      maxSize: 10,
+      maxSize: 20,
       createCallback: (item: Phaser.GameObjects.GameObject) => {
         const bullet = item as Bullet;
         bullet.setTexture(this.bulletSprite || 'arrow');

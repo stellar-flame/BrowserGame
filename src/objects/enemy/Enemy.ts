@@ -92,6 +92,10 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
 
     // Initialize last position
     this.lastPosition = { x, y };
+
+    if (config?.behaviour) {
+      config.behaviour.init(scene, this);
+    }
   }
 
 
@@ -133,7 +137,6 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     // Only create animation if animationConfig is provided
     if (this.config.animationConfig && !scene.anims.exists(animationKey)) {
       const animConfig = this.config.animationConfig;
-
       scene.anims.create({
         key: animationKey,
         frames: scene.anims.generateFrameNumbers(this.config.sprite, {
@@ -175,6 +178,9 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
       this.performAttack();
     }
 
+    if (this.config?.behaviour) {
+      this.config.behaviour.preUpdate(time, delta);
+    }
     // Update health bar position
     this.healthBar.update();
   }

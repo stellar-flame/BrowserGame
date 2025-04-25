@@ -22,7 +22,7 @@ export interface WeaponConfig {
 
 export const WEAPON_CONFIGS = {
   // Enemy weapons
-  ZOMBIESTRIKE: {
+  STRIKE: {
     type: TYPE_MELEE,
     owner: OWNER_ENEMY,
     damage: 20,
@@ -79,7 +79,18 @@ export const WEAPON_CONFIGS = {
     minDistance: 100,
     maxDistance: 200
   },
-
+  CANON: {
+    type: TYPE_RANGED,
+    owner: OWNER_ENEMY,
+    damage: 30,
+    attackRate: 5000, // 2 attacks per second (1000ms / 2)
+    bulletSpeed: 400,
+    bulletSprite: 'canon-bullet',
+    bulletWidth: 32,
+    bulletHeight: 32,
+    minDistance: 70,
+    maxDistance: 500,
+  },
   // Player weapons
   BOLTSPITTER: {
     type: TYPE_RANGED,
@@ -101,7 +112,7 @@ export const WEAPON_CONFIGS = {
     owner: OWNER_PLAYER,
     damage: 20,
     attackRate: 150, // 4 attacks per second (1000ms / 4)
-    bulletSpeed: 300,
+    bulletSpeed: 350,
     bulletSprite: 'player-bullet-1',
     bulletWidth: 32,
     bulletHeight: 32,

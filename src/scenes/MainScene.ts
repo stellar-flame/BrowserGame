@@ -49,7 +49,8 @@ export class MainScene extends Scene {
     this.loadSprite('zombie-sprite', 'assets/sprites/zombie.png', 32, 32);
     this.loadSprite('ninja-sprite', 'assets/sprites/ninja.png', 16, 32);
     this.loadSprite('chomper-sprite', 'assets/sprites/chomper.png', 16, 32);
-
+    this.loadSprite('canon', 'assets/sprites/canon.png', 16, 16);
+    this.loadSprite('troll-sprite', 'assets/sprites/troll-sprite.png', 32, 32);
     this.loadSprite('arrow', 'assets/sprites/arrow.png', 32, 16);
     this.loadSprite('ninja-star', 'assets/sprites/ninja-star.png', 32, 32);
     this.loadSprite('smashed-barrel', 'assets/sprites/smashed-barrel.png', 32, 32);
@@ -60,6 +61,7 @@ export class MainScene extends Scene {
     this.load.tilemapTiledJSON('dungeon-map', 'assets/dungeon-32.tmj');
 
     // Load props
+    this.load.image('particle', 'assets/sprites/particle.png');
     this.load.image('door-open', 'assets/sprites/door-open.png');
     this.load.image('door-closed', 'assets/sprites/door-closed.png');
     this.load.image('barrel', 'assets/sprites/barrel.png');
@@ -178,6 +180,8 @@ export class MainScene extends Scene {
 
     this.player = new Player(this, 100, 300);
     // this.player = new Player(this, 1400, 700);
+    // this.player = new Player(this, 1400, 1000);
+
     console.log('Player created:', this.player);
 
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body;

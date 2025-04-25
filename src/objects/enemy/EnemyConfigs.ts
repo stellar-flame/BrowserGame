@@ -1,4 +1,6 @@
+import { Canon } from '../items/Canon';
 import { WeaponType } from '../weapons/WeaponConfigs';
+import { DropCanonBehaviour, EnemyBehaviour } from './EnemyBehaviour';
 
 export interface AnimationConfig {
   startFrame: number;
@@ -17,6 +19,7 @@ export interface EnemyConfig {
   animationKey: string;
   animationConfig?: AnimationConfig;
   weaponType?: WeaponType;
+  behaviour?: EnemyBehaviour;
 }
 
 export const ENEMY_CONFIGS = {
@@ -34,7 +37,7 @@ export const ENEMY_CONFIGS = {
       frameRate: 8,
       repeat: -1
     },
-    weaponType: 'ZOMBIESTRIKE'
+    weaponType: 'STRIKE'
   },
   SKELETON: {
     type: 'ranged',
@@ -83,5 +86,22 @@ export const ENEMY_CONFIGS = {
       repeat: -1
     },
     weaponType: 'CHOMPER_BITE'
+  },
+  TROLL: {
+    type: 'melee',
+    sprite: 'troll-sprite',
+    scale: 2,
+    moveSpeed: 150,
+    health: 30,
+    maxHealth: 30,
+    animationKey: 'troll-walk',
+    animationConfig: {
+      startFrame: 0,
+      endFrame: 7,
+      frameRate: 8,
+      repeat: -1
+    },
+    weaponType: 'STRIKE',
+    behaviour: new DropCanonBehaviour()
   }
 } as const; 

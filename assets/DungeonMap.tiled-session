@@ -28,14 +28,14 @@
                 13
             ],
             "expandedObjectLayers": [
-                4,
-                5
+                5,
+                4
             ],
             "scale": 1.02,
-            "selectedLayer": 1,
+            "selectedLayer": 4,
             "viewCenter": {
-                "x": 1155.8823529411764,
-                "y": 613.2352941176471
+                "x": 1300.4901960784314,
+                "y": 567.6470588235293
             }
         },
         "dungeon-32.tmx#tiles-32": {
