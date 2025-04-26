@@ -178,9 +178,9 @@ export class MainScene extends Scene {
       return;
     }
 
-    this.player = new Player(this, 100, 300);
+    // this.player = new Player(this, 100, 300);
     // this.player = new Player(this, 1400, 700);
-    // this.player = new Player(this, 1400, 1000);
+    this.player = new Player(this, 1400, 1000);
 
     console.log('Player created:', this.player);
 
@@ -232,6 +232,8 @@ export class MainScene extends Scene {
   private setupPotions() {
     this.itemManager = new ItemManager(this, this.player);
     this.itemManager.setSpawnPoints(this.getRoomManager().getRooms());
+    const map = this.make.tilemap({ key: 'dungeon-map' });
+    this.itemManager.createItemsFromItemsLayer(map.getObjectLayer('Items') as Phaser.Tilemaps.ObjectLayer);
   }
 
   protected setupEnemies() {

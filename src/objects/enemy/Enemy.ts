@@ -5,6 +5,7 @@ import { EnemyConfig } from './EnemyConfigs';
 import { Player } from '../player/Player';
 import { MainScene } from '../../scenes/MainScene';
 import { WeaponFactory } from '../weapons/WeaponFactory';
+import { Canon } from '../items/Canon';
 
 
 // Extend Physics.Arcade.Sprite for physics and preUpdate/update capabilities
@@ -96,7 +97,14 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     if (config?.behaviour) {
       config.behaviour.init(scene, this);
     }
+
+    this.scene.events.on(Canon.CANON_EXPLODE, (x: number, y: number) => {
+      if (Phaser.Math.Distance.Between(this.x, this.y, x, y) < 70) {
+        this.takeDamage(10);
+      }
+    }, this);
   }
+
 
 
   private initializePathfinding(): void {

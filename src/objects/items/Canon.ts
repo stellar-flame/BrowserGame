@@ -3,6 +3,8 @@ import { MainScene } from "../../scenes/MainScene";
 export class Canon extends Phaser.Physics.Arcade.Sprite {
     private actionTimer: number = 0;
     private actionInterval: number = 10000;
+    public static readonly CANON_EXPLODE = 'canon-explode';
+
 
     constructor(scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y, 'canon');
@@ -16,16 +18,19 @@ export class Canon extends Phaser.Physics.Arcade.Sprite {
             this.body.immovable = true;
         }
         this.setupOverlap();
+
     }
 
     private setupOverlap() {
         const player = (this.scene as MainScene).getPlayer();
         this.scene.physics.add.overlap(this, player, this.handleOverlap, undefined, this);
+        this.scene.physics.add.overlap(this, player.weapon.bullets as Phaser.Physics.Arcade.Group, this.handleOverlap, undefined, this);
     }
 
     private handleOverlap(canon: any, player: any) {
         console.log('handleOverlap canon', canon);
         this.explode();
+
     }
 
     createAnimations() {
@@ -56,6 +61,7 @@ export class Canon extends Phaser.Physics.Arcade.Sprite {
         if (distance < 50) {
             player.takeDamage(10);
         }
+        this.scene.events.emit(Canon.CANON_EXPLODE, this.x, this.y);
 
         // Create explosion particles
         const particles = this.scene.add.particles(0, 0, 'particle', {

@@ -40,7 +40,12 @@ export class MovementManager {
             this.targetReachedEnemies.clear();
             this.lastFlankingUpdate = currentTime;
             this.calculateFlankingPoints(enemies.filter(enemy => enemy instanceof RangedEnemy), 100);
-            this.calculateFlankingPoints(enemies.filter(enemy => enemy instanceof MeleeEnemy), 30);
+            this.calculateFlankingPoints(enemies.filter(enemy => enemy instanceof MeleeEnemy), 60);
+
+
+            for (const enemy of enemies) {
+                console.log('Enemy', enemy.id, enemy.getPath());
+            }
         }
     }
 

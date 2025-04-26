@@ -39,11 +39,21 @@ export class ItemManager {
     // Listen for barrel smashed events
     scene.events.on(Barrel.SMASHED_EVENT, (data: { x: number, y: number, barrel: Barrel }) => {
       if (data.barrel.getItemType() === ItemType.Potion) {
-        this.spawnPotion(data.x, data.y);
+        const healAmount = Phaser.Math.Between(15, 25);
+        this.spawnPotion(data.x, data.y, healAmount);
       }
       if (data.barrel.getItemType() === ItemType.Powerup) {
         console.log('*************************** spawning powerup from barrel');
         this.spawnPowerup(data.x, data.y);
+      }
+    });
+  }
+
+  public createItemsFromItemsLayer(itemsLayer: Phaser.Tilemaps.ObjectLayer): void {
+    itemsLayer.objects.filter(item => item.name === 'Potion').forEach(item => {
+      if (item.x && item.y) {
+        const healAmount = item.properties?.find((p: { name: string; value: string }) => p.name === 'HealAmount')?.value as number;
+        this.spawnPotion(item.x, item.y, healAmount);
       }
     });
   }
@@ -61,12 +71,10 @@ export class ItemManager {
     }
   }
 
-  private spawnPotion(x: number, y: number): void {
+  private spawnPotion(x: number, y: number, healAmount: number = 50): void {
     if (this.potions.countActive(true) >= this.maxPotions) return;
-
     const potion: Potion = this.potions.get(x, y) as Potion;
     if (potion) {
-      const healAmount = Phaser.Math.Between(15, 25);
       potion.setHealAmount(healAmount);
       potion.setActive(true);
       potion.setVisible(true);

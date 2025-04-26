@@ -20,19 +20,17 @@ export class EnemySpawner {
 
     public spawnEnemies() {
         // Get a random point for spawning
-        this.getRandomPoint().then(point => {
-            if (point) {
+        this.getRandomPoint().then(points => {
+            if (points && points.length > 0) {
                 if (!this.room.canSpawnEnemies()) {
                     return;
                 }
-                // Create spawn effect
-                this.createSpawnEffect(point.x, point.y);
 
                 console.log('Spawning enemies for room', this.room.getId(), 'with state', this.room.getState());
 
                 // Schedule next enemy spawn after delay
                 this.scene.time.delayedCall(200, () => {
-                    this.spawnEnemyWithDelay(point, 0);
+                    this.spawnEnemyWithDelay(points);
                 });
             }
         });
@@ -41,11 +39,12 @@ export class EnemySpawner {
     /**
      * Recursively spawns enemies with a delay between each one
      * @param room The room to spawn enemies in
-     * @param point The spawn point
+     * @param points The spawn points
      * @param enemyTypeIndex The current enemy type index
      * @param enemyIndex The current enemy index within the type
+     * @param pointIndex The current spawn point index
      */
-    private spawnEnemyWithDelay(point: { x: number, y: number }, enemyTypeIndex: number, enemyIndex: number = 0): void {
+    private spawnEnemyWithDelay(points: { x: number, y: number }[], enemyTypeIndex: number = 0, enemyIndex: number = 0, pointIndex: number = 0): void {
         const enemyTypes = this.room.getEnemyTypes();
 
         // Check if we've processed all enemy types
@@ -58,9 +57,13 @@ export class EnemySpawner {
         // Check if we've spawned all enemies of this type
         if (enemyIndex >= enemyType.count) {
             // Move to next enemy type
-            this.spawnEnemyWithDelay(point, enemyTypeIndex + 1, 0);
+            this.spawnEnemyWithDelay(points, enemyTypeIndex + 1, 0, pointIndex);
             return;
         }
+
+        const point = points[pointIndex % points.length];
+        // Create spawn effect
+        this.createSpawnEffect(point.x, point.y);
 
         // Spawn a single enemy
         const enemy = EnemyFactory.createEnemy(
@@ -83,7 +86,7 @@ export class EnemySpawner {
 
         // Schedule next enemy spawn after delay
         this.scene.time.delayedCall(this.spawnRate, () => {
-            this.spawnEnemyWithDelay(point, enemyTypeIndex, enemyIndex + 1);
+            this.spawnEnemyWithDelay(points, enemyTypeIndex, enemyIndex + 1, pointIndex + 1);
         });
     }
 
@@ -132,11 +135,13 @@ export class EnemySpawner {
         });
     }
 
-    private async getRandomPoint(): Promise<{ x: number, y: number } | null> {
+    private async getRandomPoint(): Promise<{ x: number, y: number }[] | null> {
         const numberOfPoints = 8;
-        const radius = 300;
         const pathfindingGrid = (this.scene as MainScene).getPathfindingGrid();
         const easystar = pathfindingGrid.getEasyStar();
+        const radius = Phaser.Math.Between(200, 500);
+
+        const spawnPoints: { x: number, y: number }[] = [];
         for (let i = 0; i < numberOfPoints; i++) {
             const angle = (Math.PI * 2 * i) / numberOfPoints;
             const x = Math.round(this.player.x + radius * Math.cos(angle));
@@ -164,14 +169,18 @@ export class EnemySpawner {
                 easystar.calculate();
                 const hasPath = await pathPromise;
                 if (hasPath) {
-                    return { x, y };
+                    spawnPoints.push({ x, y });
                 }
             }
         }
-        if (this.room.getWorkingSpawnPoint()) {
-            return this.room.getWorkingSpawnPoint();
+        if (spawnPoints.length > 0) {
+            return spawnPoints;
         }
-        return { x: this.room.getZone().getBounds().centerX, y: this.room.getZone().getBounds().centerY };
+        const workingSpawnPoint = this.room.getWorkingSpawnPoint();
+        if (workingSpawnPoint) {
+            return [workingSpawnPoint];
+        }
+        return [{ x: this.room.getZone().getBounds().centerX, y: this.room.getZone().getBounds().centerY }];
     }
 
     public destroy() {

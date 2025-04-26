@@ -7,6 +7,8 @@ export class Potion extends Item {
   public static readonly COLLECTED_EVENT = 'potion-collected';
   constructor(scene: Scene, x: number, y: number) {
     super(scene, x, y, 'potion');
+    this.setActive(false);
+    this.setVisible(false);
   }
 
   protected getCollectData(): { [key: string]: any } {
