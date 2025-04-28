@@ -40,7 +40,7 @@ A top-down dungeon shooter game built with Phaser 3 and TypeScript. Battle enemi
    npm start
    ```
 
-4. Open your browser and navigate to `http://localhost:8080`
+4. Open your browser and navigate to `http://localhost:5173`
 
 ## How to Play
 
