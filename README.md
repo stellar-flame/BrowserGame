@@ -26,7 +26,7 @@ A top-down dungeon shooter game built with Phaser 3 and TypeScript. Battle enemi
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/browser-game.git
+   git clone https://github.com/stellar-flame/browser-game.git
    cd browser-game
    ```
 
