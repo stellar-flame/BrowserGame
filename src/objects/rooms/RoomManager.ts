@@ -10,6 +10,8 @@ export class RoomManager {
   private rooms: Map<string, Room>;
   private currentRoom: Room | null = null;
   private player: Player;
+  public static readonly CURRENT_ROOM_CHANGED = 'current-room-changed';
+
   constructor(scene: Scene, player: Player) {
     this.scene = scene;
     this.player = player;
@@ -165,6 +167,11 @@ export class RoomManager {
 
     console.log(`Player entered room ${room.getId()}`);
     this.currentRoom = room;
+    this.scene.events.emit(RoomManager.CURRENT_ROOM_CHANGED, room);
+  }
+
+  public getCurrentRoom(): Room | null {
+    return this.currentRoom;
   }
 
   public getRooms(): Map<string, Room> {
@@ -173,6 +180,10 @@ export class RoomManager {
 
   public getRoom(roomId: string): Room | undefined {
     return this.rooms.get(roomId);
+  }
+
+  public getRoomAtPosition(x: number, y: number): Room | undefined {
+    return Array.from(this.rooms.values()).find(room => room.getZone().getBounds().contains(x, y));
   }
 
   public destroy(): void {

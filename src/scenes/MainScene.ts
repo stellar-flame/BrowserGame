@@ -1,6 +1,5 @@
 import { Scene } from 'phaser';
 import { Player } from '../objects/player/Player';
-import { Enemy } from '../objects/enemy/Enemy';
 import { Bullet } from '../objects/weapons/Bullet';
 import { PathfindingGrid } from '../objects/pathfinding/PathfindingGrid';
 import { RoomManager } from '../objects/rooms/RoomManager';
@@ -9,6 +8,7 @@ import { EnemyManager } from '../objects/enemy/EnemyManager';
 import { ItemManager } from '../objects/items/ItemManager';
 import { WeaponManager } from '../objects/weapons/WeaponManager';
 import { MovementManager } from '../objects/enemy/MovementManager';
+import { DeployableWeaponManager } from '../objects/weapons/DeployableWeaponManager';
 
 export class MainScene extends Scene {
   // Core game objects
@@ -31,6 +31,7 @@ export class MainScene extends Scene {
   protected itemManager: ItemManager | null = null;
   protected weaponManager: WeaponManager | null = null;
   protected movementManager: MovementManager | null = null;
+  protected deployableWeaponManager: DeployableWeaponManager | null = null;
 
   constructor(key: string = 'MainScene') {
     super({ key: key });
@@ -68,6 +69,7 @@ export class MainScene extends Scene {
     this.load.image('potion', 'assets/sprites/potion.png');
     this.load.image('powerup', 'assets/sprites/powerup.png');
     this.load.image('player-bullet-1', 'assets/sprites/player-bullet-1.png');
+    this.load.image('turret', 'assets/sprites/turret.png');
 
     // Load sound effects
     // this.load.audio('weapon-upgrade', 'assets/sounds/weapon-upgrade.mp3');
@@ -180,7 +182,9 @@ export class MainScene extends Scene {
 
     // this.player = new Player(this, 100, 300);
     // this.player = new Player(this, 1400, 700);
-    this.player = new Player(this, 1400, 1000);
+    // this.player = new Player(this, 1400, 1000);
+    this.player = new Player(this, 735, 1500);
+
 
     console.log('Player created:', this.player);
 
@@ -197,17 +201,18 @@ export class MainScene extends Scene {
     this.weaponManager = new WeaponManager(this, this.player);
     const map = this.make.tilemap({ key: 'dungeon-map' });
     this.weaponManager.setupWeaponUpgrades(map.getObjectLayer('Items') as Phaser.Tilemaps.ObjectLayer);
+    this.deployableWeaponManager = new DeployableWeaponManager(this, this.player);
   }
 
   private setupCamera() {
-    this.cameras.main.setBounds(0, 0, 2400, 1800);
+    this.cameras.main.setBounds(0, 0, 2400, 3600);
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
     this.cameras.main.setRoundPixels(true);
     this.cameras.main.setZoom(1);
   }
 
   private setupPhysics() {
-    this.physics.world.setBounds(0, 0, 2400, 1800);
+    this.physics.world.setBounds(0, 0, 2400, 3600);
   }
 
   private setupRooms() {
@@ -377,4 +382,5 @@ export class MainScene extends Scene {
     }
     return this.movementManager;
   }
+
 }

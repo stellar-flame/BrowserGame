@@ -28,7 +28,7 @@ export class Room {
   private state: RoomState = RoomState.CREATED;
   private enemySpawner: EnemySpawner | null = null;
   private workingSpawnPoint: { x: number, y: number } | null = null;
-
+  public static readonly ROOM_STATE_CHANGED = 'room-state-changed';
 
 
   constructor(
@@ -234,6 +234,7 @@ export class Room {
           enemySpawner.spawnEnemies();
         }
       }
+      this.scene.events.emit(Room.ROOM_STATE_CHANGED, this.id, this.state);
     }
   }
 

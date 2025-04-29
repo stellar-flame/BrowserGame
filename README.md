@@ -1,5 +1,7 @@
 # Browser-Based Dungeon Shooter
 
+> **Note:** This game is currently a work in progress. Features and mechanics may change as development continues.
+
 A top-down dungeon shooter game built with Phaser 3 and TypeScript. Battle enemies, collect potions, and navigate through procedurally generated rooms in this action-packed adventure.
 
 ![Game Screenshot](screenshot.png)

@@ -91,7 +91,8 @@ export class BarrelManager {
   }
 
   public setupPlayerBulletCollisions(): void {
-    const currentWeapon = this.player.weapon;
+    const currentWeapon = this.player.getWeapon();
+    const deployableWeapon = this.player.getDeployableWeapon();
 
     if (currentWeapon?.bullets) {
       this.scene.physics.add.collider(
@@ -103,6 +104,15 @@ export class BarrelManager {
       );
     }
 
+    if (deployableWeapon?.bullets) {
+      this.scene.physics.add.collider(
+        this.barrels,
+        deployableWeapon.bullets,
+        this.handleBulletCollision,
+        undefined,
+        this
+      );
+    }
   }
 
   public setupCollisions(): void {

@@ -6,6 +6,7 @@ export const OWNER_ENEMY = 'enemy';
 export interface WeaponConfig {
   type: typeof TYPE_MELEE | typeof TYPE_RANGED;
   owner: typeof OWNER_PLAYER | typeof OWNER_ENEMY;
+  deployable?: boolean;
   damage: number;
   attackRate: number; // Cooldown time in milliseconds between attacks
   bulletSpeed?: number;
@@ -16,6 +17,7 @@ export interface WeaponConfig {
   minDistance?: number;
   maxDistance?: number;
   displayConfig?: {
+    sprite?: string;
     color?: string;
   } | null;
 }
@@ -104,6 +106,7 @@ export const WEAPON_CONFIGS = {
     minDistance: 100,
     maxDistance: 300,
     displayConfig: {
+      sprite: 'weapon-upgrade',
       color: '0x888888' // Gray
     }
   },
@@ -119,13 +122,32 @@ export const WEAPON_CONFIGS = {
     minDistance: 100,
     maxDistance: 300,
     displayConfig: {
+      sprite: 'weapon-upgrade',
+      color: '0xffffff' // Pure white
+    }
+  },
+  TURRET: {
+    type: TYPE_RANGED,
+    owner: OWNER_PLAYER,
+    damage: 10,
+    attackRate: 1000,
+    deployable: true,
+    bulletSpeed: 400,
+    bulletSprite: 'player-bullet-1',
+    bulletWidth: 32,
+    bulletHeight: 32,
+    minDistance: 70,
+    maxDistance: 500,
+    displayConfig: {
+      sprite: 'turret',
       color: '0xffffff' // Pure white
     }
   }
 } as const;
 
 export const WEAPON_UPGRADE = {
-  '1': 'QUICKLASH'
+  '1': 'QUICKLASH',
+  '2': 'TURRET'
 }
 
 export type WeaponType = keyof typeof WEAPON_CONFIGS;

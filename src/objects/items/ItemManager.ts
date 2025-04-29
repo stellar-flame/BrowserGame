@@ -15,7 +15,9 @@ export class ItemManager {
   private maxPowerups: number = 2;
   private roomsToSpawnItems: { [key: string]: string[] } = {
     '2': [ItemType.Potion],
-    '3': [ItemType.Powerup]
+    '3': [ItemType.Powerup],
+    '4': [ItemType.Powerup],
+    '5': [ItemType.Potion, ItemType.Powerup]
   };
 
   constructor(scene: Scene, player: Player) {

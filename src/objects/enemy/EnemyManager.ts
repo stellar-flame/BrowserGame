@@ -92,12 +92,23 @@ export class EnemyManager {
   }
 
   private setupPlayerBulletCollisions(): void {
-    const currentWeapon = this.player.weapon;
+    const currentWeapon = this.player.getWeapon();
+    const deployableWeapon = this.player.getDeployableWeapon();
 
     if (currentWeapon?.bullets) {
       this.scene.physics.add.collider(
         this.enemies,
         currentWeapon.bullets,
+        this.handleEnemyBulletCollision,
+        undefined,
+        this
+      );
+    }
+
+    if (deployableWeapon?.bullets) {
+      this.scene.physics.add.collider(
+        this.enemies,
+        deployableWeapon.bullets,
         this.handleEnemyBulletCollision,
         undefined,
         this

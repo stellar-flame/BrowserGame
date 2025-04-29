@@ -4,11 +4,11 @@ import { WeaponUpgrade } from "./WeaponUpgrade";
 import { Player } from "../player/Player";
 import { MainScene } from "../../scenes/MainScene";
 import { Scene } from "phaser";
+import { Weapon } from "./Weapon";
 
 export class WeaponManager {
   private player: Player | null = null;
   private scene: Scene;
-  private weaponUpgrades: WeaponUpgrade[] = [];
   public static readonly SWAPPED_EVENT = 'weapon-swapped';
 
   constructor(scene: Scene, player: Player) {
@@ -28,9 +28,8 @@ export class WeaponManager {
         const levelProperty = item.properties?.find((p: { name: string; value: string }) => p.name === 'Level');
         const weaponType = WEAPON_UPGRADE[levelProperty?.value as keyof typeof WEAPON_UPGRADE];
         if (weaponType && this.player) {
-          const weapon = WeaponFactory.createPlayerWeapon(this.scene, weaponType as WeaponType);
+          const weapon = WeaponFactory.createPlayerWeapon(this.scene, weaponType as unknown as WeaponType);
           const weaponUpgrade = new WeaponUpgrade(this.scene, item.x, item.y, weapon, this.player);
-          this.weaponUpgrades.push(weaponUpgrade);
           this.setupWeaponUpgrade(weaponUpgrade);
         }
       }
@@ -55,7 +54,7 @@ export class WeaponManager {
     if (!this.player || !wallsLayer) { return; }
 
     // Remove any existing collisions first
-    const currentWeapon = this.player.weapon;
+    const currentWeapon = this.player.getWeapon();
 
     // Setup new collisions
     if (currentWeapon?.bullets) {
@@ -73,9 +72,16 @@ export class WeaponManager {
   private onEnterUpgradeArea(player: any, upgrade: any): void {
     if (!this.player) return;
 
+    let newWeapon = null;
     // Get the new weapon from the upgrade
     const weaponUpgrade = upgrade as WeaponUpgrade;
-    const newWeapon = weaponUpgrade.swapWeapon(this.player.weapon);
+    if (!weaponUpgrade.weapon) return;
+    if (weaponUpgrade.weapon.isDeployable()) {
+      newWeapon = weaponUpgrade.swapWeapon(this.player.getDeployableWeapon() as Weapon);
+    } else {
+      newWeapon = weaponUpgrade.swapWeapon(this.player.getWeapon());
+    }
+
     if (newWeapon) {
       // Update the player's weapon
       this.player.swapWeapon(newWeapon);
@@ -85,7 +91,7 @@ export class WeaponManager {
 
       // Emit weapon swapped event
       this.scene.events.emit(WeaponManager.SWAPPED_EVENT, {
-        oldWeapon: this.player.weapon,
+        oldWeapon: this.player.getWeapon(),
         newWeapon: newWeapon
       });
     }

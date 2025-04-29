@@ -2,7 +2,7 @@ import { Player } from "../player/Player";
 import { Weapon } from "./Weapon";
 
 export class WeaponUpgrade extends Phaser.Physics.Arcade.Sprite {
-  public weapon: Weapon;
+  public weapon: Weapon | null = null;
   public isUpgradeCollected: boolean = false;
   private glowEffect: Phaser.GameObjects.Graphics | null = null;
   private weaponNameText: Phaser.GameObjects.Text | null = null;
@@ -11,7 +11,7 @@ export class WeaponUpgrade extends Phaser.Physics.Arcade.Sprite {
   private canSwapWeapon: boolean = true;
 
   constructor(scene: Phaser.Scene, x: number, y: number, weapon: Weapon, player: Player) {
-    super(scene, x, y, 'weapon-upgrade');
+    super(scene, x, y, weapon.config.displayConfig?.sprite || 'weapon-upgrade');
     this.weapon = weapon;
     this.player = player;
     this.scene.add.existing(this);
@@ -30,7 +30,7 @@ export class WeaponUpgrade extends Phaser.Physics.Arcade.Sprite {
   }
 
   private createWeaponNameText(): void {
-
+    if (!this.weapon) return;
     // Format the weapon name for display (replace underscores with spaces and capitalize)
     const displayName = this.weapon.weaponType
       .split('_')
@@ -67,10 +67,6 @@ export class WeaponUpgrade extends Phaser.Physics.Arcade.Sprite {
   }
 
   private applyWeaponVisualCue(): void {
-    const displayConfig = this.weapon.config.displayConfig;
-    if (displayConfig) {
-      this.setTint(parseInt(displayConfig.color as string, 16));
-    }
     // Add a pulsing effect to make it more noticeable
     this.scene.tweens.add({
       targets: this,
@@ -91,6 +87,12 @@ export class WeaponUpgrade extends Phaser.Physics.Arcade.Sprite {
   }
 
   private updateGlowEffect(): void {
+    if (!this.weapon) return;
+    const displayConfig = this.weapon.config.displayConfig;
+    if (displayConfig) {
+      this.setTint(parseInt(displayConfig.color as string, 16));
+    }
+
     //  if (this.isUpgradeCollected || !this.glowEffect) return;
     if (!this.glowEffect) return;
     this.glowEffect.clear();
@@ -110,6 +112,7 @@ export class WeaponUpgrade extends Phaser.Physics.Arcade.Sprite {
     this.glowEffect.strokeCircle(this.x, this.y, 25 * scale);
   }
 
+
   public swapWeapon(oldWeapon: Weapon): Weapon | null {
     if (!this.canSwapWeapon) { return null }
     this.canSwapWeapon = false;
@@ -127,13 +130,22 @@ export class WeaponUpgrade extends Phaser.Physics.Arcade.Sprite {
 
     this.applyWeaponVisualCue();
 
-    // Update the weapon name text
-    if (this.weaponNameText) {
-      const displayName = this.weapon.weaponType
-        .split('_')
-        .map(word => word.charAt(0) + word.slice(1).toLowerCase())
-        .join(' ');
-      this.weaponNameText.setText(displayName);
+
+    if (!this.weapon) {
+      this.scene.time.delayedCall(100, () => {
+        this.destroy();
+      });
+    }
+    else {
+
+      // Update the weapon name text
+      if (this.weaponNameText) {
+        const displayName = this.weapon.weaponType
+          .split('_')
+          .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+          .join(' ');
+        this.weaponNameText.setText(displayName);
+      }
     }
 
     // Return the new weapon

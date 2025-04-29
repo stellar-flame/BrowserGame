@@ -50,6 +50,10 @@ export class Weapon {
 
   }
 
+  public isDeployable(): boolean {
+    return false;
+  }
+
   private createBulletGroup(scene: Scene): Physics.Arcade.Group {
     return scene.physics.add.group({
       classType: Bullet,
@@ -182,5 +186,9 @@ export class Weapon {
 
   public setRange(range: number): void {
     this.maxDistance = range;
+  }
+
+  public destroy(): void {
+    this.bullets?.destroy();
   }
 } 

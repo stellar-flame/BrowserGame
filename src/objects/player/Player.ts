@@ -17,7 +17,9 @@ export class Player extends Physics.Arcade.Sprite {
     right: Input.Keyboard.Key;
   };
   private isTeleporting: boolean = false;
-  public weapon: Weapon;
+  private weapon: Weapon;
+  private deployableWeapon: Weapon | null = null;
+
   public lastFired: number = 0;
   public fireRate: number = 500; // Fire every 0.5 seconds
 
@@ -190,24 +192,16 @@ export class Player extends Physics.Arcade.Sprite {
     this.targetCircle.lineTo(mouseX, mouseY + 10);
   }
 
-
-  public teleport(x: number, y: number) {
-    const body = this.body as Physics.Arcade.Body;
-    body.stop(); // Stop any velocity
-    body.reset(x, y); // Reset body AND display position
-
-
-    // Set teleporting flag
-    this.isTeleporting = true;
-
-    // Reset teleporting flag after delay
-    this.scene.time.delayedCall(1000, () => {
-      this.isTeleporting = false;
-    });
+  public getWeapon(): Weapon {
+    return this.weapon;
   }
 
-  public isCurrentlyTeleporting(): boolean {
-    return this.isTeleporting;
+  public getDeployableWeapon(): Weapon | null {
+    return this.deployableWeapon;
+  }
+
+  public hasDeployableWeapon(): boolean {
+    return this.deployableWeapon !== null;
   }
 
   // Method to take damage
@@ -248,7 +242,6 @@ export class Player extends Physics.Arcade.Sprite {
   private applySpeedBoost(boostAmount: number): void {
     this.moveSpeed *= boostAmount;
     this.isSpeedBoosted = true;
-    console.log('*************************** speed boost applied:', boostAmount);
     // Add visual effects
     this.setTint(0x00ffff); // Cyan tint
     this.createSpeedBoostTrail();
@@ -296,7 +289,6 @@ export class Player extends Physics.Arcade.Sprite {
 
     // Start emitting immediately
     this.speedBoostTrail.start();
-    console.log('*************************** speed boost trail created');
   }
 
   // Show a visual healing effect
@@ -408,7 +400,11 @@ export class Player extends Physics.Arcade.Sprite {
   }
 
   public swapWeapon(newWeapon: Weapon): void {
-    this.weapon = newWeapon;
+    if (newWeapon.isDeployable()) {
+      this.deployableWeapon = newWeapon;
+    } else {
+      this.weapon = newWeapon;
+    }
     this.weaponOverlay.updateWeapon(this.weapon);
   }
 
@@ -425,6 +421,7 @@ export class Player extends Physics.Arcade.Sprite {
     // Deactivate all bullets when player is destroyed
     if (this.weapon) {
       this.weapon.deactivateAllBullets();
+      this.weapon.destroy();
     }
     super.destroy(fromScene);
     if (this.speedBoostTimer) {
@@ -470,4 +467,6 @@ export class Player extends Physics.Arcade.Sprite {
       }
     });
   }
+
+
 }
