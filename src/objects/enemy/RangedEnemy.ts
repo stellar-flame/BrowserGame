@@ -1,12 +1,13 @@
 import { Scene, Physics } from 'phaser';
 import { Enemy } from './Enemy';
 import { EnemyConfig } from './EnemyConfigs';
+import { EnemyType } from './EnemyFactory';
 
 export class RangedEnemy extends Enemy {
   // Pathfinding properties
 
-  constructor(scene: Scene, x: number, y: number, id: string, config: EnemyConfig) {
-    super(scene, x, y, id, config);
+  constructor(scene: Scene, x: number, y: number, id: string, enemyType: EnemyType, config: EnemyConfig) {
+    super(scene, x, y, id, enemyType, config);
   }
 
 

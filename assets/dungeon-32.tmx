@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="75" height="80" tilewidth="32" tileheight="32" infinite="0" nextlayerid="16" nextobjectid="150">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="75" height="80" tilewidth="32" tileheight="32" infinite="0" nextlayerid="16" nextobjectid="152">
  <editorsettings>
   <export target="dungeon-32.tmj" format="json"/>
  </editorsettings>
@@ -386,6 +386,11 @@
     <property name="Room" value="4"/>
    </properties>
   </object>
+  <object id="150" name="Room" x="157" y="1860" width="1142" height="712">
+   <properties>
+    <property name="Room" value="5"/>
+   </properties>
+  </object>
   <object id="130" name="EnemyTrigger" x="717" y="736" width="275" height="479">
    <properties>
     <property name="Room" value="4"/>
@@ -408,6 +413,11 @@
     <property name="Room" value="4"/>
    </properties>
    <point/>
+  </object>
+  <object id="151" name="EnemyTrigger" x="352" y="1979" width="766" height="479">
+   <properties>
+    <property name="Room" value="5"/>
+   </properties>
   </object>
  </objectgroup>
  <objectgroup id="5" name="Enemies">
@@ -445,7 +455,7 @@
   <object id="116" name="Skeleton" x="1703" y="908">
    <properties>
     <property name="MaxSpawns" value="3"/>
-    <property name="Quantity" value="1"/>
+    <property name="Quantity" value="2"/>
     <property name="Room" value="3"/>
     <property name="Type" value="SKELETON"/>
    </properties>
@@ -453,7 +463,7 @@
   </object>
   <object id="112" name="Chomper" x="1590" y="921">
    <properties>
-    <property name="MaxSpawns" value="3"/>
+    <property name="MaxSpawns" value="2"/>
     <property name="Quantity" value="3"/>
     <property name="Room" value="3"/>
     <property name="Type" value="CHOMPER"/>
@@ -480,8 +490,8 @@
   </object>
   <object id="148" name="Troll" x="917" y="2199">
    <properties>
-    <property name="MaxSpawns" value="3"/>
-    <property name="Quantity" value="2"/>
+    <property name="MaxSpawns" value="5"/>
+    <property name="Quantity" value="1"/>
     <property name="Room" value="5"/>
     <property name="Type" value="TROLL"/>
    </properties>
@@ -579,7 +589,7 @@
     <property name="Room" value="3"/>
    </properties>
   </object>
-  <object id="144" name="Barrels" x="904" y="1933" width="124" height="51" rotation="359.589">
+  <object id="144" name="Barrels" x="902" y="1942" width="124" height="51" rotation="359.589">
    <properties>
     <property name="Room" value="3"/>
    </properties>

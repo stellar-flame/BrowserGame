@@ -93,6 +93,18 @@ export const WEAPON_CONFIGS = {
     minDistance: 70,
     maxDistance: 500,
   },
+  SLIME_SHOT: {
+    type: TYPE_RANGED,
+    owner: OWNER_ENEMY,
+    damage: 10,
+    attackRate: 1000,
+    bulletSpeed: 400,
+    bulletSprite: 'slime-shot',
+    bulletWidth: 32,
+    bulletHeight: 32,
+    minDistance: 100,
+    maxDistance: 300,
+  },
   // Player weapons
   BOLTSPITTER: {
     type: TYPE_RANGED,

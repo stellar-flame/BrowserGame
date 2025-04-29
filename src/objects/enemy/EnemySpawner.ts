@@ -1,5 +1,5 @@
 import { Scene } from "phaser";
-import { EnemyFactory } from "./EnemyFactory";
+import { EnemyFactory, EnemyType } from "./EnemyFactory";
 import { Room, RoomState } from "../rooms/Room";
 import { Player } from "../player/Player";
 import { MainScene } from "../../scenes/MainScene";
@@ -27,10 +27,10 @@ export class EnemySpawner {
                 }
 
                 console.log('Spawning enemies for room', this.room.getId(), 'with state', this.room.getState());
-
+                const enemyTypes = this.room.getEnemyTypesToSpawn();
                 // Schedule next enemy spawn after delay
                 this.scene.time.delayedCall(200, () => {
-                    this.spawnEnemyWithDelay(points);
+                    this.spawnEnemyWithDelay(points, enemyTypes);
                 });
             }
         });
@@ -44,20 +44,19 @@ export class EnemySpawner {
      * @param enemyIndex The current enemy index within the type
      * @param pointIndex The current spawn point index
      */
-    private spawnEnemyWithDelay(points: { x: number, y: number }[], enemyTypeIndex: number = 0, enemyIndex: number = 0, pointIndex: number = 0): void {
-        const enemyTypes = this.room.getEnemyTypes();
-
+    private spawnEnemyWithDelay(points: { x: number, y: number }[], enemyTypes: { type: EnemyType, count: number }[], enemyTypeIndex: number = 0, enemyIndex: number = 0, pointIndex: number = 0): void {
         // Check if we've processed all enemy types
         if (enemyTypeIndex >= enemyTypes.length) {
             return;
         }
 
         const enemyType = enemyTypes[enemyTypeIndex];
-
+        console.log('****************** enemyType', enemyType.type, enemyType.count, enemyIndex);
         // Check if we've spawned all enemies of this type
         if (enemyIndex >= enemyType.count) {
             // Move to next enemy type
-            this.spawnEnemyWithDelay(points, enemyTypeIndex + 1, 0, pointIndex);
+            this.room.updateMaxSpawns(enemyType.type);
+            this.spawnEnemyWithDelay(points, enemyTypes, enemyTypeIndex + 1, 0, pointIndex);
             return;
         }
 
@@ -86,7 +85,7 @@ export class EnemySpawner {
 
         // Schedule next enemy spawn after delay
         this.scene.time.delayedCall(this.spawnRate, () => {
-            this.spawnEnemyWithDelay(points, enemyTypeIndex, enemyIndex + 1, pointIndex + 1);
+            this.spawnEnemyWithDelay(points, enemyTypes, enemyTypeIndex, enemyIndex + 1, pointIndex + 1);
         });
     }
 

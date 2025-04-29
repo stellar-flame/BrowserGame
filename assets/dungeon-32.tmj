@@ -726,7 +726,7 @@
                         {
                          "name":"Quantity",
                          "type":"string",
-                         "value":"1"
+                         "value":"2"
                         }, 
                         {
                          "name":"Room",
@@ -754,7 +754,7 @@
                         {
                          "name":"MaxSpawns",
                          "type":"string",
-                         "value":"3"
+                         "value":"2"
                         }, 
                         {
                          "name":"Quantity",
@@ -853,12 +853,12 @@
                         {
                          "name":"MaxSpawns",
                          "type":"string",
-                         "value":"3"
+                         "value":"5"
                         }, 
                         {
                          "name":"Quantity",
                          "type":"string",
-                         "value":"2"
+                         "value":"1"
                         }, 
                         {
                          "name":"Room",

@@ -10,7 +10,7 @@ export enum RoomState {
   CREATED = 'CREATED',
   TRIGGERED = 'TRIGGERED',
   SPAWNING = 'SPAWNING',
-  ENEMIES_DEAD = 'ENEMIES_DEAD',
+  RESPAWN = 'RESPAWN',
   ROOM_CLEARED = 'ROOM_CLEARED'
 }
 
@@ -22,16 +22,15 @@ export class Room {
   private enemies: Enemy[] = [];
   private doors: Door[] = [];
   private barrels: Barrel[] = [];
-  private enemyTypes: Array<{ type: EnemyType, count: number }> = [];
-  private maxSpawns: number = 3;
-  private numberOfSpawns: number = 0;
+  private enemyTypes: Map<EnemyType, { count: number }> = new Map();
+  private maxSpawns: Map<EnemyType, { maxSpawns: number, numberOfSpawns: number }> = new Map();
   private state: RoomState = RoomState.CREATED;
   private enemySpawner: EnemySpawner | null = null;
   private workingSpawnPoint: { x: number, y: number } | null = null;
   public static readonly ROOM_STATE_CHANGED = 'room-state-changed';
 
 
-  constructor(
+  public constructor(
     scene: Scene,
     id: string,
     x: number,
@@ -87,8 +86,18 @@ export class Room {
     return this.zone.getBounds().contains(x, y);
   }
 
-  public getEnemyTypes(): Array<{ type: EnemyType, count: number }> {
-    return this.enemyTypes;
+  public getEnemyTypesToSpawn(): Array<{ type: EnemyType, count: number }> {
+    const enemyTypesToSpawn: Array<{ type: EnemyType, count: number }> = [];
+    for (const [enemyType, { count }] of this.enemyTypes.entries()) {
+      const enemiesOfTypeAlive = this.findAliveEnemyOfType(enemyType);
+      const maxSpawn = this.maxSpawns.get(enemyType);
+      if (enemiesOfTypeAlive.length === 0 && maxSpawn && maxSpawn.numberOfSpawns < maxSpawn.maxSpawns) {
+        enemyTypesToSpawn.push({ type: enemyType, count });
+      }
+    }
+    console.log('****************** maxSpawns', this.maxSpawns);
+    console.log('****************** enemyTypesToSpawn', enemyTypesToSpawn);
+    return enemyTypesToSpawn;
   }
 
   public setEnemyTriggerZone(zone: GameObjects.Zone) {
@@ -125,10 +134,6 @@ export class Room {
     }
   }
 
-  public isRoomTriggered(): boolean {
-    return this.state === RoomState.TRIGGERED || this.state === RoomState.ENEMIES_DEAD;
-  }
-
 
   public isCreated(): boolean {
     return this.state === RoomState.CREATED;
@@ -142,13 +147,13 @@ export class Room {
     return this.barrels;
   }
 
-  public setMaxSpawns(maxSpawns: number): void {
-    this.maxSpawns = maxSpawns;
+  public setMaxSpawns(enemyType: EnemyType, maxSpawns: number): void {
+    this.maxSpawns.set(enemyType, { maxSpawns: maxSpawns, numberOfSpawns: 0 });
   }
 
 
   public addEnemyType(enemyType: EnemyType, quantity: number): void {
-    this.enemyTypes.push({ type: enemyType, count: quantity });
+    this.enemyTypes.set(enemyType, { count: quantity });
   }
 
 
@@ -158,19 +163,28 @@ export class Room {
     }
 
     const allEnemiesDead = this.enemies.length === 0;
-    if (allEnemiesDead) {
-      this.setState(RoomState.ENEMIES_DEAD);
+    const spawnsLeft = this.getEnemyTypesToSpawn();
+    if (allEnemiesDead && spawnsLeft.length === 0) {
+      console.log('****************** allEnemiesDead and spawnsLeft.length === 0');
+      this.setState(RoomState.ROOM_CLEARED);
+      this.openDoors();
+      this.enemies = [];
+      return true;
+    }
 
-      console.log('Number of spawns', this.numberOfSpawns, 'Max spawns', this.maxSpawns);
-      if (this.numberOfSpawns >= this.maxSpawns) {
-        this.setState(RoomState.ROOM_CLEARED);
-        this.openDoors();
-        this.enemies = [];
-        return true;
-      }
+    // If there are any spawns left for any type, set to RESPAWN
+    if (spawnsLeft.length > 0) {
+      this.setState(RoomState.RESPAWN);
+      return false;
     }
 
     return false;
+  }
+
+  private findAliveEnemyOfType(enemyType: EnemyType): Enemy[] {
+    return this.enemies.filter(enemy => {
+      return enemy.getEnemyType() === enemyType && !enemy.isEnemyDead();
+    });
   }
 
   private openDoors(): void {
@@ -223,21 +237,21 @@ export class Room {
 
   public setState(newState: RoomState): void {
     if (this.state !== newState) {
-      console.log('Setting state of room', this.id, 'to', newState);
       this.state = newState;
-      if (newState === RoomState.SPAWNING) {
-        this.numberOfSpawns++;
-      }
-      else {
-        const enemySpawner = this.getEnemySpawner();
-        if (enemySpawner && this.canSpawnEnemies()) {
-          enemySpawner.spawnEnemies();
-        }
+      const enemySpawner = this.getEnemySpawner();
+      if (enemySpawner && this.canSpawnEnemies()) {
+        enemySpawner.spawnEnemies();
       }
       this.scene.events.emit(Room.ROOM_STATE_CHANGED, this.id, this.state);
     }
   }
 
+  public updateMaxSpawns(enemyType: EnemyType): void {
+    const maxSpawn = this.maxSpawns.get(enemyType);
+    if (maxSpawn) {
+      maxSpawn.numberOfSpawns++;
+    }
+  }
 
   public getEnemySpawner(): EnemySpawner | null {
     if (!this.enemySpawner) {
@@ -247,7 +261,7 @@ export class Room {
   }
 
   public canSpawnEnemies(): boolean {
-    return this.state === RoomState.TRIGGERED || this.state === RoomState.ENEMIES_DEAD;
+    return this.state === RoomState.TRIGGERED || this.state === RoomState.RESPAWN;
   }
 
 } 

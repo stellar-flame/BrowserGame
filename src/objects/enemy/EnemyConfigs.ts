@@ -1,4 +1,3 @@
-import { Canon } from '../items/Canon';
 import { WeaponType } from '../weapons/WeaponConfigs';
 import { DropCanonBehaviour, EnemyBehaviour } from './EnemyBehaviour';
 
@@ -103,5 +102,21 @@ export const ENEMY_CONFIGS = {
     },
     weaponType: 'STRIKE',
     behaviour: new DropCanonBehaviour()
+  },
+  SLUG: {
+    type: 'ranged',
+    sprite: 'slug-sprite',
+    scale: 2,
+    moveSpeed: 100,
+    health: 10,
+    maxHealth: 10,
+    animationKey: 'slug-walk',
+    animationConfig: {
+      startFrame: 0,
+      endFrame: 7,
+      frameRate: 8,
+      repeat: -1
+    },
+    weaponType: 'SLIME_SHOT'
   }
 } as const; 

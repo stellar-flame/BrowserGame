@@ -60,7 +60,7 @@ export class EnemyManager {
 
         // Add spawn point to room
         room.addEnemyType(enemyType, parseInt(quantityProperty?.value || '1'));
-        room.setMaxSpawns(parseInt(maxSpawnsProperty?.value || '1'));
+        room.setMaxSpawns(enemyType, parseInt(maxSpawnsProperty?.value || '1'));
       }
     });
   }

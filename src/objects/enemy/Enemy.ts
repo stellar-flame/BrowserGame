@@ -6,6 +6,7 @@ import { Player } from '../player/Player';
 import { MainScene } from '../../scenes/MainScene';
 import { WeaponFactory } from '../weapons/WeaponFactory';
 import { Canon } from '../items/Canon';
+import { EnemyType } from './EnemyFactory';
 
 
 // Extend Physics.Arcade.Sprite for physics and preUpdate/update capabilities
@@ -34,7 +35,7 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   protected isStuck: boolean = false;
   protected alternativeDirection: { x: number, y: number } | null = null;
   protected lastPosition: { x: number, y: number } | null = null;
-
+  protected enemyType: EnemyType;
   protected pathfindingEnabled: boolean = false;
   protected currentPath: Array<{ x: number, y: number }> = [];
   protected currentPathIndex: number = 0;
@@ -43,10 +44,10 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   public static readonly ENEMY_DIED = 'enemy-died';
   public static readonly TARGET_REACHED = 'target-reached';
 
-  constructor(scene: Scene, x: number, y: number, id: string, config?: EnemyConfig) {
+  constructor(scene: Scene, x: number, y: number, id: string, enemyType: EnemyType, config?: EnemyConfig) {
     // Call Sprite constructor (use __WHITE texture key for tinting)
     super(scene, x, y, '__WHITE');
-
+    this.enemyType = enemyType;
     this.id = id; // Assign the ID
 
     // Apply configuration
@@ -118,7 +119,9 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     }
   }
 
-
+  public getEnemyType(): EnemyType {
+    return this.enemyType;
+  }
 
   protected setHitBox() {
     if (!this.body) return;

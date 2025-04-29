@@ -90,7 +90,6 @@ export class Barrel extends Phaser.Physics.Arcade.Sprite {
 
   // Method to smash the barrel
   public smash(): void {
-    console.log('smash barrel');
     if (!this.isSmashed && this.body) {
       this.isSmashed = true;
 

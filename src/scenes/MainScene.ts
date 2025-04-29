@@ -56,7 +56,7 @@ export class MainScene extends Scene {
     this.loadSprite('ninja-star', 'assets/sprites/ninja-star.png', 32, 32);
     this.loadSprite('smashed-barrel', 'assets/sprites/smashed-barrel.png', 32, 32);
     this.loadSprite('weapon-upgrade', 'assets/sprites/weapon-upgrade.png', 32, 32);
-
+    this.loadSprite('slug-sprite', 'assets/sprites/slug-sprite.png', 16, 32);
     // Load tiles and maps
     this.load.image('tiles-32', 'assets/tiles.png');
     this.load.tilemapTiledJSON('dungeon-map', 'assets/dungeon-32.tmj');
@@ -70,7 +70,7 @@ export class MainScene extends Scene {
     this.load.image('powerup', 'assets/sprites/powerup.png');
     this.load.image('player-bullet-1', 'assets/sprites/player-bullet-1.png');
     this.load.image('turret', 'assets/sprites/turret.png');
-
+    this.load.image('slime-shot', 'assets/sprites/slime-shot.png');
     // Load sound effects
     // this.load.audio('weapon-upgrade', 'assets/sounds/weapon-upgrade.mp3');
   }
@@ -181,9 +181,11 @@ export class MainScene extends Scene {
     }
 
     // this.player = new Player(this, 100, 300);
-    // this.player = new Player(this, 1400, 700);
+    // this.player = new Player(this, 850, 320);
+
+    this.player = new Player(this, 1400, 700);
     // this.player = new Player(this, 1400, 1000);
-    this.player = new Player(this, 735, 1500);
+    // this.player = new Player(this, 735, 1500);
 
 
     console.log('Player created:', this.player);
