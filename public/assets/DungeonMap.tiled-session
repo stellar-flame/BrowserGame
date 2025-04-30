@@ -1,0 +1,92 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "dungeon-32.tmx",
+    "expandedProjectPaths": [
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "": {
+            "scaleInDock": 1,
+            "scaleInEditor": 0.97
+        },
+        "/Users/hava/dungeon-tiles.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "/Volumes/source-code/browser-game/atlas_walls_high-16x32.tsx": {
+            "scaleInDock": 1
+        },
+        "atlas_walls_high-16x32.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1.77
+        },
+        "dungeon-32.tmx": {
+            "expandedGroupLayers": [
+                13
+            ],
+            "expandedObjectLayers": [
+                5,
+                4
+            ],
+            "scale": 1.02,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": 1300.4901960784314,
+                "y": 567.6470588235293
+            }
+        },
+        "dungeon-32.tmx#tiles-32": {
+            "scaleInDock": 1.4025
+        },
+        "dungeon-tiles.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1.77
+        },
+        "dungeon.tmx": {
+            "expandedObjectLayers": [
+                9,
+                8
+            ],
+            "scale": 1.36,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": 423.1617647058823,
+                "y": 339.3382352941176
+            }
+        },
+        "dungeon.tmx#atlas_walls_high-16x32": {
+            "scaleInDock": 2.2901,
+            "scaleInEditor": 1
+        },
+        "dungeon.tmx#dungeon-tiles": {
+            "scaleInDock": 2.6429
+        },
+        "tiles-32.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
+    },
+    "last.exportedFilePath": "/Volumes/source-code/browser-game/assets",
+    "last.imagePath": "/Volumes/source-code/browser-game/assets",
+    "last.objectTemplatePath": "/Volumes/source-code/browser-game/assets",
+    "map.lastUsedExportFilter": "JSON map files (*.tmj *.json)",
+    "map.lastUsedFormat": "tmx",
+    "map.width": 25,
+    "openFiles": [
+        "dungeon-32.tmx"
+    ],
+    "project": "DungeonMap.tiled-project",
+    "property.type": "string",
+    "recentFiles": [
+        "dungeon-32.tmx",
+        "dungeon.tmx",
+        "tiles-32.tsx",
+        "atlas_walls_high-16x32.tsx",
+        "dungeon-tiles.tsx",
+        "/Users/hava/dungeon-tiles.tsx"
+    ],
+    "tileset.lastUsedFormat": "tsx"
+}
