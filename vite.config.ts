@@ -1,11 +1,10 @@
 import { defineConfig } from 'vite';
-import { resolve } from 'path';
 
 export default defineConfig({
-  base: '/browser-game/',
+  base: '',
   server: {
     host: 'localhost',
-    port: 3000,
+    port: 5173,
     strictPort: true,
     open: true
   },
@@ -18,13 +17,6 @@ export default defineConfig({
       output: {
         manualChunks: undefined,
       },
-    },
-    copyPublicDir: true,
-  },
-  publicDir: 'public',
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, './src'),
     },
   },
 }); 
