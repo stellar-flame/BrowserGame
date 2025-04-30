@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
 export default defineConfig({
-  base: '/BrowserGame/',
+  base: '/browser-game/',
   server: {
     host: 'localhost',
     port: 3000,
