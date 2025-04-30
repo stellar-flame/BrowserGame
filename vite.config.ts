@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '',
+  base: process.env.NODE_ENV === 'production' ? '/browser-game/' : '/',
   server: {
     host: 'localhost',
     port: 5173,
