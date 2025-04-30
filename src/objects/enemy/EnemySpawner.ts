@@ -51,6 +51,8 @@ export class EnemySpawner {
         }
 
         const enemyType = enemyTypes[enemyTypeIndex];
+        if (!enemyType) return;
+
         // Check if we've spawned all enemies of this type
         if (enemyIndex >= enemyType.count) {
             // Move to next enemy type
@@ -60,6 +62,8 @@ export class EnemySpawner {
         }
 
         const point = points[pointIndex % points.length];
+        if (!point) return;
+
         // Create spawn effect
         this.createSpawnEffect(point.x, point.y);
 

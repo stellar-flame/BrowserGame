@@ -11,7 +11,7 @@ export class RangedEnemy extends Enemy {
   }
 
 
-  protected performAttack(): void {
+  override performAttack(): void {
     if (!this.weapon || !this.player) return;
 
     // Use the weapon's fire method
@@ -24,7 +24,7 @@ export class RangedEnemy extends Enemy {
     this.performAttack();
   }
 
-  public die(): void {
+  override die(): void {
     // Deactivate all bullets in the weapon
     if (this.weapon) {
       this.weapon.deactivateAllBullets();

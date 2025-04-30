@@ -164,7 +164,7 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
 
 
   // Update method to handle movement and shooting logic
-  preUpdate(time: number, delta: number) {
+  override preUpdate(time: number, delta: number) {
     super.preUpdate(time, delta);
     if (!this.body) return;
 
@@ -206,6 +206,7 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
 
     if (this.currentPath && this.currentPath.length > 0) {
       const targetNode = this.currentPath[this.currentPathIndex];
+      if (!targetNode) return;
       const targetWorldX = pathfindingGrid.getWorldX(targetNode.x);
       const targetWorldY = pathfindingGrid.getWorldY(targetNode.y);
 
@@ -298,7 +299,7 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   }
 
   // Override the destroy method to ensure health bar is destroyed
-  public destroy(fromScene?: boolean): void {
+  override destroy(fromScene?: boolean): void {
     // Destroy the health bar if it exists
     if (this.healthBar) {
       this.healthBar.destroy();

@@ -45,7 +45,7 @@ export class Canon extends Phaser.Physics.Arcade.Sprite {
         });
     }
 
-    preUpdate(time: number, delta: number) {
+    override preUpdate(time: number, delta: number) {
         super.preUpdate(time, delta);
         this.play('canon-explode', true);
         this.actionTimer += delta;
@@ -88,7 +88,7 @@ export class Canon extends Phaser.Physics.Arcade.Sprite {
         this.destroy();
     }
 
-    destroy() {
+    override destroy() {
         this.scene.anims.remove('canon');
         super.destroy();
     }
