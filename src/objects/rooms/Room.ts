@@ -95,8 +95,6 @@ export class Room {
         enemyTypesToSpawn.push({ type: enemyType, count });
       }
     }
-    console.log('****************** maxSpawns', this.maxSpawns);
-    console.log('****************** enemyTypesToSpawn', enemyTypesToSpawn);
     return enemyTypesToSpawn;
   }
 
@@ -165,7 +163,6 @@ export class Room {
     const allEnemiesDead = this.enemies.length === 0;
     const spawnsLeft = this.getEnemyTypesToSpawn();
     if (allEnemiesDead && spawnsLeft.length === 0) {
-      console.log('****************** allEnemiesDead and spawnsLeft.length === 0');
       this.setState(RoomState.ROOM_CLEARED);
       this.openDoors();
       this.enemies = [];
@@ -226,9 +223,6 @@ export class Room {
 
     // Add to room's enemy list
     this.enemies.push(enemy);
-
-    // Emit event with properly initialized enemy
-    // this.scene.events.emit(Room.ENEMY_CREATED, { enemy });
   }
 
   public getState(): RoomState {
@@ -242,7 +236,7 @@ export class Room {
       if (enemySpawner && this.canSpawnEnemies()) {
         enemySpawner.spawnEnemies();
       }
-      this.scene.events.emit(Room.ROOM_STATE_CHANGED, this.id, this.state);
+      this.scene.events.emit(Room.ROOM_STATE_CHANGED, this, this.state);
     }
   }
 

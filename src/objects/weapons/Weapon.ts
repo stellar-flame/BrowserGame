@@ -17,7 +17,7 @@ export class Weapon {
   public minDistance: number = 50;
   public maxDistance: number = 200;
   public weaponType: WeaponType;
-  private scene: Scene;
+  protected scene: Scene;
   public config: WeaponConfig;
   private lastFired: number = 0;
   public displayConfig?: WeaponConfig['displayConfig'] | null;

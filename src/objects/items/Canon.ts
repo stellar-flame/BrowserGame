@@ -24,7 +24,7 @@ export class Canon extends Phaser.Physics.Arcade.Sprite {
     private setupOverlap() {
         const player = (this.scene as MainScene).getPlayer();
         this.scene.physics.add.overlap(this, player, this.handleOverlap, undefined, this);
-        this.scene.physics.add.overlap(this, player.weapon.bullets as Phaser.Physics.Arcade.Group, this.handleOverlap, undefined, this);
+        this.scene.physics.add.overlap(this, player.getWeapon().bullets as Phaser.Physics.Arcade.Group, this.handleOverlap, undefined, this);
     }
 
     private handleOverlap(canon: any, player: any) {
@@ -33,7 +33,7 @@ export class Canon extends Phaser.Physics.Arcade.Sprite {
 
     }
 
-    createAnimations() {
+    private createAnimations() {
         if (this.scene.anims.exists('canon-explode')) return;
         this.scene.anims.create({
             key: 'canon-explode',

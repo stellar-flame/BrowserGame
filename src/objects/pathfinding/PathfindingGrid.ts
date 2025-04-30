@@ -21,14 +21,14 @@ export class PathfindingGrid {
     return PathfindingGrid.instance;
   }
 
-  public initialize(scene: Scene, map: Tilemaps.Tilemap, wallsLayer: Tilemaps.TilemapLayer): void {
+  public initialize(scene: Scene, map: Tilemaps.Tilemap): void {
     if (this.grid && this.bufferedGrid) {
       // Grid already initialized
       return;
     }
 
     // Create the base grid
-    this.grid = this.createBaseGrid(map, wallsLayer);
+    this.grid = this.createBaseGrid(map);
 
     // Create the buffered grid
     this.bufferedGrid = this.createBufferedGrid(this.grid, map.width, map.height);
@@ -183,30 +183,47 @@ export class PathfindingGrid {
     }
   }
 
-  private createBaseGrid(map: Tilemaps.Tilemap, wallsLayer: Tilemaps.TilemapLayer): number[][] {
+  private createBaseGrid(map: Tilemaps.Tilemap): number[][] {
     const width = map.width;
     const height = map.height;
 
     // Create a grid for pathfinding
     const grid: number[][] = [];
 
-    // Initialize grid with all tiles walkable (0)
+    // Initialize grid with all tiles unwalkable (1)
     for (let y = 0; y < height; y++) {
       const row: number[] = [];
       for (let x = 0; x < width; x++) {
-        row.push(0); // 0 = walkable
+        row.push(1); // 1 = unwalkable by default
       }
       grid.push(row);
     }
 
-    // Mark wall tiles as unwalkable (1)
-    wallsLayer.forEachTile((tile) => {
-      if (tile && tile.index > 0) { // Only mark as wall if tile index is greater than 0
-        const tileX = tile.x;
-        const tileY = tile.y;
-        grid[tileY][tileX] = 1; // 1 = unwalkable
-      }
-    });
+    // Get the Floor layer
+    const floorLayer = map.getLayer('Floor');
+    if (floorLayer) {
+      // Mark floor tiles as walkable (0)
+      floorLayer.data.forEach((row, y) => {
+        row.forEach((tile, x) => {
+          if (tile && tile.index > 0) { // If there's a floor tile
+            grid[y][x] = 0; // 0 = walkable
+          }
+        });
+      });
+    }
+
+    // Get the Walls layer
+    const wallsLayer = map.getLayer('Walls');
+    if (wallsLayer) {
+      // Mark wall tiles as unwalkable (1)
+      wallsLayer.data.forEach((row, y) => {
+        row.forEach((tile, x) => {
+          if (tile && tile.index > 0) { // Only mark as wall if tile index is greater than 0
+            grid[y][x] = 1; // 1 = unwalkable
+          }
+        });
+      });
+    }
 
     return grid;
   }

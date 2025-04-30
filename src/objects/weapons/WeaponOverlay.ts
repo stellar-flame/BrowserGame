@@ -1,5 +1,6 @@
 import { Scene, GameObjects } from 'phaser';
 import { Weapon } from './Weapon';
+import { DeployableWeapon } from './DeployableWeapon';
 
 export class WeaponOverlay {
     private scene: Scene;
@@ -8,6 +9,10 @@ export class WeaponOverlay {
     private weaponName: GameObjects.Text;
     private weaponStats: GameObjects.Text;
     private background: GameObjects.Rectangle;
+    private deployableContainer: GameObjects.Container;
+    private deployableIcon: GameObjects.Sprite;
+    private deployableName: GameObjects.Text;
+    private deployableStats: GameObjects.Text;
 
     constructor(scene: Scene) {
         this.scene = scene;
@@ -24,7 +29,6 @@ export class WeaponOverlay {
 
         // Create weapon icon
         this.weaponIcon = scene.add.sprite(25, 25, 'weapon-upgrade');
-
         this.weaponIcon.setScale(1);
         this.container.add(this.weaponIcon);
 
@@ -44,11 +48,37 @@ export class WeaponOverlay {
         });
         this.container.add(this.weaponStats);
 
+        // Create deployable container
+        this.deployableContainer = scene.add.container(0, 60);
+        this.container.add(this.deployableContainer);
+
+        // Create deployable icon
+        this.deployableIcon = scene.add.sprite(25, 25, 'turret');
+        this.deployableIcon.setScale(1);
+        this.deployableContainer.add(this.deployableIcon);
+
+        // Create deployable name text
+        this.deployableName = scene.add.text(55, 5, '', {
+            fontSize: '12px',
+            color: '#ffffff',
+            fontFamily: 'Arial',
+        });
+        this.deployableContainer.add(this.deployableName);
+
+        // Create deployable stats text
+        this.deployableStats = scene.add.text(55, 30, '', {
+            fontSize: '10px',
+            color: '#cccccc',
+            fontFamily: 'Arial'
+        });
+        this.deployableContainer.add(this.deployableStats);
+
         // Hide initially
         this.container.setVisible(false);
+        this.deployableContainer.setVisible(false);
     }
 
-    public updateWeapon(weapon: Weapon): void {
+    public updateWeapon(weapon: Weapon, deployableWeapon?: DeployableWeapon | null): void {
         if (!weapon) {
             this.container.setVisible(false);
             return;
@@ -80,6 +110,38 @@ export class WeaponOverlay {
             `Attack Rate: ${attackRate}/s`
         ].join('\n');
         this.weaponStats.setText(stats);
+
+        // Update deployable weapon if available
+        if (deployableWeapon) {
+            this.background.setSize(140, 120);
+            this.deployableContainer.setVisible(true);
+
+            // Update deployable icon color
+            if (deployableWeapon.displayConfig?.color) {
+                this.deployableIcon.setTint(parseInt(deployableWeapon.displayConfig.color, 16));
+            } else {
+                this.deployableIcon.clearTint();
+            }
+
+            // Format deployable name
+            const deployableDisplayName = deployableWeapon.weaponType
+                .split('_')
+                .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+                .join(' ');
+
+            // Update deployable name
+            this.deployableName.setText(deployableDisplayName);
+
+            // Format and update deployable stats
+            const deployableAttackRate = (1000 / deployableWeapon.attackRate).toFixed(1);
+            const deployableStats = [
+                `Damage: ${deployableWeapon.damage}`,
+                `Attack Rate: ${deployableAttackRate}/s`
+            ].join('\n');
+            this.deployableStats.setText(deployableStats);
+        } else {
+            this.deployableContainer.setVisible(false);
+        }
     }
 
     public destroy(): void {

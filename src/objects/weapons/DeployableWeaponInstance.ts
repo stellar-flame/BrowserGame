@@ -1,19 +1,36 @@
+import { Scene } from 'phaser';
 import { MainScene } from "../../scenes/MainScene";
 import { Enemy } from "../enemy/Enemy";
 import { Weapon } from "./Weapon";
 import { DeployableWeapon } from "./DeployableWeapon";
+import { Room } from "../rooms/Room";
 
 export class DeployableWeaponInstance extends Phaser.Physics.Arcade.Sprite {
     private weapon: Weapon;
     private targetEnemy: Enemy | null = null;
     private targetUpdateTimer: number = 0;
     private targetUpdateInterval: number = 500; // Update target every 500ms
+    private respawnTimer: number = 0;
+    private respawnInterval: number = 5000; // Respawn every 5 seconds
+    private room: Room;
+    private shooter: any;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, weapon: DeployableWeapon) {
-        super(scene, x, y, weapon.config.displayConfig?.sprite || 'turret'); // Using canon sprite for now
-        this.setScale(2);
+    public static create(scene: Scene, shooter: any, room: Room): void {
+        const weapon = shooter.getDeployableWeapon();
+        if (!weapon) return;
+        const spawnPoint = this.getSpawnPoint(scene, shooter);
+        if (!spawnPoint) return;
+        console.log('spawnPoint', spawnPoint);
+        new DeployableWeaponInstance(scene, spawnPoint.x, spawnPoint.y, weapon as DeployableWeapon, shooter, room);
+    }
+
+    constructor(scene: Phaser.Scene, x: number, y: number, weapon: DeployableWeapon, shooter: any, room: Room) {
+        super(scene, x, y, weapon.config.displayConfig?.sprite || 'turret');
+        this.setScale(1.5);
         this.scene.add.existing(this);
         this.scene.physics.world.enable(this);
+        this.room = room;
+        this.shooter = shooter;
 
         if (this.body instanceof Phaser.Physics.Arcade.Body) {
             this.body.setSize(32, 32);
@@ -24,11 +41,26 @@ export class DeployableWeaponInstance extends Phaser.Physics.Arcade.Sprite {
         // Create weapon for the turret
         this.weapon = weapon;
         this.createSpawnEffect();
+
+        this.createAnimation();
     }
 
-
+    private createAnimation() {
+        if (this.scene.anims.exists('turret-animation')) return;
+        this.scene.anims.create({
+            key: 'turret-animation',
+            frames: this.scene.anims.generateFrameNumbers(this.weapon.config.displayConfig?.animation || 'turret', {
+                start: 0,
+                end: 3
+            }),
+            frameRate: 10,
+            repeat: -1
+        });
+        console.log('*************************** created animation', this.weapon.config.displayConfig?.animation);
+    }
     preUpdate(time: number, delta: number) {
         super.preUpdate(time, delta);
+        this.play('turret-animation', true);
 
         // Update target enemy
         this.targetUpdateTimer += delta;
@@ -41,6 +73,64 @@ export class DeployableWeaponInstance extends Phaser.Physics.Arcade.Sprite {
         if (this.targetEnemy && this.weapon) {
             this.weapon.fireAtTarget(this, this.targetEnemy);
         }
+
+        // Handle respawn
+        this.respawnTimer += delta;
+        if (this.respawnTimer >= this.respawnInterval) {
+            this.respawnTimer = 0;
+            if (!this.room.isRoomCleared()) {
+                this.respawn();
+            }
+            else {
+                console.log('Room cleared, destroying weapon instance');
+                this.destroy();
+            }
+        }
+    }
+
+    private static getSpawnPoint(scene: Scene, shooter: any): { x: number, y: number } | null {
+        const tries = 10;
+        for (let i = 0; i < tries; i++) {
+            // Get player position with random offset
+            const offsetX = Phaser.Math.Between(-100, 100);
+            const offsetY = Phaser.Math.Between(-100, 100);
+            const x = shooter.x + offsetX;
+            const y = shooter.y + offsetY;
+            const points = [
+                { x: x - 100, y },
+                { x: x + 100, y },
+                { x, y: y - 100 },
+                { x, y: y + 100 },
+                { x: x - 100, y: y - 100 },
+                { x: x + 100, y: y - 100 },
+                { x: x - 100, y: y + 100 },
+                { x: x + 100, y: y + 100 }
+            ];
+            points.sort(() => Math.random() - 0.5);
+
+            for (const point of points) {
+                const pathfindingGrid = (scene as MainScene).getPathfindingGrid();
+                const gridX = pathfindingGrid.getGridX(point.x);
+                const gridY = pathfindingGrid.getGridY(point.y);
+                const isWalkable = pathfindingGrid.isTileWalkable(gridX, gridY);
+                if (isWalkable) {
+                    return point;
+                }
+            }
+        }
+        console.log('No spawn point found');
+        return null;
+    }
+
+    private respawn() {
+        const mainScene = this.scene as MainScene;
+        const spawnPoint = DeployableWeaponInstance.getSpawnPoint(mainScene, this.shooter);
+        if (!spawnPoint) return;
+
+        // Create new instance
+        new DeployableWeaponInstance(this.scene, spawnPoint.x, spawnPoint.y, this.weapon as DeployableWeapon, this.shooter, this.room);
+
+        this.destroy();
     }
 
     private findNearestEnemy() {
@@ -134,7 +224,9 @@ export class DeployableWeaponInstance extends Phaser.Physics.Arcade.Sprite {
 
     public destroy() {
         this.createDestroyEffect();
-        super.destroy();
+        this.scene.time.delayedCall(100, () => {
+            super.destroy();
+        });
     }
 
 } 

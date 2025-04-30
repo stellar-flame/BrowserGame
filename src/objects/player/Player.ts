@@ -6,6 +6,9 @@ import { Weapon } from '../weapons/Weapon';
 import { WeaponFactory } from '../weapons/WeaponFactory';
 import { WeaponOverlay } from '../weapons/WeaponOverlay';
 import { Powerup } from '../items/Powerup';
+import { RoomState } from '../rooms/Room';
+import { Room } from '../rooms/Room';
+import { DeployableWeapon } from '../weapons/DeployableWeapon';
 // Extend Physics.Arcade.Sprite for physics and preUpdate
 export class Player extends Physics.Arcade.Sprite {
   // Removed redundant body declaration, it's inherited
@@ -18,7 +21,7 @@ export class Player extends Physics.Arcade.Sprite {
   };
   private isTeleporting: boolean = false;
   private weapon: Weapon;
-  private deployableWeapon: Weapon | null = null;
+  private deployableWeapon: DeployableWeapon | null = null;
 
   public lastFired: number = 0;
   public fireRate: number = 500; // Fire every 0.5 seconds
@@ -95,6 +98,11 @@ export class Player extends Physics.Arcade.Sprite {
       this.showFloatingImage('powerup');
     });
 
+    this.scene.events.on(Room.ROOM_STATE_CHANGED, (room: Room, state: RoomState) => {
+      if (state === RoomState.TRIGGERED) {
+        this.deployableWeapon?.deploy(this, room);
+      }
+    });
     this.createAnimations(scene);
 
   }
@@ -401,11 +409,11 @@ export class Player extends Physics.Arcade.Sprite {
 
   public swapWeapon(newWeapon: Weapon): void {
     if (newWeapon.isDeployable()) {
-      this.deployableWeapon = newWeapon;
+      this.deployableWeapon = newWeapon as DeployableWeapon;
     } else {
       this.weapon = newWeapon;
     }
-    this.weaponOverlay.updateWeapon(this.weapon);
+    this.weaponOverlay.updateWeapon(this.weapon, this.deployableWeapon);
   }
 
   public destroy(fromScene?: boolean): void {

@@ -18,6 +18,7 @@ export interface WeaponConfig {
   maxDistance?: number;
   displayConfig?: {
     sprite?: string;
+    animation?: string;
     color?: string;
   } | null;
 }
@@ -152,9 +153,10 @@ export const WEAPON_CONFIGS = {
     maxDistance: 500,
     displayConfig: {
       sprite: 'turret',
-      color: '0xffffff' // Pure white
+      color: '0xffffff', // Pure white
+      animation: 'turret-animation'
     }
-  }
+  },
 } as const;
 
 export const WEAPON_UPGRADE = {

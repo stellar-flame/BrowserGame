@@ -51,7 +51,6 @@ export class EnemySpawner {
         }
 
         const enemyType = enemyTypes[enemyTypeIndex];
-        console.log('****************** enemyType', enemyType.type, enemyType.count, enemyIndex);
         // Check if we've spawned all enemies of this type
         if (enemyIndex >= enemyType.count) {
             // Move to next enemy type

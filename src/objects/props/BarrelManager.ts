@@ -49,7 +49,7 @@ export class BarrelManager {
 
           // Create 3-5 barrels
           const numBarrels = Phaser.Math.Between(3, 5);
-          const barrelSize = 32; // Size of a barrel
+          const barrelSize = 24; // Size of a barrel
           const padding = 8; // Minimum space between barrels
 
           // Calculate grid positions

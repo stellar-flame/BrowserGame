@@ -8,7 +8,6 @@ import { EnemyManager } from '../objects/enemy/EnemyManager';
 import { ItemManager } from '../objects/items/ItemManager';
 import { WeaponManager } from '../objects/weapons/WeaponManager';
 import { MovementManager } from '../objects/enemy/MovementManager';
-import { DeployableWeaponManager } from '../objects/weapons/DeployableWeaponManager';
 
 export class MainScene extends Scene {
   // Core game objects
@@ -31,7 +30,6 @@ export class MainScene extends Scene {
   protected itemManager: ItemManager | null = null;
   protected weaponManager: WeaponManager | null = null;
   protected movementManager: MovementManager | null = null;
-  protected deployableWeaponManager: DeployableWeaponManager | null = null;
 
   constructor(key: string = 'MainScene') {
     super({ key: key });
@@ -57,6 +55,7 @@ export class MainScene extends Scene {
     this.loadSprite('smashed-barrel', 'assets/sprites/smashed-barrel.png', 32, 32);
     this.loadSprite('weapon-upgrade', 'assets/sprites/weapon-upgrade.png', 32, 32);
     this.loadSprite('slug-sprite', 'assets/sprites/slug-sprite.png', 16, 32);
+    this.loadSprite('turret-animation', 'assets/sprites/turret-sheet.png', 32, 32);
     // Load tiles and maps
     this.load.image('tiles-32', 'assets/tiles.png');
     this.load.tilemapTiledJSON('dungeon-map', 'assets/dungeon-32.tmj');
@@ -99,6 +98,7 @@ export class MainScene extends Scene {
     this.setupPotions();
     this.setupEnemies();
     this.setupCollisions();
+    this.setupDeployableWeapon();
 
     // Add keyboard shortcut to toggle grid labels
     if (this.input && this.input.keyboard) {
@@ -183,9 +183,9 @@ export class MainScene extends Scene {
     // this.player = new Player(this, 100, 300);
     // this.player = new Player(this, 850, 320);
 
-    this.player = new Player(this, 1400, 700);
+    // this.player = new Player(this, 1400, 700);
     // this.player = new Player(this, 1400, 1000);
-    // this.player = new Player(this, 735, 1500);
+    this.player = new Player(this, 735, 1500);
 
 
     console.log('Player created:', this.player);
@@ -203,7 +203,6 @@ export class MainScene extends Scene {
     this.weaponManager = new WeaponManager(this, this.player);
     const map = this.make.tilemap({ key: 'dungeon-map' });
     this.weaponManager.setupWeaponUpgrades(map.getObjectLayer('Items') as Phaser.Tilemaps.ObjectLayer);
-    this.deployableWeaponManager = new DeployableWeaponManager(this, this.player);
   }
 
   private setupCamera() {
@@ -226,7 +225,7 @@ export class MainScene extends Scene {
   private setupPathfinding() {
     if (this.wallsLayer) {
       const map = this.make.tilemap({ key: 'dungeon-map' });
-      this.pathfindingGrid.initialize(this, map, this.wallsLayer);
+      this.pathfindingGrid.initialize(this, map);
     }
   }
 
@@ -384,5 +383,10 @@ export class MainScene extends Scene {
     }
     return this.movementManager;
   }
+
+  private setupDeployableWeapon() {
+
+  }
+
 
 }

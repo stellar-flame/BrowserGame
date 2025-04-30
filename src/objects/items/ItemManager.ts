@@ -45,7 +45,6 @@ export class ItemManager {
         this.spawnPotion(data.x, data.y, healAmount);
       }
       if (data.barrel.getItemType() === ItemType.Powerup) {
-        console.log('*************************** spawning powerup from barrel');
         this.spawnPowerup(data.x, data.y);
       }
     });
@@ -61,12 +60,13 @@ export class ItemManager {
   }
 
   public setSpawnPoints(rooms: Map<string, Room>): void {
-    for (const roomId of Object.keys(this.roomsToSpawnItems)) {
+    for (const [roomId, itemTypes] of Object.entries(this.roomsToSpawnItems)) {
       const room = rooms.get(roomId);
-      const barrel = room?.getBarrels()[Phaser.Math.Between(0, room.getBarrels().length - 1)];
-      if (barrel) {
-        for (const itemType of this.roomsToSpawnItems[roomId]) {
-          console.log('*************************** adding item type to barrel', itemType);
+      for (const itemType of itemTypes) {
+        const barrels: Barrel[] = room?.getBarrels() || [];
+        barrels.sort(() => Math.random() - 0.5);
+        const barrel = barrels.find(barrel => !barrel.getItemType());
+        if (barrel) {
           barrel.addItem(itemType as ItemType);
         }
       }
