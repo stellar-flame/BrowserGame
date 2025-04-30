@@ -3,7 +3,6 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "homepage": "https://stellar-flame.github.io/browser-game/",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
