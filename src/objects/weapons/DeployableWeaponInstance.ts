@@ -20,7 +20,6 @@ export class DeployableWeaponInstance extends Phaser.Physics.Arcade.Sprite {
         if (!weapon) return;
         const spawnPoint = this.getSpawnPoint(scene, shooter);
         if (!spawnPoint) return;
-        console.log('spawnPoint', spawnPoint);
         new DeployableWeaponInstance(scene, spawnPoint.x, spawnPoint.y, weapon as DeployableWeapon, shooter, room);
     }
 
@@ -56,7 +55,6 @@ export class DeployableWeaponInstance extends Phaser.Physics.Arcade.Sprite {
             frameRate: 10,
             repeat: -1
         });
-        console.log('*************************** created animation', this.weapon.config.displayConfig?.animation);
     }
     preUpdate(time: number, delta: number) {
         super.preUpdate(time, delta);
@@ -82,7 +80,6 @@ export class DeployableWeaponInstance extends Phaser.Physics.Arcade.Sprite {
                 this.respawn();
             }
             else {
-                console.log('Room cleared, destroying weapon instance');
                 this.destroy();
             }
         }
@@ -118,7 +115,6 @@ export class DeployableWeaponInstance extends Phaser.Physics.Arcade.Sprite {
                 }
             }
         }
-        console.log('No spawn point found');
         return null;
     }
 

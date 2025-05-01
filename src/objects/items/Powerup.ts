@@ -9,8 +9,6 @@ export class Powerup extends Item {
 
     constructor(scene: Scene, x: number, y: number) {
         super(scene, x, y, 'powerup');
-        console.log('powerup');
-
     }
 
     protected getCollectData(): { [key: string]: any } {

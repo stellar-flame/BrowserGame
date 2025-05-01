@@ -1,6 +1,5 @@
 import 'phaser';
 import { MainScene } from './scenes/MainScene';
-import { EnemyTestScene } from './scenes/EnemyTestScene';
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   width: 800,

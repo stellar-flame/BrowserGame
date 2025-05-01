@@ -27,10 +27,12 @@ export class WeaponOverlay {
         this.background.setOrigin(0, 0);
         this.container.add(this.background);
 
-        // Create weapon icon
-        this.weaponIcon = scene.add.sprite(25, 25, 'weapon-upgrade');
-        this.weaponIcon.setScale(1);
-        this.container.add(this.weaponIcon);
+        // Create weapon icon if texture exists
+        if (scene.textures.exists('weapon-upgrade')) {
+            this.weaponIcon = scene.add.sprite(25, 25, 'weapon-upgrade');
+            this.weaponIcon.setScale(1);
+            this.container.add(this.weaponIcon);
+        }
 
         // Create weapon name text
         this.weaponName = scene.add.text(55, 5, '', {
@@ -52,10 +54,12 @@ export class WeaponOverlay {
         this.deployableContainer = scene.add.container(0, 60);
         this.container.add(this.deployableContainer);
 
-        // Create deployable icon
-        this.deployableIcon = scene.add.sprite(25, 25, 'turret');
-        this.deployableIcon.setScale(1);
-        this.deployableContainer.add(this.deployableIcon);
+        // Create deployable icon if texture exists
+        if (scene.textures.exists('turret')) {
+            this.deployableIcon = scene.add.sprite(25, 25, 'turret');
+            this.deployableIcon.setScale(1);
+            this.deployableContainer.add(this.deployableIcon);
+        }
 
         // Create deployable name text
         this.deployableName = scene.add.text(55, 5, '', {

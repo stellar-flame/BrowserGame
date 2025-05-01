@@ -196,6 +196,7 @@ export class Weapon {
     }
 
     // Null references for cleanup (optional, helps GC)
+    this.config = null;
     this.displayConfig = null;
   }
 } 

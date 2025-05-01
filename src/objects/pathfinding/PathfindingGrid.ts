@@ -297,7 +297,7 @@ export class PathfindingGrid {
       }
       gridStr += "\n";
     }
-    console.log(gridStr);
+    // console.log(gridStr);
   }
 
   public getGridWidth(): number {

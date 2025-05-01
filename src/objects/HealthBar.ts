@@ -13,9 +13,9 @@ export class HealthBar {
   private isPlayerBar: boolean = false;
 
   constructor(
-    scene: Scene, 
-    parent: Phaser.GameObjects.GameObject, 
-    width: number = 150, 
+    scene: Scene,
+    parent: Phaser.GameObjects.GameObject,
+    width: number = 150,
     height: number = 10,
     isPlayerBar: boolean = false
   ) {
@@ -30,7 +30,7 @@ export class HealthBar {
     // Create the health bar graphics
     this.bar = scene.add.graphics();
     this.bar.setDepth(100); // Ensure it's drawn above other objects
-    
+
     // Position the health bar based on whether it's a player bar or enemy bar
     this.updatePosition();
   }
@@ -63,18 +63,18 @@ export class HealthBar {
 
   private draw(): void {
     if (!this.visible) return;
-    
+
     this.bar.clear();
-    
+
     // Background (dark red)
     this.bar.fillStyle(0x660000);
     this.bar.fillRect(0, 0, this.width, this.height);
-    
+
     // Health bar (green)
     const healthWidth = (this.currentHealth / this.maxHealth) * this.width;
     this.bar.fillStyle(0x00ff00);
     this.bar.fillRect(0, 0, healthWidth, this.height);
-    
+
     // Border
     this.bar.lineStyle(1, 0xffffff);
     this.bar.strokeRect(0, 0, this.width, this.height);
@@ -85,7 +85,9 @@ export class HealthBar {
       // Update enemy health bar position to follow the enemy
       const parentSprite = this.parent as Phaser.GameObjects.Sprite;
       const offsetY = -20; // Offset above the enemy
-      this.bar.setPosition(parentSprite.x - this.width / 2, parentSprite.y + offsetY);
+      if (parentSprite) {
+        this.bar.setPosition(parentSprite.x - this.width / 2, parentSprite.y + offsetY);
+      }
       // Redraw the health bar after updating position
       this.draw();
     }
@@ -93,5 +95,7 @@ export class HealthBar {
 
   public destroy(): void {
     this.bar.destroy();
+    this.parent = null;
+    this.scene = null;
   }
 } 

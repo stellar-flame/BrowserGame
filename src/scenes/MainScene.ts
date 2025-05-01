@@ -8,6 +8,8 @@ import { EnemyManager } from '../objects/enemy/EnemyManager';
 import { ItemManager } from '../objects/items/ItemManager';
 import { WeaponManager } from '../objects/weapons/WeaponManager';
 import { MovementManager } from '../objects/enemy/MovementManager';
+import { Enemy } from '../objects/enemy/Enemy';
+import { EnemySpawner } from '../objects/enemy/EnemySpawner';
 
 export class MainScene extends Scene {
   // Core game objects
@@ -53,7 +55,6 @@ export class MainScene extends Scene {
     this.loadSprite('arrow', 'sprites/arrow.png', 32, 16);
     this.loadSprite('ninja-star', 'sprites/ninja-star.png', 32, 32);
     this.loadSprite('smashed-barrel', 'sprites/smashed-barrel.png', 32, 32);
-    this.loadSprite('weapon-upgrade', 'sprites/weapon-upgrade.png', 32, 32);
     this.loadSprite('slug-sprite', 'sprites/slug-sprite.png', 16, 32);
     this.loadSprite('turret-animation', 'sprites/turret-sheet.png', 32, 32);
     // Load tiles and maps
@@ -70,6 +71,7 @@ export class MainScene extends Scene {
     this.load.image('player-bullet-1', 'sprites/player-bullet-1.png');
     this.load.image('turret', 'sprites/turret.png');
     this.load.image('slime-shot', 'sprites/slime-shot.png');
+    this.load.image('weapon-upgrade', 'sprites/weapon-upgrade.png');
     // Load sound effects
     // this.load.audio('weapon-upgrade', 'assets/sounds/weapon-upgrade.mp3');
   }
@@ -98,29 +100,10 @@ export class MainScene extends Scene {
     this.setupPotions();
     this.setupEnemies();
     this.setupCollisions();
-
-    // Add keyboard shortcut to toggle grid labels
-    if (this.input && this.input.keyboard) {
-      this.input.keyboard.on('keydown-G', () => {
-        if (this.pathfindingGrid) {
-          this.pathfindingGrid.toggleGridLabels(this);
-        }
-      });
-
-      // Add keyboard shortcut to toggle buffered grid visualization
-      this.input.keyboard.on('keydown-B', () => {
-        if (this.pathfindingGrid) {
-          this.pathfindingGrid.toggleBufferedGridVisualization(this);
-        }
-      });
-    }
     // Enable debug visualization
     // this.physics.world.createDebugGraphic();
 
   }
-
-
-
 
   private setupInput() {
     if (this.input && this.input.keyboard) {
@@ -134,10 +117,11 @@ export class MainScene extends Scene {
       this.mousePointer = this.input.activePointer;
     }
 
-    if (this.gameOver && this.input && this.input.keyboard) {
+    if (this.input && this.input.keyboard) {
       this.input.keyboard.on('keydown-R', () => {
         this.shutdown();
         this.scene.restart();
+        this.gameOver = false;
       });
     }
   }
@@ -195,7 +179,6 @@ export class MainScene extends Scene {
     // this.player = new Player(this, 735, 1500);
 
 
-    console.log('Player created:', this.player);
 
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
     playerBody.setSize(32, 32);
@@ -233,6 +216,21 @@ export class MainScene extends Scene {
     if (this.wallsLayer) {
       const map = this.make.tilemap({ key: 'dungeon-map' });
       this.pathfindingGrid.initialize(this, map);
+    }
+    // Add keyboard shortcut to toggle grid labels
+    if (this.input && this.input.keyboard) {
+      this.input.keyboard.on('keydown-G', () => {
+        if (this.pathfindingGrid) {
+          this.pathfindingGrid.toggleGridLabels(this);
+        }
+      });
+
+      // Add keyboard shortcut to toggle buffered grid visualization
+      this.input.keyboard.on('keydown-B', () => {
+        if (this.pathfindingGrid) {
+          this.pathfindingGrid.toggleBufferedGridVisualization(this);
+        }
+      });
     }
   }
 
@@ -391,9 +389,66 @@ export class MainScene extends Scene {
     return this.movementManager;
   }
 
+  public isPositionValid(x: number, y: number): boolean {
+    const pathfindingGrid = this.getPathfindingGrid();
+    return pathfindingGrid.isTileWalkable(x, y);
+  }
+
   shutdown() {
-    this.player.destroy();
-    this.roomManager?.destroy();
+    console.log('Shutting down scene');
+    //Clean up player
+    if (this.player) {
+      this.player.destroy();
+    }
+
+    // Clean up managers
+    if (this.roomManager) {
+      this.roomManager.destroy();
+    }
+    if (this.barrelManager) {
+      this.barrelManager.destroy();
+    }
+    if (this.enemyManager) {
+      this.enemyManager.destroy();
+    }
+    if (this.itemManager) {
+      this.itemManager.destroy();
+    }
+    if (this.weaponManager) {
+      this.weaponManager.destroy();
+    }
+    if (this.movementManager) {
+      this.movementManager.destroy();
+    }
+
+    // Clean up UI elements
+    if (this.gameOverText) {
+      this.gameOverText.destroy();
+    }
+    if (this.restartText) {
+      this.restartText.destroy();
+    }
+
+    // Clean up input
+    if (this.input && this.input.keyboard) {
+      this.input.keyboard.removeAllKeys();
+    }
+
+    // Clean up events
+    this.events.removeListener('playerDied', this.handlePlayerDeath, this);
+
+    // Clean up tilemap layers
+    if (this.wallsLayer) {
+      this.wallsLayer.destroy();
+    }
+
+    this.player = null;
+    this.roomManager = null;
+    this.barrelManager = null;
+    this.enemyManager = null;
+    this.itemManager = null;
+    this.weaponManager = null;
+    this.movementManager = null;
   }
 
 

@@ -1,36 +1,39 @@
 import { MainScene } from "../../scenes/MainScene";
+import { Player } from "../player/Player";
+import { Bullet } from "../weapons/Bullet";
 
 export class Canon extends Phaser.Physics.Arcade.Sprite {
     private actionTimer: number = 0;
     private actionInterval: number = 10000;
     public static readonly CANON_EXPLODE = 'canon-explode';
-
+    private particles: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
 
     constructor(scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y, 'canon');
         this.setScale(2);
         this.createAnimations();
         this.scene.add.existing(this);
-        this.scene.physics.world.enable(this);
+        console.log('Canon created');
+
+        // Add to scene and enable physics in one step
+        scene.physics.add.existing(this);
+
         if (this.body instanceof Phaser.Physics.Arcade.Body) {
             this.body.setSize(16, 16);
             this.body.setBounce(0);
             this.body.immovable = true;
         }
         this.setupOverlap();
-
     }
 
     private setupOverlap() {
         const player = (this.scene as MainScene).getPlayer();
-        this.scene.physics.add.overlap(this, player, this.handleOverlap, undefined, this);
-        this.scene.physics.add.overlap(this, player.getWeapon().bullets as Phaser.Physics.Arcade.Group, this.handleOverlap, undefined, this);
+        this.scene.physics.add.overlap(this, player, (obj1, obj2) => this.handleOverlap(obj1 as Canon, obj2 as Player), undefined, this);
+        this.scene.physics.add.overlap(this, player.getWeapon().bullets as Phaser.Physics.Arcade.Group, (obj1, obj2) => this.handleOverlap(obj1 as Canon, obj2 as Bullet), undefined, this);
     }
 
-    private handleOverlap(canon: any, player: any) {
-        console.log('handleOverlap canon', canon);
+    private handleOverlap(canon: Canon, other: Player | Bullet) {
         this.explode();
-
     }
 
     private createAnimations() {
@@ -64,7 +67,7 @@ export class Canon extends Phaser.Physics.Arcade.Sprite {
         this.scene.events.emit(Canon.CANON_EXPLODE, this.x, this.y);
 
         // Create explosion particles
-        const particles = this.scene.add.particles(0, 0, 'particle', {
+        this.particles = this.scene.add.particles(0, 0, 'particle', {
             x: this.x,
             y: this.y,
             speed: { min: 50, max: 150 },
@@ -78,19 +81,40 @@ export class Canon extends Phaser.Physics.Arcade.Sprite {
         });
 
         // Emit particles for a short duration
-        particles.explode(20, this.x, this.y);
+        this.particles.explode(20, this.x, this.y);
 
         // Destroy particles after animation completes
         this.scene.time.delayedCall(800, () => {
-            particles.destroy();
+            if (this.particles) {
+                this.particles.destroy();
+                this.particles = null;
+            }
         });
 
-        this.destroy();
+        this.deactivate();
     }
 
-    override destroy() {
-        this.scene.anims.remove('canon');
-        super.destroy();
+    public deactivate(): void {
+        // return to pool   
+        this.setVisible(false);
+        this.setActive(false);
+        this.body.enable = false;
+
+        // Clean up particles if they exist
+        if (this.particles) {
+            this.particles.destroy();
+            this.particles = null;
+        }
+
+        // Reset action timer
+        this.actionTimer = 0;
     }
 
+    public activate(x: number, y: number): void {
+        this.setPosition(x, y);
+        this.setVisible(true);
+        this.setActive(true);
+        this.body.enable = true;
+        this.actionTimer = 0;
+    }
 }

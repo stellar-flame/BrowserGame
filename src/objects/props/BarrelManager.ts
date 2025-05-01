@@ -145,4 +145,11 @@ export class BarrelManager {
   public destroyBarrel(): void {
     this.barrels.destroy(true);
   }
+
+  public destroy(): void {
+    this.barrels.destroy(true);
+    this.scene.events.off(WeaponManager.SWAPPED_EVENT);
+    this.player = null;
+    this.scene = null;
+  }
 } 

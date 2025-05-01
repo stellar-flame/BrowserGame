@@ -8,6 +8,10 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
     protected glowEffect: Phaser.GameObjects.Graphics | null = null;
 
     constructor(scene: Scene, x: number, y: number, texture: string) {
+        if (!scene.textures.exists(texture)) {
+            console.warn(`Texture ${texture} does not exist`);
+            return;
+        }
         super(scene, x, y, texture);
 
         // Add to scene
@@ -124,10 +128,7 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
                     });
 
                     // Clean up
-                    this.cleanup();
-
-                    // Disable active state to prevent further interactions
-                    this.setActive(false);
+                    this.destroy();
                 }
             });
         }
@@ -149,7 +150,8 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
         return this.isHovered;
     }
 
-    protected cleanup(): void {
+
+    public destroy(fromScene?: boolean): void {
         // Stop the floating animation
         if (this.floatTween) {
             this.floatTween.stop();
@@ -163,12 +165,10 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
         }
 
         // Remove event listener
-        this.scene.events.off('update', this.updateGlowPosition, this);
-    }
+        if (this.scene) {
+            this.scene.events.off('update', this.updateGlowPosition, this);
+        }
 
-    public destroy(fromScene?: boolean): void {
-        this.cleanup();
-        super.destroy(fromScene);
+        super.destroy(true);
     }
-
 }

@@ -25,8 +25,6 @@ export class EnemySpawner {
                 if (!this.room.canSpawnEnemies()) {
                     return;
                 }
-
-                console.log('Spawning enemies for room', this.room.getId(), 'with state', this.room.getState());
                 const enemyTypes = this.room.getEnemyTypesToSpawn();
                 // Schedule next enemy spawn after delay
                 this.scene.time.delayedCall(200, () => {
@@ -114,27 +112,29 @@ export class EnemySpawner {
             }
         });
 
-        // Create particle effect
-        const particles = this.scene.add.particles(0, 0, 'particle', {
-            x: x,
-            y: y,
-            speed: { min: 50, max: 100 },
-            scale: { start: 0.5, end: 0 },
-            lifespan: 800,
-            quantity: 10,
-            tint: 0xffffff, // white color
-            alpha: { start: 0.8, end: 0 },
-            blendMode: 'ADD',
-            gravityY: 0
-        });
+        // Create particle effect if texture exists
+        if (this.scene.textures.exists('particle')) {
+            const particles = this.scene.add.particles(0, 0, 'particle', {
+                x: x,
+                y: y,
+                speed: { min: 50, max: 100 },
+                scale: { start: 0.5, end: 0 },
+                lifespan: 800,
+                quantity: 10,
+                tint: 0xffffff, // white color
+                alpha: { start: 0.8, end: 0 },
+                blendMode: 'ADD',
+                gravityY: 0
+            });
 
-        // Emit particles for a short duration
-        particles.explode(10, x, y);
+            // Emit particles for a short duration
+            particles.explode(10, x, y);
 
-        // Destroy particles after animation completes
-        this.scene.time.delayedCall(500, () => {
-            particles.destroy();
-        });
+            // Destroy particles after animation completes
+            this.scene.time.delayedCall(500, () => {
+                particles.destroy();
+            });
+        }
     }
 
     private async getRandomPoint(): Promise<{ x: number, y: number }[] | null> {
@@ -190,5 +190,9 @@ export class EnemySpawner {
             this.spawnTimer.destroy();
             this.spawnTimer = null;
         }
+        this.scene = null;
+        this.player = null;
+        this.room = null;
+
     }
 }

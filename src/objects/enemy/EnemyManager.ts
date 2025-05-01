@@ -172,9 +172,13 @@ export class EnemyManager {
     }
   }
 
-  public destroyEnemies(): void {
+  public destroy(): void {
     this.enemies.destroy(true);
+    this.enemies = null;
+    this.player = null;
+    this.scene = null;
   }
+
 
   public getEnemies(): Enemy[] {
     return this.enemies.getChildren() as Enemy[];

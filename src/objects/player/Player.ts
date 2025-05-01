@@ -9,6 +9,8 @@ import { Powerup } from '../items/Powerup';
 import { RoomState } from '../rooms/Room';
 import { Room } from '../rooms/Room';
 import { DeployableWeapon } from '../weapons/DeployableWeapon';
+import { Canon } from '../items/Canon';
+
 // Extend Physics.Arcade.Sprite for physics and preUpdate
 export class Player extends Physics.Arcade.Sprite {
   // Removed redundant body declaration, it's inherited
@@ -74,7 +76,6 @@ export class Player extends Physics.Arcade.Sprite {
 
     // Initialize weapon with LEVEL_1_GUN configuration
     this.weapon = WeaponFactory.createPlayerWeapon(scene, 'BOLTSPITTER');
-    console.log(this.weapon);
 
     // Create target circle
     this.targetCircle = scene.add.graphics();
@@ -103,6 +104,8 @@ export class Player extends Physics.Arcade.Sprite {
         this.deployableWeapon?.deploy(this, room);
       }
     });
+
+
     this.createAnimations(scene);
 
   }
@@ -233,14 +236,50 @@ export class Player extends Physics.Arcade.Sprite {
   }
 
   // Method to heal the player
-  public heal(amount: number = 10): void {
-    this.currentHealth = Math.min(this.maxHealth, this.currentHealth + amount);
+  public heal(amount: number): void {
+    if (this.currentHealth >= this.maxHealth) return;
+
+    this.currentHealth = Math.min(this.currentHealth + amount, this.maxHealth);
     this.healthBar.setHealth(this.currentHealth, this.maxHealth);
 
-    // Visual healing effect
-    this.showHealEffect(amount);
+    // Create healing particles
+    if (this.scene.textures.exists('particle')) {
+      const particles = this.scene.add.particles(0, 0, 'particle', {
+        x: this.x,
+        y: this.y,
+        speed: { min: 20, max: 50 },
+        scale: { start: 0.5, end: 0 },
+        lifespan: 800,
+        quantity: 10,
+        tint: 0x00ff00,
+        alpha: { start: 0.8, end: 0 },
+        blendMode: 'ADD',
+        gravityY: -50
+      });
+      // Emit particles for a short duration
+      particles.explode(20, this.x, this.y);
+      // Create healing text
+      const healText = this.scene.add.text(this.x, this.y - 20, `+${amount}`, {
+        fontSize: '16px',
+        color: '#00ff00',
+        fontStyle: 'bold',
+        stroke: '#000000',
+        strokeThickness: 3
+      });
+      // Animate the text
+      this.scene.tweens.add({
+        targets: healText,
+        y: this.y - 40,
+        alpha: 0,
+        duration: 1000,
+        ease: 'Power2',
+        onComplete: () => {
+          healText.destroy();
+          particles.destroy();
+        }
+      });
+    }
   }
-
 
   private applySpeedBoost(boostAmount: number): void {
     this.moveSpeed *= boostAmount;
@@ -292,54 +331,6 @@ export class Player extends Physics.Arcade.Sprite {
 
     // Start emitting immediately
     this.speedBoostTrail.start();
-  }
-
-  // Show a visual healing effect
-  private showHealEffect(amount: number): void {
-    // Flash green tint
-    this.setTint(0x00ff00);
-    this.scene.time.delayedCall(200, () => {
-      this.clearTint();
-    });
-
-    // Create healing particles
-    const particles = this.scene.add.particles(0, 0, 'particle', {
-      x: this.x,
-      y: this.y,
-      speed: { min: 20, max: 50 },
-      scale: { start: 0.5, end: 0 },
-      lifespan: 800,
-      quantity: 10,
-      tint: 0x00ff00,
-      alpha: { start: 0.8, end: 0 },
-      blendMode: 'ADD',
-      gravityY: -50
-    });
-
-    // Emit particles for a short duration
-    particles.explode(20, this.x, this.y);
-
-    // Create healing text
-    const healText = this.scene.add.text(this.x, this.y - 20, `+${amount}`, {
-      fontSize: '16px',
-      color: '#00ff00',
-      fontStyle: 'bold',
-      stroke: '#000000',
-      strokeThickness: 3
-    });
-
-    // Animate the text
-    this.scene.tweens.add({
-      targets: healText,
-      y: this.y - 40,
-      alpha: 0,
-      duration: 1000,
-      ease: 'Power2',
-      onComplete: () => {
-        healText.destroy();
-        particles.destroy();
-      }
-    });
   }
 
   // Method to handle player death
@@ -411,26 +402,6 @@ export class Player extends Physics.Arcade.Sprite {
     this.weaponOverlay.updateWeapon(this.weapon, this.deployableWeapon);
   }
 
-  public destroy(fromScene?: boolean): void {
-    if (this.wasdKeys) {
-      this.scene.input.keyboard.removeKey(this.wasdKeys.up);
-      this.scene.input.keyboard.removeKey(this.wasdKeys.down);
-      this.scene.input.keyboard.removeKey(this.wasdKeys.left);
-      this.scene.input.keyboard.removeKey(this.wasdKeys.right);
-    }
-
-    this.weapon?.destroy?.();
-    this.deployableWeapon?.destroy?.();
-
-    this.targetCircle?.destroy?.();
-    this.healthBar?.destroy?.();
-    this.weaponOverlay?.destroy?.();
-    this.speedBoostTrail?.stop();
-    this.speedBoostTrail?.destroy();
-    this.floatingImage?.destroy?.();
-    super.destroy(fromScene);
-
-  }
 
   private handleAutoTargeting(): void {
     // Get mouse position
@@ -469,6 +440,33 @@ export class Player extends Physics.Arcade.Sprite {
         }
       }
     });
+  }
+
+  public destroy(): void {
+    if (this.scene) {
+      // this.scene.events.off(Canon.CANON_EXPLODE);
+      // this.scene.events.off(Potion.COLLECTED_EVENT);
+      // this.scene.events.off(Powerup.COLLECTED_EVENT);
+      // this.scene.events.off(Room.ROOM_STATE_CHANGED);
+
+
+      // if (this.wasdKeys) {
+      //   this.scene.input.keyboard.removeKey(this.wasdKeys.up);
+      //   this.scene.input.keyboard.removeKey(this.wasdKeys.down);
+      //   this.scene.input.keyboard.removeKey(this.wasdKeys.left);
+      //   this.scene.input.keyboard.removeKey(this.wasdKeys.right);
+      // }
+    }
+    // this.weapon?.destroy?.();
+    // this.deployableWeapon?.destroy?.();
+    // this.targetCircle?.destroy?.();
+    // this.healthBar?.destroy?.();
+    // this.weaponOverlay?.destroy?.();
+    // this.speedBoostTrail?.stop();
+    // this.speedBoostTrail?.destroy();
+    // this.floatingImage?.destroy?.();
+
+    // super.destroy(true);
   }
 
 

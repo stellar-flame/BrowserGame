@@ -11,12 +11,16 @@ export class WeaponUpgrade extends Phaser.Physics.Arcade.Sprite {
   private canSwapWeapon: boolean = true;
 
   constructor(scene: Phaser.Scene, x: number, y: number, weapon: Weapon, player: Player) {
-    super(scene, x, y, weapon.config.displayConfig?.sprite || 'weapon-upgrade');
+    const spriteKey = weapon.config.displayConfig?.sprite || 'weapon-upgrade';
+    console.log('Using sprite key:', spriteKey);
+
+    super(scene, x, y, spriteKey);
     this.weapon = weapon;
     this.player = player;
-    this.scene.add.existing(this);
+    this.scene.add.existing(this)
 
-    // Add physics
+
+    // Add to scene and enable physics in one step
     scene.physics.add.existing(this);
 
     // Apply visual cue based on weapon type
@@ -44,7 +48,6 @@ export class WeaponUpgrade extends Phaser.Physics.Arcade.Sprite {
       strokeThickness: 2,
       align: 'center'
     });
-    console.log(this.weaponNameText);
     this.weaponNameText.setOrigin(0.5);
     this.weaponNameText.setDepth(this.depth + 1);
   }
@@ -152,20 +155,29 @@ export class WeaponUpgrade extends Phaser.Physics.Arcade.Sprite {
     return upgradeWeapon;
   }
 
-  public destroy(fromScene?: boolean): void {
+  public destroy(): void {
     // Clean up event listeners
-    this.scene.events.off('update', this.updateGlowEffect, this);
+    // if (this.scene) {
+    //   this.scene.events.off('update', this.updateGlowEffect, this);
+    // }
 
     // Destroy glow effect
-    if (this.glowEffect) {
-      this.glowEffect.destroy();
-    }
+    // if (this.glowEffect) {
+    //   this.glowEffect.destroy();
+    //   this.glowEffect = null;
+    // }
 
-    // Destroy weapon name text
-    if (this.weaponNameText) {
-      this.weaponNameText.destroy();
-    }
+    // // Destroy weapon name text
+    // if (this.weaponNameText) {
+    //   this.weaponNameText.destroy();
+    //   this.weaponNameText = null;
+    // }
 
-    super.destroy(fromScene);
+    // // Null out references
+    // this.weapon = null;
+    // this.player = null;
+
+    // super.destroy(true);
+
   }
 }

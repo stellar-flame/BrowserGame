@@ -26,7 +26,6 @@ export class RoomManager {
           const roomId = roomObj.properties?.find((p: { name: string; value: string }) => p.name === 'Room');
 
           this.rooms.set(roomId.value, room);
-          console.log('Room added:', room.getId());
           this.scene.physics.add.overlap(this.player, room.getZone(), () => {
             this.handleRoomEntry(room);
           });
@@ -67,7 +66,6 @@ export class RoomManager {
     }
 
     const roomId = roomProperty.value;
-    console.log('Creating room with ID:', roomId);
 
     if (typeof roomObj.x !== 'number' ||
       typeof roomObj.y !== 'number' ||
@@ -115,7 +113,6 @@ export class RoomManager {
         }
       });
     }
-    console.log('Enemy trigger zone created:', zone);
   }
 
   private setupDoor(obj: Phaser.Types.Tilemaps.TiledObject, room: Room): void {
@@ -161,10 +158,7 @@ export class RoomManager {
 
 
   private handleRoomEntry(room: Room) {
-    // If we're already in this room, do nothing
     if (this.currentRoom === room) return;
-
-    console.log(`Player entered room ${room.getId()}`);
     this.currentRoom = room;
   }
 
@@ -188,5 +182,7 @@ export class RoomManager {
     this.rooms.forEach(room => room.destroy());
     this.rooms.clear();
     this.currentRoom = null;
+    this.player = null;
+    this.scene = null;
   }
 } 

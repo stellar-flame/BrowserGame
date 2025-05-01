@@ -204,10 +204,6 @@ export class Room {
     this.enemies.splice(this.enemies.indexOf(enemy), 1);
   }
 
-  public destroy(): void {
-    this.enemies = [];
-    this.zone.destroy();
-  }
 
   public _testSpawnEnemies(x: number, y: number, type: EnemyType | undefined, id: string): void {
     const enemy = EnemyFactory.createEnemy(
@@ -258,4 +254,19 @@ export class Room {
     return this.state === RoomState.TRIGGERED || this.state === RoomState.RESPAWN;
   }
 
+
+  public destroy(): void {
+    this.enemies.forEach(enemy => enemy.destroy());
+    this.enemies = [];
+    this.zone.destroy();
+    this.scene.events.off(Enemy.ENEMY_DIED);
+    this.scene.events.off(Barrel.SMASHED_EVENT);
+
+    this.enemySpawner?.destroy();
+    this.doors.forEach(door => door.destroy());
+    this.doors = [];
+    this.barrels.forEach(barrel => barrel.destroy());
+    this.barrels = [];
+    this.enemyTypes.clear();
+  }
 } 

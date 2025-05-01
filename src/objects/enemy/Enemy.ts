@@ -7,7 +7,7 @@ import { MainScene } from '../../scenes/MainScene';
 import { WeaponFactory } from '../weapons/WeaponFactory';
 import { Canon } from '../items/Canon';
 import { EnemyType } from './EnemyFactory';
-
+import { EnemyBehaviour } from './EnemyBehaviour';
 
 // Extend Physics.Arcade.Sprite for physics and preUpdate/update capabilities
 export abstract class Enemy extends Physics.Arcade.Sprite {
@@ -43,6 +43,7 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   protected pathUpdateInterval: number = 1000; // Update path every second
   public static readonly ENEMY_DIED = 'enemy-died';
   public static readonly TARGET_REACHED = 'target-reached';
+
 
   constructor(scene: Scene, x: number, y: number, id: string, enemyType: EnemyType, config?: EnemyConfig) {
     // Call Sprite constructor (use __WHITE texture key for tinting)
@@ -190,7 +191,7 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     }
 
     if (this.config?.behaviour) {
-      this.config.behaviour.preUpdate(time, delta);
+      this.config.behaviour.preUpdate(time, delta, this.scene, this);
     }
     // Update health bar position
     this.healthBar.update();
@@ -225,7 +226,6 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
         // If we've reached the end of the path, stop moving
         if (this.currentPathIndex >= this.currentPath.length) {
           if (this.body instanceof Phaser.Physics.Arcade.Body) {
-            console.log('enemy: stopping movement');
             this.body.setVelocity(0, 0);
             this.currentPathIndex = 0;
             this.currentPath = [];
@@ -289,26 +289,12 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   public die(): void {
     this.isDead = true;
 
-    // Destroy the health bar if it exists
-    if (this.healthBar) {
-      this.healthBar.destroy();
-    }
+    this.scene.events.emit(Enemy.ENEMY_DIED, { enemy: this });
 
     // Destroy the enemy sprite
     this.destroy();
   }
 
-  // Override the destroy method to ensure health bar is destroyed
-  override destroy(fromScene?: boolean): void {
-    // Destroy the health bar if it exists
-    if (this.healthBar) {
-      this.healthBar.destroy();
-    }
-    this.scene.events.emit(Enemy.ENEMY_DIED, { enemy: this });
-    // Call the parent destroy method
-    super.destroy(fromScene);
-
-  }
 
   // Method to check if enemy is dead
   public isEnemyDead(): boolean {
@@ -318,13 +304,6 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
   // Method to check if animations should be played
   protected shouldPlayAnimation(): boolean {
     return this.config !== null && this.config.animationKey !== undefined;
-  }
-
-  // Public method to destroy health bar
-  public destroyHealthBar(): void {
-    if (this.healthBar) {
-      this.healthBar.destroy();
-    }
   }
 
   protected performAttack(): void {
@@ -362,4 +341,25 @@ export abstract class Enemy extends Physics.Arcade.Sprite {
     }
   }
 
+
+  // Override the destroy method to ensure health bar is destroyed
+  override destroy(fromScene?: boolean): void {
+    if (this.scene) {
+      this.scene.events.off(Canon.CANON_EXPLODE);
+    }
+
+    // Destroy the health bar if it exists
+    if (this.healthBar) {
+      this.healthBar.destroy();
+    }
+    // Call the parent destroy method
+    this.player = null;
+    this.weapon = null;
+
+    this.config = null;
+    this.currentPath = [];
+
+
+    super.destroy(true);
+  }
 }

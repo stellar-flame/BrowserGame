@@ -5,6 +5,10 @@ import { DeployableWeapon } from './DeployableWeapon';
 
 export class WeaponFactory {
 
+  static getWeaponConfig(type: WeaponType): WeaponConfig | undefined {
+    return WEAPON_CONFIGS[type];
+  }
+
   static createPlayerWeapon(scene: Scene, type: WeaponType): Weapon {
     const config = WEAPON_CONFIGS[type];
     if (config.owner !== OWNER_PLAYER) {

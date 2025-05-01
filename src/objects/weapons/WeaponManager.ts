@@ -9,13 +9,13 @@ import { Weapon } from "./Weapon";
 export class WeaponManager {
   private player: Player | null = null;
   private scene: Scene;
+  private weaponUpgrades: WeaponUpgrade[] = [];
   public static readonly SWAPPED_EVENT = 'weapon-swapped';
 
   constructor(scene: Scene, player: Player) {
     this.scene = scene;
     this.player = player;
   }
-
 
   public setupWeaponUpgrades(itemsLayer: Phaser.Tilemaps.ObjectLayer): void {
     itemsLayer.objects.forEach((item) => {
@@ -30,6 +30,7 @@ export class WeaponManager {
         if (weaponType && this.player) {
           const weapon = WeaponFactory.createPlayerWeapon(this.scene, weaponType as unknown as WeaponType);
           const weaponUpgrade = new WeaponUpgrade(this.scene, item.x, item.y, weapon, this.player);
+          this.weaponUpgrades.push(weaponUpgrade);
           this.setupWeaponUpgrade(weaponUpgrade);
         }
       }
@@ -146,5 +147,21 @@ export class WeaponManager {
 
     // Add a screen shake effect
     this.scene.cameras.main.shake(200, 0.005);
+  }
+
+  public destroy(): void {
+    // Clean up all weapon upgrades
+    this.weaponUpgrades.forEach(upgrade => {
+      if (upgrade) {
+        upgrade.destroy();
+      }
+    });
+    this.weaponUpgrades = [];
+
+    // Remove event listeners
+    this.scene.events.off(WeaponManager.SWAPPED_EVENT);
+
+    this.player = null;
+    this.scene = null;
   }
 }

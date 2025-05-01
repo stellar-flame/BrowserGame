@@ -54,7 +54,7 @@ export class ItemManager {
     itemsLayer.objects.filter(item => item.name === 'Potion').forEach(item => {
       if (item.x && item.y) {
         const healAmount = item.properties?.find((p: { name: string; value: string }) => p.name === 'HealAmount')?.value as number;
-        this.spawnPotion(item.x, item.y, healAmount);
+        // this.spawnPotion(item.x, item.y, healAmount);
       }
     });
   }
@@ -88,7 +88,6 @@ export class ItemManager {
 
     const powerup: Powerup = this.powerups.get(x, y) as Powerup;
     if (powerup) {
-      console.log('*************************** spawning powerup');
       const speedBoostAmount = Phaser.Math.FloatBetween(2, 3);
       powerup.setSpeedBoost(speedBoostAmount);
       powerup.setActive(true);
@@ -117,7 +116,6 @@ export class ItemManager {
       this.powerups,
       (player: any, powerupObj: any) => {
         const powerup = powerupObj as Powerup;
-        console.log('*************************** powerup collected', powerup.isItemCollected());
         if (!powerup.isItemCollected()) {
           powerup.collect();
         }
@@ -127,14 +125,14 @@ export class ItemManager {
 
 
   public destroy(): void {
-
-
     // Remove event listeners
-    this.scene.events.off(Potion.COLLECTED_EVENT);
-    this.scene.events.off(Powerup.COLLECTED_EVENT);
+    this.scene.events.off(Barrel.SMASHED_EVENT);
 
-    // Clear all items
-    this.potions.clear(true, true);
-    this.powerups.clear(true, true);
+    // // // Clear all items
+    // this.potions.clear(true, true);
+    // this.powerups.clear(true, true);
+
+    this.player = null;
+    this.scene = null;
   }
 } 

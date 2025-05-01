@@ -128,4 +128,11 @@ export class MovementManager {
         }
         return { x: this.player.x, y: this.player.y };;
     }
+
+    public destroy(): void {
+        this.scene.events.off(Enemy.TARGET_REACHED);
+        this.scene.events.off(EnemySpawner.ENEMY_CREATED);
+        this.player = null;
+        this.pathfindingGrid = null;
+    }
 }
