@@ -98,7 +98,6 @@ export class MainScene extends Scene {
     this.setupPotions();
     this.setupEnemies();
     this.setupCollisions();
-    this.setupDeployableWeapon();
 
     // Add keyboard shortcut to toggle grid labels
     if (this.input && this.input.keyboard) {
@@ -117,10 +116,14 @@ export class MainScene extends Scene {
     }
 
 
+
     // Enable debug visualization
     // this.physics.world.createDebugGraphic();
 
   }
+
+
+
 
   private setupInput() {
     if (this.input && this.input.keyboard) {
@@ -132,6 +135,13 @@ export class MainScene extends Scene {
         }
       });
       this.mousePointer = this.input.activePointer;
+    }
+
+    if (this.input && this.input.keyboard) {
+      this.input.keyboard.on('keydown-R', () => {
+        this.shutdown();
+        this.scene.restart();
+      });
     }
   }
 
@@ -384,8 +394,8 @@ export class MainScene extends Scene {
     return this.movementManager;
   }
 
-  private setupDeployableWeapon() {
-
+  shutdown() {
+    this.roomManager?.destroy();
   }
 
 

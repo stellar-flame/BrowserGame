@@ -10,7 +10,6 @@ export class RoomManager {
   private rooms: Map<string, Room>;
   private currentRoom: Room | null = null;
   private player: Player;
-  public static readonly CURRENT_ROOM_CHANGED = 'current-room-changed';
 
   constructor(scene: Scene, player: Player) {
     this.scene = scene;
@@ -167,7 +166,6 @@ export class RoomManager {
 
     console.log(`Player entered room ${room.getId()}`);
     this.currentRoom = room;
-    this.scene.events.emit(RoomManager.CURRENT_ROOM_CHANGED, room);
   }
 
   public getCurrentRoom(): Room | null {
@@ -189,5 +187,6 @@ export class RoomManager {
   public destroy(): void {
     this.rooms.forEach(room => room.destroy());
     this.rooms.clear();
+    this.currentRoom = null;
   }
 } 
