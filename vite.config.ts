@@ -30,7 +30,6 @@ export default defineConfig({
       name: 'copy-assets',
       async closeBundle() {
         await copy('assets', 'dist/assets', {
-          recursive: true,
           overwrite: true
         });
       }

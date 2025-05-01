@@ -4,8 +4,6 @@
 
 A top-down dungeon shooter game built with Phaser 3 and TypeScript. Battle enemies, collect potions, and navigate through procedurally generated rooms in this action-packed adventure.
 
-![Game Screenshot](screenshot.png)
-
 ## Features
 
 - **Dynamic Room System**: Procedurally generated rooms with varying layouts and challenges
@@ -39,10 +37,10 @@ A top-down dungeon shooter game built with Phaser 3 and TypeScript. Battle enemi
 
 3. Start the development server:
    ```
-   npm start
+   npm run dev
    ```
 
-4. Open your browser and navigate to `http://localhost:5173`
+4. Open your browser and navigate to `http://localhost:3000`
 
 ## How to Play
 
@@ -89,6 +87,17 @@ src/
 └── utils/             # Utility functions and helpers
 ```
 
+### Asset Structure
+```
+assets/
+├── sprites/          # Game sprites
+│   ├── potion.png
+│   ├── shooter-sprite.png
+│   └── ...
+├── tiles.png         # Tileset
+└── dungeon-32.tmj    # Tiled map file
+```
+
 ### Building for Production
 
 ```
@@ -96,6 +105,15 @@ npm run build
 ```
 
 This will create a production-ready build in the `dist` directory.
+
+### Preview Production
+```
+npm run preview
+```
+
+### Deployment
+The game is automatically deployed to GitHub Pages when changes are pushed to the main branch.
+You can access it at: https://stellar-flame.github.io/browser-game/
 
 ## License
 
