@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { resolve } from 'path';
 
 export default defineConfig({
   base: process.env.NODE_ENV === 'production' ? '/browser-game/' : '/',
@@ -9,14 +10,18 @@ export default defineConfig({
     open: true
   },
   build: {
-    assetsDir: 'assets',
     outDir: 'dist',
+    assetsDir: 'assets',
     emptyOutDir: true,
     chunkSizeWarningLimit: 1600,
     rollupOptions: {
       output: {
         manualChunks: undefined,
       },
+      input: {
+        main: resolve(__dirname, 'index.html')
+      }
     },
   },
+  publicDir: 'assets'
 }); 
