@@ -189,6 +189,13 @@ export class Weapon {
   }
 
   public destroy(): void {
-    this.bullets?.destroy();
+    if (this.bullets) {
+      this.bullets.clear(true, true); // Destroys all bullets
+      this.bullets.destroy();         // Destroys the group itself
+      this.bullets = undefined;
+    }
+
+    // Null references for cleanup (optional, helps GC)
+    this.displayConfig = null;
   }
 } 

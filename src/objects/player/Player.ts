@@ -19,7 +19,7 @@ export class Player extends Physics.Arcade.Sprite {
     left: Input.Keyboard.Key;
     right: Input.Keyboard.Key;
   };
-  private isTeleporting: boolean = false;
+
   private weapon: Weapon;
   private deployableWeapon: DeployableWeapon | null = null;
 
@@ -135,11 +135,6 @@ export class Player extends Physics.Arcade.Sprite {
   // Pre-update is valid for Sprites
   preUpdate(time: number, delta: number) {
     super.preUpdate(time, delta);
-
-    // Skip movement if teleporting
-    if (this.isTeleporting) {
-      return;
-    }
 
     // Cast body to Arcade.Body to access physics methods
     const body = this.body as Physics.Arcade.Body;
@@ -417,24 +412,24 @@ export class Player extends Physics.Arcade.Sprite {
   }
 
   public destroy(fromScene?: boolean): void {
-    this.weaponOverlay.destroy();
-    this.healthBar.destroy();
-    this.targetCircle.destroy();
-    if (this.speedBoostTrail) {
-      this.speedBoostTrail.destroy();
+    if (this.wasdKeys) {
+      this.scene.input.keyboard.removeKey(this.wasdKeys.up);
+      this.scene.input.keyboard.removeKey(this.wasdKeys.down);
+      this.scene.input.keyboard.removeKey(this.wasdKeys.left);
+      this.scene.input.keyboard.removeKey(this.wasdKeys.right);
     }
-    if (this.floatingImage) {
-      this.floatingImage.destroy();
-    }
-    // Deactivate all bullets when player is destroyed
-    if (this.weapon) {
-      this.weapon.deactivateAllBullets();
-      this.weapon.destroy();
-    }
+
+    this.weapon?.destroy?.();
+    this.deployableWeapon?.destroy?.();
+
+    this.targetCircle?.destroy?.();
+    this.healthBar?.destroy?.();
+    this.weaponOverlay?.destroy?.();
+    this.speedBoostTrail?.stop();
+    this.speedBoostTrail?.destroy();
+    this.floatingImage?.destroy?.();
     super.destroy(fromScene);
-    if (this.speedBoostTimer) {
-      this.speedBoostTimer.destroy();
-    }
+
   }
 
   private handleAutoTargeting(): void {

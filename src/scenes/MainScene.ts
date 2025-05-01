@@ -395,6 +395,7 @@ export class MainScene extends Scene {
   }
 
   shutdown() {
+    this.player.destroy();
     this.roomManager?.destroy();
   }
 
