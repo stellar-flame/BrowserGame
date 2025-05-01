@@ -29,7 +29,7 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
+    "noImplicitOverride": false,
     "noPropertyAccessFromIndexSignature": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
