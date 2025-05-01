@@ -3,14 +3,14 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   base: process.env.NODE_ENV === 'production' ? '/browser-game/' : '/',
   server: {
-    host: 'localhost',
-    port: 5173,
+    host: true,
+    port: 3000,
     strictPort: true,
     open: true
   },
   build: {
-    outDir: 'dist',
     assetsDir: 'assets',
+    outDir: 'dist',
     emptyOutDir: true,
     chunkSizeWarningLimit: 1600,
     rollupOptions: {

@@ -43,33 +43,33 @@ export class MainScene extends Scene {
 
   private loadGameAssets() {
     // Load sprites
-    this.loadSprite('player-sprite', 'assets/sprites/shooter-sprite.png', 64, 64);
-    this.loadSprite('skeleton-sprite', 'assets/sprites/skeleton.png', 16, 32);
-    this.loadSprite('zombie-sprite', 'assets/sprites/zombie.png', 32, 32);
-    this.loadSprite('ninja-sprite', 'assets/sprites/ninja.png', 16, 32);
-    this.loadSprite('chomper-sprite', 'assets/sprites/chomper.png', 16, 32);
-    this.loadSprite('canon', 'assets/sprites/canon.png', 16, 16);
-    this.loadSprite('troll-sprite', 'assets/sprites/troll-sprite.png', 32, 32);
-    this.loadSprite('arrow', 'assets/sprites/arrow.png', 32, 16);
-    this.loadSprite('ninja-star', 'assets/sprites/ninja-star.png', 32, 32);
-    this.loadSprite('smashed-barrel', 'assets/sprites/smashed-barrel.png', 32, 32);
-    this.loadSprite('weapon-upgrade', 'assets/sprites/weapon-upgrade.png', 32, 32);
-    this.loadSprite('slug-sprite', 'assets/sprites/slug-sprite.png', 16, 32);
-    this.loadSprite('turret-animation', 'assets/sprites/turret-sheet.png', 32, 32);
+    this.loadSprite('player-sprite', '/assets/sprites/shooter-sprite.png', 64, 64);
+    this.loadSprite('skeleton-sprite', '/assets/sprites/skeleton.png', 16, 32);
+    this.loadSprite('zombie-sprite', '/assets/sprites/zombie.png', 32, 32);
+    this.loadSprite('ninja-sprite', '/assets/sprites/ninja.png', 16, 32);
+    this.loadSprite('chomper-sprite', '/assets/sprites/chomper.png', 16, 32);
+    this.loadSprite('canon', '/assets/sprites/canon.png', 16, 16);
+    this.loadSprite('troll-sprite', '/assets/sprites/troll-sprite.png', 32, 32);
+    this.loadSprite('arrow', '/assets/sprites/arrow.png', 32, 16);
+    this.loadSprite('ninja-star', '/assets/sprites/ninja-star.png', 32, 32);
+    this.loadSprite('smashed-barrel', '/assets/sprites/smashed-barrel.png', 32, 32);
+    this.loadSprite('weapon-upgrade', '/assets/sprites/weapon-upgrade.png', 32, 32);
+    this.loadSprite('slug-sprite', '/assets/sprites/slug-sprite.png', 16, 32);
+    this.loadSprite('turret-animation', '/assets/sprites/turret-sheet.png', 32, 32);
     // Load tiles and maps
-    this.load.image('tiles-32', 'assets/tiles.png');
-    this.load.tilemapTiledJSON('dungeon-map', 'assets/dungeon-32.tmj');
+    this.load.image('tiles-32', '/assets/tiles.png');
+    this.load.tilemapTiledJSON('dungeon-map', '/assets/dungeon-32.tmj');
 
     // Load props
-    this.load.image('particle', 'assets/sprites/particle.png');
-    this.load.image('door-open', 'assets/sprites/door-open.png');
-    this.load.image('door-closed', 'assets/sprites/door-closed.png');
-    this.load.image('barrel', 'assets/sprites/barrel.png');
-    this.load.image('potion', 'assets/sprites/potion.png');
-    this.load.image('powerup', 'assets/sprites/powerup.png');
-    this.load.image('player-bullet-1', 'assets/sprites/player-bullet-1.png');
-    this.load.image('turret', 'assets/sprites/turret.png');
-    this.load.image('slime-shot', 'assets/sprites/slime-shot.png');
+    this.load.image('particle', '/assets/sprites/particle.png');
+    this.load.image('door-open', '/assets/sprites/door-open.png');
+    this.load.image('door-closed', '/assets/sprites/door-closed.png');
+    this.load.image('barrel', '/assets/sprites/barrel.png');
+    this.load.image('potion', '/assets/sprites/potion.png');
+    this.load.image('powerup', '/assets/sprites/powerup.png');
+    this.load.image('player-bullet-1', '/assets/sprites/player-bullet-1.png');
+    this.load.image('turret', '/assets/sprites/turret.png');
+    this.load.image('slime-shot', '/assets/sprites/slime-shot.png');
     // Load sound effects
     // this.load.audio('weapon-upgrade', 'assets/sounds/weapon-upgrade.mp3');
   }
