@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import { copy } from 'fs-extra';
 
 export default defineConfig({
   base: process.env.NODE_ENV === 'production' ? '/browser-game/' : '/',
@@ -23,5 +24,16 @@ export default defineConfig({
       }
     },
   },
-  publicDir: 'assets'
+  publicDir: 'assets',
+  plugins: [
+    {
+      name: 'copy-assets',
+      async closeBundle() {
+        await copy('assets', 'dist/assets', {
+          recursive: true,
+          overwrite: true
+        });
+      }
+    }
+  ]
 }); 
