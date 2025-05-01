@@ -114,9 +114,6 @@ export class MainScene extends Scene {
         }
       });
     }
-
-
-
     // Enable debug visualization
     // this.physics.world.createDebugGraphic();
 
@@ -137,7 +134,7 @@ export class MainScene extends Scene {
       this.mousePointer = this.input.activePointer;
     }
 
-    if (this.input && this.input.keyboard) {
+    if (this.gameOver && this.input && this.input.keyboard) {
       this.input.keyboard.on('keydown-R', () => {
         this.shutdown();
         this.scene.restart();
