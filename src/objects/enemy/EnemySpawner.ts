@@ -60,6 +60,7 @@ export class EnemySpawner {
         }
 
         const point = points[pointIndex % points.length];
+        console.log(point, points, pointIndex);
         if (!point) return;
 
         // Create spawn effect
@@ -138,14 +139,13 @@ export class EnemySpawner {
     }
 
     private async getRandomPoint(): Promise<{ x: number, y: number }[] | null> {
-        const numberOfPoints = 8;
+        const numberOfPoints = 20;
         const pathfindingGrid = (this.scene as MainScene).getPathfindingGrid();
-        const easystar = pathfindingGrid.getEasyStar();
-        const radius = Phaser.Math.Between(200, 500);
 
         const spawnPoints: { x: number, y: number }[] = [];
         for (let i = 0; i < numberOfPoints; i++) {
             const angle = (Math.PI * 2 * i) / numberOfPoints;
+            const radius = Phaser.Math.Between(200, 600);
             const x = Math.round(this.player.x + radius * Math.cos(angle));
             const y = Math.round(this.player.y + radius * Math.sin(angle));
             if (!this.room.inRoom(x, y)) {
@@ -153,26 +153,10 @@ export class EnemySpawner {
             }
             const gridX = pathfindingGrid.getGridX(x);
             const gridY = pathfindingGrid.getGridY(y);
-            const playerGridX = pathfindingGrid.getGridX(this.player.x);
-            const playerGridY = pathfindingGrid.getGridY(this.player.y);
 
-            if (pathfindingGrid.isTileWalkable(gridX, gridY)) {
-                const pathPromise = new Promise<boolean>((resolve) => {
-                    easystar.findPath(playerGridX, playerGridY, gridX, gridY, (path) => {
-                        if (path && path.length > 0) {
-                            resolve(true);
-                        }
-                        else {
-                            resolve(false);
-                        }
-                    });
-                });
-
-                easystar.calculate();
-                const hasPath = await pathPromise;
-                if (hasPath) {
-                    spawnPoints.push({ x, y });
-                }
+            if (pathfindingGrid.isTileWalkable(gridX, gridY) &&
+                this.room.getZone().getBounds().contains(x, y)) {
+                spawnPoints.push({ x, y });
             }
         }
         if (spawnPoints.length > 0) {
