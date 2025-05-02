@@ -4,7 +4,7 @@ import { Bullet } from "../weapons/Bullet";
 
 export class Canon extends Phaser.Physics.Arcade.Sprite {
     private actionTimer: number = 0;
-    private actionInterval: number = 10000;
+    private actionInterval: number = 5000;
     public static readonly CANON_EXPLODE = 'canon-explode';
     private particles: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
 

@@ -13,7 +13,7 @@ export interface EnemyBehaviour {
 
 export class DropCanonBehaviour implements EnemyBehaviour {
     private actionTimer: number = 0;
-    private actionInterval: number = 2000;
+    private actionInterval: number = 4000;
     private canons: Phaser.Physics.Arcade.Group | null = null;
     private isDestroying: boolean = false;
     private direction: { x: number, y: number }[] =

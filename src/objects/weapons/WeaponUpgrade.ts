@@ -157,27 +157,27 @@ export class WeaponUpgrade extends Phaser.Physics.Arcade.Sprite {
 
   public destroy(): void {
     // Clean up event listeners
-    // if (this.scene) {
-    //   this.scene.events.off('update', this.updateGlowEffect, this);
-    // }
+    if (this.scene) {
+      this.scene.events.off('update', this.updateGlowEffect, this);
+    }
 
     // Destroy glow effect
-    // if (this.glowEffect) {
-    //   this.glowEffect.destroy();
-    //   this.glowEffect = null;
-    // }
+    if (this.glowEffect) {
+      this.glowEffect.destroy();
+      this.glowEffect = null;
+    }
 
-    // // Destroy weapon name text
-    // if (this.weaponNameText) {
-    //   this.weaponNameText.destroy();
-    //   this.weaponNameText = null;
-    // }
+    // Destroy weapon name text
+    if (this.weaponNameText) {
+      this.weaponNameText.destroy();
+      this.weaponNameText = null;
+    }
 
-    // // Null out references
-    // this.weapon = null;
-    // this.player = null;
+    // Null out references
+    this.weapon = null;
+    this.player = null;
 
-    // super.destroy(true);
+    super.destroy(true);
 
   }
 }

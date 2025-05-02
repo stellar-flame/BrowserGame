@@ -260,7 +260,6 @@ export class MainScene extends Scene {
     // Collisions with walls
     if (this.wallsLayer) {
       this.physics.add.collider(this.player, this.wallsLayer); // Player vs Walls
-
     }
 
     if (this.weaponManager) {
