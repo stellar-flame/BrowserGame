@@ -95,8 +95,12 @@ export class WeaponManager {
         oldWeapon: this.player.getWeapon(),
         newWeapon: newWeapon
       });
+
+      this.setupCollisions();
     }
   }
+
+
 
   private createPlayerUpgradeEffect(): void {
     if (!this.player) {
@@ -158,8 +162,6 @@ export class WeaponManager {
     });
     this.weaponUpgrades = [];
 
-    // Remove event listeners
-    this.scene.events.off(WeaponManager.SWAPPED_EVENT);
 
     this.player = null;
     this.scene = null;

@@ -97,7 +97,7 @@ export const WEAPON_CONFIGS = {
   SLIME_SHOT: {
     type: TYPE_RANGED,
     owner: OWNER_ENEMY,
-    damage: 10,
+    damage: 30,
     attackRate: 1000,
     bulletSpeed: 400,
     bulletSprite: 'slime-shot',

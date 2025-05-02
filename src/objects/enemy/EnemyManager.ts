@@ -173,6 +173,11 @@ export class EnemyManager {
   }
 
   public destroy(): void {
+
+    if (this.scene) {
+      this.scene.events.off(WeaponManager.SWAPPED_EVENT);
+    }
+
     this.enemies.destroy(true);
     this.enemies = null;
     this.player = null;

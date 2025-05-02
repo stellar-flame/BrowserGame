@@ -9,24 +9,6 @@ export class Bullet extends Physics.Arcade.Sprite {
     constructor(scene: Scene, x: number, y: number, textureKey: string = '__WHITE') {
         // Call Sprite constructor with the provided texture
         super(scene, x, y, 'arrow');
-
-        // // Add to scene's display list and update list
-        // scene.add.existing(this);
-        // scene.physics.add.existing(this);
-
-        // // Initial visual setup (will be confirmed in fire method)
-        // this.setOrigin(0.5, 0.5); // Center the origin
-
-        // // Initial physics setup (cast to Arcade.Body)
-        // const body = this.body as Physics.Arcade.Body;
-        // body.setCollideWorldBounds(false); // Don't stop at bounds
-        // body.onWorldBounds = true;       // But detect when hitting bounds
-        // body.setAllowGravity(false);
-        // body.setBounce(0);
-
-
-        // // Deactivate by default
-        // this.deactivate();
     }
 
     setSpeed(speed: number): void {
