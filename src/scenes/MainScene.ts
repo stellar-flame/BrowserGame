@@ -325,12 +325,36 @@ export class MainScene extends Scene {
       fontFamily: 'Arial'
     }).setOrigin(0.5).setDepth(101);
 
-    // Add restart instruction
-    this.restartText = this.add.text(cameraCenterX, cameraCenterY + 30, 'Press R to restart', {
+    // Create restart button background
+    const buttonBg = this.add.rectangle(cameraCenterX, cameraCenterY + 30, 200, 50, 0x666666);
+    buttonBg.setOrigin(0.5);
+    buttonBg.setDepth(101);
+    buttonBg.setInteractive();
+
+    // Create restart button text
+    this.restartText = this.add.text(cameraCenterX, cameraCenterY + 30, 'RESTART', {
       fontSize: '32px',
       color: '#ffffff',
       fontFamily: 'Arial'
-    }).setOrigin(0.5).setDepth(101);
+    }).setOrigin(0.5).setDepth(102);
+
+    // Add button hover effects
+    buttonBg.on('pointerover', () => {
+      buttonBg.setFillStyle(0x888888);
+      this.restartText?.setColor('#ffff00');
+    });
+
+    buttonBg.on('pointerout', () => {
+      buttonBg.setFillStyle(0x666666);
+      this.restartText?.setColor('#ffffff');
+    });
+
+    // Add click handler
+    buttonBg.on('pointerdown', () => {
+      this.shutdown();
+      this.scene.restart();
+      this.gameOver = false;
+    });
 
     // Set game over flag
     this.gameOver = true;
