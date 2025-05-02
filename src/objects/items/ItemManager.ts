@@ -54,7 +54,7 @@ export class ItemManager {
     itemsLayer.objects.filter(item => item.name === 'Potion').forEach(item => {
       if (item.x && item.y) {
         const healAmount = item.properties?.find((p: { name: string; value: string }) => p.name === 'HealAmount')?.value as number;
-        // this.spawnPotion(item.x, item.y, healAmount);
+        this.spawnPotion(item.x, item.y, healAmount);
       }
     });
   }
