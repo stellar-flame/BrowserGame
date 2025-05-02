@@ -16,13 +16,6 @@ import { MainScene } from '../../scenes/MainScene';
 export class Player extends Physics.Arcade.Sprite {
   // Removed redundant body declaration, it's inherited
 
-  private wasdKeys: {
-    up: Input.Keyboard.Key;
-    down: Input.Keyboard.Key;
-    left: Input.Keyboard.Key;
-    right: Input.Keyboard.Key;
-  };
-
   private weapon: Weapon;
   private deployableWeapon: DeployableWeapon | null = null;
 
@@ -45,7 +38,7 @@ export class Player extends Physics.Arcade.Sprite {
   private speedBoostTrail: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
   private floatingImage: Phaser.GameObjects.Image | null = null;
 
-  public moveSpeed: number = 160; // Base movement speed
+  public moveSpeed: number = 200; // Base movement speed
   public isSpeedBoosted: boolean = false;
 
   private touchPosition: { x: number; y: number } | null = null;
@@ -147,20 +140,31 @@ export class Player extends Physics.Arcade.Sprite {
     body.setVelocity(0);
 
     if (this.touchPosition) {
-      // Calculate angle to touch position
-      const angle = Phaser.Math.Angle.Between(this.x, this.y, this.touchPosition.x, this.touchPosition.y);
+      // Calculate distance to touch position
+      const distance = Phaser.Math.Distance.Between(this.x, this.y, this.touchPosition.x, this.touchPosition.y);
 
-      // Calculate velocity based on angle
-      const velocityX = Math.cos(angle) * this.moveSpeed;
-      const velocityY = Math.sin(angle) * this.moveSpeed;
+      // Only move if we're not too close to the target
+      if (distance > 10) {
+        // Calculate angle to touch position
+        const angle = Phaser.Math.Angle.Between(this.x, this.y, this.touchPosition.x, this.touchPosition.y);
 
-      body.setVelocity(velocityX, velocityY);
+        // Calculate velocity based on angle and distance
+        // Reduce speed when getting closer to target
+        const speedMultiplier = Math.min(1, distance / 50);
+        const velocityX = Math.cos(angle) * this.moveSpeed * speedMultiplier;
+        const velocityY = Math.sin(angle) * this.moveSpeed * speedMultiplier;
 
-      // Update animation based on movement
-      this.anims.play('player-walk', true);
+        body.setVelocity(velocityX, velocityY);
 
-      // Update sprite direction
-      this.flipX = velocityX < 0;
+        // Update animation based on movement
+        this.anims.play('player-walk', true);
+
+        // Update sprite direction
+        this.flipX = velocityX < 0;
+      } else {
+        // Stop animation when close to target
+        this.anims.play('player-idle', true);
+      }
     } else {
       // Stop animation when not moving
       this.anims.play('player-idle', true);
@@ -465,14 +469,6 @@ export class Player extends Physics.Arcade.Sprite {
       this.scene.events.off(Potion.COLLECTED_EVENT);
       this.scene.events.off(Powerup.COLLECTED_EVENT);
       this.scene.events.off(Room.ROOM_STATE_CHANGED);
-
-
-      if (this.wasdKeys) {
-        this.scene.input.keyboard.removeKey(this.wasdKeys.up);
-        this.scene.input.keyboard.removeKey(this.wasdKeys.down);
-        this.scene.input.keyboard.removeKey(this.wasdKeys.left);
-        this.scene.input.keyboard.removeKey(this.wasdKeys.right);
-      }
     }
     this.weapon?.destroy?.();
     this.deployableWeapon?.destroy?.();
@@ -483,7 +479,7 @@ export class Player extends Physics.Arcade.Sprite {
     this.speedBoostTrail?.destroy();
     this.floatingImage?.destroy?.();
 
-    super.destroy(true);
+    // super.destroy(true);
   }
 
 
