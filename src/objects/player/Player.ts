@@ -10,6 +10,7 @@ import { RoomState } from '../rooms/Room';
 import { Room } from '../rooms/Room';
 import { DeployableWeapon } from '../weapons/DeployableWeapon';
 import { Canon } from '../items/Canon';
+import { MainScene } from '../../scenes/MainScene';
 
 // Extend Physics.Arcade.Sprite for physics and preUpdate
 export class Player extends Physics.Arcade.Sprite {
@@ -47,13 +48,16 @@ export class Player extends Physics.Arcade.Sprite {
   public moveSpeed: number = 160; // Base movement speed
   public isSpeedBoosted: boolean = false;
 
+  private touchPosition: { x: number; y: number } | null = null;
+
   constructor(scene: Scene, x: number, y: number) {
-    super(scene, x, y, 'player-sprite'); // Use the sprite sheet
+    super(scene, x, y, 'player-sprite');
 
     // Add to scene's display list and update list
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.setDepth(1);
+
     // Set up physics body
     const body = this.body as Physics.Arcade.Body;
     body.setCollideWorldBounds(true);
@@ -61,25 +65,27 @@ export class Player extends Physics.Arcade.Sprite {
     body.setDrag(300);
     body.setMaxVelocity(200, 200);
 
-    // Set up input
-    this.wasdKeys = (scene.input as Input.InputPlugin).keyboard!.addKeys({
-      up: Input.Keyboard.KeyCodes.W,
-      down: Input.Keyboard.KeyCodes.S,
-      left: Input.Keyboard.KeyCodes.A,
-      right: Input.Keyboard.KeyCodes.D,
-    }) as {
-      up: Input.Keyboard.Key;
-      down: Input.Keyboard.Key;
-      left: Input.Keyboard.Key;
-      right: Input.Keyboard.Key;
-    };
+    // Set up touch input
+    scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      this.touchPosition = { x: pointer.worldX, y: pointer.worldY };
+    });
+
+    scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      if (pointer.isDown) {
+        this.touchPosition = { x: pointer.worldX, y: pointer.worldY };
+      }
+    });
+
+    scene.input.on('pointerup', () => {
+      this.touchPosition = null;
+    });
 
     // Initialize weapon with LEVEL_1_GUN configuration
     this.weapon = WeaponFactory.createPlayerWeapon(scene, 'BOLTSPITTER');
 
     // Create target circle
     this.targetCircle = scene.add.graphics();
-    this.targetCircle.setDepth(10); // Ensure it's drawn above other elements
+    this.targetCircle.setDepth(10);
 
     // Initialize health bar
     this.healthBar = new HealthBar(scene, this, 150, 10, true);
@@ -105,9 +111,7 @@ export class Player extends Physics.Arcade.Sprite {
       }
     });
 
-
     this.createAnimations(scene);
-
   }
 
   private createAnimations(scene: Scene) {
@@ -139,34 +143,26 @@ export class Player extends Physics.Arcade.Sprite {
   preUpdate(time: number, delta: number) {
     super.preUpdate(time, delta);
 
-    // Cast body to Arcade.Body to access physics methods
     const body = this.body as Physics.Arcade.Body;
-
     body.setVelocity(0);
 
-    // Track if the player is moving
-    let isMoving = false;
+    if (this.touchPosition) {
+      // Calculate angle to touch position
+      const angle = Phaser.Math.Angle.Between(this.x, this.y, this.touchPosition.x, this.touchPosition.y);
 
-    if (this.wasdKeys.left.isDown) {
-      body.setVelocityX(-this.moveSpeed);
-      this.flipX = true; // Flip the sprite horizontally
-      isMoving = true;
-    } else if (this.wasdKeys.right.isDown) {
-      body.setVelocityX(this.moveSpeed);
-      this.flipX = false; // Flip the sprite horizontally
-      isMoving = true;
-    } else if (this.wasdKeys.up.isDown) {
-      body.setVelocityY(-this.moveSpeed);
-      isMoving = true;
-    } else if (this.wasdKeys.down.isDown) {
-      body.setVelocityY(this.moveSpeed);
-      isMoving = true;
-    }
+      // Calculate velocity based on angle
+      const velocityX = Math.cos(angle) * this.moveSpeed;
+      const velocityY = Math.sin(angle) * this.moveSpeed;
 
-    // Play the appropriate animation based on movement
-    if (isMoving) {
+      body.setVelocity(velocityX, velocityY);
+
+      // Update animation based on movement
       this.anims.play('player-walk', true);
+
+      // Update sprite direction
+      this.flipX = velocityX < 0;
     } else {
+      // Stop animation when not moving
       this.anims.play('player-idle', true);
     }
 
@@ -404,14 +400,35 @@ export class Player extends Physics.Arcade.Sprite {
 
 
   private handleAutoTargeting(): void {
-    // Get mouse position
-    const mouseX = this.scene.input.activePointer.worldX;
-    const mouseY = this.scene.input.activePointer.worldY;
+    // Get the enemy manager from the scene
+    const scene = this.scene as MainScene;
+    const enemyManager = scene.getEnemyManager();
+    const enemies = enemyManager.getEnemies();
 
+    if (enemies.length === 0) return;
 
-    // Calculate angle to mouse position
-    this.weapon.fireInDirection(this, mouseX, mouseY);
+    // Find the nearest enemy
+    let nearestEnemy = enemies[0];
+    let nearestDistance = Phaser.Math.Distance.Between(
+      this.x, this.y,
+      nearestEnemy.x, nearestEnemy.y
+    );
 
+    for (let i = 1; i < enemies.length; i++) {
+      const enemy = enemies[i];
+      const distance = Phaser.Math.Distance.Between(
+        this.x, this.y,
+        enemy.x, enemy.y
+      );
+
+      if (distance < nearestDistance) {
+        nearestEnemy = enemy;
+        nearestDistance = distance;
+      }
+    }
+
+    // Fire at the nearest enemy
+    this.weapon.fireInDirection(this, nearestEnemy.x, nearestEnemy.y);
   }
 
   private showFloatingImage(texture: string): void {
@@ -444,29 +461,29 @@ export class Player extends Physics.Arcade.Sprite {
 
   public destroy(): void {
     if (this.scene) {
-      // this.scene.events.off(Canon.CANON_EXPLODE);
-      // this.scene.events.off(Potion.COLLECTED_EVENT);
-      // this.scene.events.off(Powerup.COLLECTED_EVENT);
-      // this.scene.events.off(Room.ROOM_STATE_CHANGED);
+      this.scene.events.off(Canon.CANON_EXPLODE);
+      this.scene.events.off(Potion.COLLECTED_EVENT);
+      this.scene.events.off(Powerup.COLLECTED_EVENT);
+      this.scene.events.off(Room.ROOM_STATE_CHANGED);
 
 
-      // if (this.wasdKeys) {
-      //   this.scene.input.keyboard.removeKey(this.wasdKeys.up);
-      //   this.scene.input.keyboard.removeKey(this.wasdKeys.down);
-      //   this.scene.input.keyboard.removeKey(this.wasdKeys.left);
-      //   this.scene.input.keyboard.removeKey(this.wasdKeys.right);
-      // }
+      if (this.wasdKeys) {
+        this.scene.input.keyboard.removeKey(this.wasdKeys.up);
+        this.scene.input.keyboard.removeKey(this.wasdKeys.down);
+        this.scene.input.keyboard.removeKey(this.wasdKeys.left);
+        this.scene.input.keyboard.removeKey(this.wasdKeys.right);
+      }
     }
-    // this.weapon?.destroy?.();
-    // this.deployableWeapon?.destroy?.();
-    // this.targetCircle?.destroy?.();
-    // this.healthBar?.destroy?.();
-    // this.weaponOverlay?.destroy?.();
-    // this.speedBoostTrail?.stop();
-    // this.speedBoostTrail?.destroy();
-    // this.floatingImage?.destroy?.();
+    this.weapon?.destroy?.();
+    this.deployableWeapon?.destroy?.();
+    this.targetCircle?.destroy?.();
+    this.healthBar?.destroy?.();
+    this.weaponOverlay?.destroy?.();
+    this.speedBoostTrail?.stop();
+    this.speedBoostTrail?.destroy();
+    this.floatingImage?.destroy?.();
 
-    // super.destroy(true);
+    super.destroy(true);
   }
 
 
