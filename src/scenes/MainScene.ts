@@ -8,8 +8,7 @@ import { EnemyManager } from '../objects/enemy/EnemyManager';
 import { ItemManager } from '../objects/items/ItemManager';
 import { WeaponManager } from '../objects/weapons/WeaponManager';
 import { MovementManager } from '../objects/enemy/MovementManager';
-import { Enemy } from '../objects/enemy/Enemy';
-import { EnemySpawner } from '../objects/enemy/EnemySpawner';
+import { Room, RoomState } from '../objects/rooms/Room';
 
 export class MainScene extends Scene {
   // Core game objects
@@ -210,6 +209,13 @@ export class MainScene extends Scene {
     this.roomManager = new RoomManager(this, this.player);
     const map = this.make.tilemap({ key: 'dungeon-map' });
     this.roomManager.initializeRooms(map.getObjectLayer('Rooms') as Phaser.Tilemaps.ObjectLayer);
+
+    // Listen for room state changes
+    this.events.on(Room.ROOM_STATE_CHANGED, (room: Room, state: RoomState) => {
+      if (room.getId() === '5' && state === RoomState.ROOM_CLEARED) {
+        this.handleWin();
+      }
+    });
   }
 
   private setupPathfinding() {
@@ -360,6 +366,65 @@ export class MainScene extends Scene {
     this.gameOver = true;
   }
 
+  private handleWin(): void {
+    if (this.gameOver) return;
+
+    // Stop all movement
+    this.player.setVelocity(0, 0);
+
+    // Disable player controls
+    this.player.setActive(false);
+
+    // Get camera center position
+    const cameraCenterX = this.cameras.main.scrollX + this.cameras.main.width / 2;
+    const cameraCenterY = this.cameras.main.scrollY + this.cameras.main.height / 2;
+
+    // Create a semi-transparent overlay at the center of the screen
+    const overlay = this.add.rectangle(cameraCenterX, cameraCenterY, 300, 200, 0x000000, 0.7);
+    overlay.setOrigin(0.5);
+    overlay.setDepth(100); // Ensure it's above other elements
+
+    // Show victory text at the center of the screen
+    this.gameOverText = this.add.text(cameraCenterX, cameraCenterY - 30, 'VICTORY!', {
+      fontSize: '64px',
+      color: '#00ff00',
+      fontFamily: 'Arial'
+    }).setOrigin(0.5).setDepth(101);
+
+    // Create restart button background
+    const buttonBg = this.add.rectangle(cameraCenterX, cameraCenterY + 30, 200, 50, 0x666666);
+    buttonBg.setOrigin(0.5);
+    buttonBg.setDepth(101);
+    buttonBg.setInteractive();
+
+    // Create restart button text
+    this.restartText = this.add.text(cameraCenterX, cameraCenterY + 30, 'PLAY AGAIN', {
+      fontSize: '32px',
+      color: '#ffffff',
+      fontFamily: 'Arial'
+    }).setOrigin(0.5).setDepth(102);
+
+    // Add button hover effects
+    buttonBg.on('pointerover', () => {
+      buttonBg.setFillStyle(0x888888);
+      this.restartText?.setColor('#ffff00');
+    });
+
+    buttonBg.on('pointerout', () => {
+      buttonBg.setFillStyle(0x666666);
+      this.restartText?.setColor('#ffffff');
+    });
+
+    // Add click handler
+    buttonBg.on('pointerdown', () => {
+      this.shutdown();
+      this.scene.restart();
+      this.gameOver = false;
+    });
+
+    // Set game over flag
+    this.gameOver = true;
+  }
 
   // Getter for player
   public getPlayer(): Player {

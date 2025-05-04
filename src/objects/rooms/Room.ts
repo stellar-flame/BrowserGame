@@ -29,6 +29,9 @@ export class Room {
   private workingSpawnPoint: { x: number, y: number } | null = null;
   public static readonly ROOM_STATE_CHANGED = 'room-state-changed';
 
+  public getId(): string {
+    return this.id;
+  }
 
   public constructor(
     scene: Scene,
@@ -103,15 +106,13 @@ export class Room {
   }
 
 
-  public getId(): string {
-    return this.id;
-  }
-
-
   public getZone(): GameObjects.Zone {
     return this.zone;
   }
 
+  public getEnemyTriggerZone(): GameObjects.Zone | null {
+    return this.enemyTriggerZone;
+  }
 
   public addDoor(door: Door): void {
     this.doors.push(door);

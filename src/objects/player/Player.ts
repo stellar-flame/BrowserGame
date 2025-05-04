@@ -28,10 +28,6 @@ export class Player extends Physics.Arcade.Sprite {
   private isInvulnerable: boolean = false;
   private invulnerabilityDuration: number = 1000; // 1 second of invulnerability after being hit
 
-  // Auto-targeting system
-  private targetCircle: GameObjects.Graphics;
-  private targetRadius: number = 20;
-
   private healthBar: HealthBar;
   private weaponOverlay: WeaponOverlay;
   private speedBoostTimer: Phaser.Time.TimerEvent | null = null;
@@ -42,10 +38,21 @@ export class Player extends Physics.Arcade.Sprite {
   public isSpeedBoosted: boolean = false;
 
   private touchPosition: { x: number; y: number } | null = null;
+  private cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
+  private keys: { [key: string]: Phaser.Input.Keyboard.Key } | null = null;
 
   constructor(scene: Scene, x: number, y: number) {
     super(scene, x, y, 'player-sprite');
 
+    this.setupPhysics(scene);
+    this.setupInput(scene);
+    this.setupWeapons(scene);
+    this.setupUI(scene);
+    this.setupEventListeners(scene);
+    this.setupAnimations(scene);
+  }
+
+  private setupPhysics(scene: Scene): void {
     // Add to scene's display list and update list
     scene.add.existing(this);
     scene.physics.add.existing(this);
@@ -57,6 +64,17 @@ export class Player extends Physics.Arcade.Sprite {
     body.setBounce(0);
     body.setDrag(300);
     body.setMaxVelocity(200, 200);
+  }
+
+  private setupInput(scene: Scene): void {
+    // Set up WASD keys
+    this.cursors = scene.input.keyboard.createCursorKeys();
+    this.keys = {
+      up: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+      down: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
+      left: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
+      right: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
+    };
 
     // Set up touch input
     scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -72,14 +90,14 @@ export class Player extends Physics.Arcade.Sprite {
     scene.input.on('pointerup', () => {
       this.touchPosition = null;
     });
+  }
 
+  private setupWeapons(scene: Scene): void {
     // Initialize weapon with LEVEL_1_GUN configuration
     this.weapon = WeaponFactory.createPlayerWeapon(scene, 'BOLTSPITTER');
+  }
 
-    // Create target circle
-    this.targetCircle = scene.add.graphics();
-    this.targetCircle.setDepth(10);
-
+  private setupUI(scene: Scene): void {
     // Initialize health bar
     this.healthBar = new HealthBar(scene, this, 150, 10, true);
     this.healthBar.setHealth(this.currentHealth, this.maxHealth);
@@ -87,27 +105,27 @@ export class Player extends Physics.Arcade.Sprite {
     // Initialize weapon overlay
     this.weaponOverlay = new WeaponOverlay(scene);
     this.weaponOverlay.updateWeapon(this.weapon);
+  }
 
-    this.scene.events.on(Potion.COLLECTED_EVENT, (data: { x: number, y: number, healAmount: number }) => {
+  private setupEventListeners(scene: Scene): void {
+    scene.events.on(Potion.COLLECTED_EVENT, (data: { x: number, y: number, healAmount: number }) => {
       this.heal(data.healAmount);
       this.showFloatingImage('potion');
     });
 
-    this.scene.events.on(Powerup.COLLECTED_EVENT, (data: { x: number, y: number, speedBoost: number }) => {
+    scene.events.on(Powerup.COLLECTED_EVENT, (data: { x: number, y: number, speedBoost: number }) => {
       this.applySpeedBoost(data.speedBoost);
       this.showFloatingImage('powerup');
     });
 
-    this.scene.events.on(Room.ROOM_STATE_CHANGED, (room: Room, state: RoomState) => {
+    scene.events.on(Room.ROOM_STATE_CHANGED, (room: Room, state: RoomState) => {
       if (state === RoomState.TRIGGERED) {
         this.deployableWeapon?.deploy(this, room);
       }
     });
-
-    this.createAnimations(scene);
   }
 
-  private createAnimations(scene: Scene) {
+  private setupAnimations(scene: Scene): void {
     // Remove existing animations if they exist
     if (scene.anims.exists('player-idle')) {
       scene.anims.remove('player-idle');
@@ -132,70 +150,65 @@ export class Player extends Physics.Arcade.Sprite {
     });
   }
 
-  // Pre-update is valid for Sprites
+  private handleKeyboardMovement(body: Physics.Arcade.Body): boolean {
+    if (!this.cursors || !this.keys) return false;
+
+    const up = this.cursors.up?.isDown || this.keys['up'].isDown;
+    const down = this.cursors.down?.isDown || this.keys['down'].isDown;
+    const left = this.cursors.left?.isDown || this.keys['left'].isDown;
+    const right = this.cursors.right?.isDown || this.keys['right'].isDown;
+
+    if (!(up || down || left || right)) return false;
+
+    let velocityX = 0;
+    let velocityY = 0;
+
+    if (up) velocityY = -this.moveSpeed;
+    if (down) velocityY = this.moveSpeed;
+    if (left) velocityX = -this.moveSpeed;
+    if (right) velocityX = this.moveSpeed;
+
+    // Normalize diagonal movement
+    if (velocityX !== 0 && velocityY !== 0) {
+      const factor = Math.sqrt(2) / 2;
+      velocityX *= factor;
+      velocityY *= factor;
+    }
+
+    body.setVelocity(velocityX, velocityY);
+    this.flipX = velocityX < 0;
+    return true;
+  }
+
+  private handleTouchMovement(body: Physics.Arcade.Body): boolean {
+    if (!this.touchPosition) return false;
+
+    const distance = Phaser.Math.Distance.Between(this.x, this.y, this.touchPosition.x, this.touchPosition.y);
+    if (distance <= 10) return false;
+
+    const angle = Phaser.Math.Angle.Between(this.x, this.y, this.touchPosition.x, this.touchPosition.y);
+    const speedMultiplier = Math.min(1, distance / 50);
+    const velocityX = Math.cos(angle) * this.moveSpeed * speedMultiplier;
+    const velocityY = Math.sin(angle) * this.moveSpeed * speedMultiplier;
+
+    body.setVelocity(velocityX, velocityY);
+    this.flipX = velocityX < 0;
+    return true;
+  }
+
   preUpdate(time: number, delta: number) {
     super.preUpdate(time, delta);
 
     const body = this.body as Physics.Arcade.Body;
     body.setVelocity(0);
 
-    if (this.touchPosition) {
-      // Calculate distance to touch position
-      const distance = Phaser.Math.Distance.Between(this.x, this.y, this.touchPosition.x, this.touchPosition.y);
+    const isMoving = this.handleKeyboardMovement(body) || this.handleTouchMovement(body);
 
-      // Only move if we're not too close to the target
-      if (distance > 10) {
-        // Calculate angle to touch position
-        const angle = Phaser.Math.Angle.Between(this.x, this.y, this.touchPosition.x, this.touchPosition.y);
-
-        // Calculate velocity based on angle and distance
-        // Reduce speed when getting closer to target
-        const speedMultiplier = Math.min(1, distance / 50);
-        const velocityX = Math.cos(angle) * this.moveSpeed * speedMultiplier;
-        const velocityY = Math.sin(angle) * this.moveSpeed * speedMultiplier;
-
-        body.setVelocity(velocityX, velocityY);
-
-        // Update animation based on movement
-        this.anims.play('player-walk', true);
-
-        // Update sprite direction
-        this.flipX = velocityX < 0;
-      } else {
-        // Stop animation when close to target
-        this.anims.play('player-idle', true);
-      }
-    } else {
-      // Stop animation when not moving
-      this.anims.play('player-idle', true);
-    }
-
-    // Update target circle position
-    this.updateTargetCircle();
+    // Update animation based on movement
+    this.anims.play(isMoving ? 'player-walk' : 'player-idle', true);
 
     // Handle auto-targeting
     this.handleAutoTargeting();
-  }
-
-  // Update the target circle position
-  private updateTargetCircle(): void {
-    // Clear previous target graphics
-    this.targetCircle.clear();
-
-    // Get mouse position in world coordinates
-    const mouseX = this.scene.input.activePointer.worldX;
-    const mouseY = this.scene.input.activePointer.worldY;
-
-    // Draw target circle
-    this.targetCircle.lineStyle(2, 0xff0000, 0.8);
-    this.targetCircle.strokeCircle(mouseX, mouseY, this.targetRadius);
-
-    // Draw crosshair
-    this.targetCircle.lineStyle(1, 0xff0000, 0.8);
-    this.targetCircle.moveTo(mouseX - 10, mouseY);
-    this.targetCircle.lineTo(mouseX + 10, mouseY);
-    this.targetCircle.moveTo(mouseX, mouseY - 10);
-    this.targetCircle.lineTo(mouseX, mouseY + 10);
   }
 
   public getWeapon(): Weapon {
@@ -282,8 +295,13 @@ export class Player extends Physics.Arcade.Sprite {
   }
 
   private applySpeedBoost(boostAmount: number): void {
+    // Store the original speed
+    const originalSpeed = this.moveSpeed;
+
+    // Apply the boost
     this.moveSpeed *= boostAmount;
     this.isSpeedBoosted = true;
+
     // Add visual effects
     this.setTint(0x00ffff); // Cyan tint
     this.createSpeedBoostTrail();
@@ -296,7 +314,8 @@ export class Player extends Physics.Arcade.Sprite {
     this.speedBoostTimer = this.scene.time.addEvent({
       delay: 5000,
       callback: () => {
-        this.moveSpeed -= boostAmount;
+        // Revert back to original speed
+        this.moveSpeed = originalSpeed;
         this.isSpeedBoosted = false;
         this.clearTint();
         if (this.speedBoostTrail) {
@@ -341,9 +360,6 @@ export class Player extends Physics.Arcade.Sprite {
 
     // Hide health bar
     this.healthBar.setVisible(false);
-
-    // Hide target circle
-    this.targetCircle.setVisible(false);
 
     // Emit an event that the scene can listen for
     this.scene.events.emit('playerDied');
@@ -401,7 +417,6 @@ export class Player extends Physics.Arcade.Sprite {
     }
     this.weaponOverlay.updateWeapon(this.weapon, this.deployableWeapon);
   }
-
 
   private handleAutoTargeting(): void {
     // Get the enemy manager from the scene
@@ -472,15 +487,10 @@ export class Player extends Physics.Arcade.Sprite {
     }
     this.weapon?.destroy?.();
     this.deployableWeapon?.destroy?.();
-    this.targetCircle?.destroy?.();
     this.healthBar?.destroy?.();
     this.weaponOverlay?.destroy?.();
     this.speedBoostTrail?.stop();
     this.speedBoostTrail?.destroy();
     this.floatingImage?.destroy?.();
-
-    // super.destroy(true);
   }
-
-
 }
