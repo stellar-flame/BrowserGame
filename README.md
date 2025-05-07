@@ -1,4 +1,5 @@
 # Browser-Based Dungeon Shooter
+You can access it at: https://stellar-flame.github.io/browser-game/
 
 > **Note:** This game is currently a work in progress. Features and mechanics may change as development continues.
 
