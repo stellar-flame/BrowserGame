@@ -18,7 +18,7 @@ export class WeaponOverlay {
         this.scene = scene;
 
         // Create container for all overlay elements
-        this.container = scene.add.container(scene.cameras.main.width - 180, 5);
+        this.container = scene.add.container(0, 0);
         this.container.setScrollFactor(0); // Make it fixed to the screen
         this.container.setDepth(100); // Ensure it's above other elements
 
@@ -80,6 +80,68 @@ export class WeaponOverlay {
         // Hide initially
         this.container.setVisible(false);
         this.deployableContainer.setVisible(false);
+
+        // Add resize handler
+        this.scene.scale.on('resize', this.handleResize, this);
+
+        // Initial position update
+        this.updatePosition();
+    }
+
+    private handleResize(gameSize: Phaser.Structs.Size): void {
+        this.updatePosition();
+    }
+
+    private updatePosition(): void {
+        const scale = Math.min(
+            this.scene.scale.width / 800, // Base width
+            this.scene.scale.height / 600  // Base height
+        );
+
+        // Calculate responsive position
+        const padding = 10 * scale;
+        const x = this.scene.scale.width - (180 * scale) - padding;
+        const y = padding;
+
+        // Update container position
+        this.container.setPosition(x, y);
+
+        // Update background size
+        const bgWidth = 140 * scale;
+        const bgHeight = this.deployableContainer.visible ? 120 * scale : 60 * scale;
+        this.background.setSize(bgWidth, bgHeight);
+
+        // Update icon scales
+        if (this.weaponIcon) {
+            this.weaponIcon.setScale(scale);
+        }
+        if (this.deployableIcon) {
+            this.deployableIcon.setScale(scale);
+        }
+
+        // Update text styles
+        const nameStyle = {
+            fontSize: `${12 * scale}px`,
+            color: '#ffffff',
+            fontFamily: 'Arial',
+        };
+        const statsStyle = {
+            fontSize: `${10 * scale}px`,
+            color: '#cccccc',
+            fontFamily: 'Arial'
+        };
+
+        this.weaponName.setStyle(nameStyle);
+        this.weaponStats.setStyle(statsStyle);
+        this.deployableName.setStyle(nameStyle);
+        this.deployableStats.setStyle(statsStyle);
+
+        // Update text positions
+        const iconOffset = 55 * scale;
+        this.weaponName.setPosition(iconOffset, 5 * scale);
+        this.weaponStats.setPosition(iconOffset, 30 * scale);
+        this.deployableName.setPosition(iconOffset, 5 * scale);
+        this.deployableStats.setPosition(iconOffset, 30 * scale);
     }
 
     public updateWeapon(weapon: Weapon, deployableWeapon?: DeployableWeapon | null): void {
@@ -146,9 +208,13 @@ export class WeaponOverlay {
         } else {
             this.deployableContainer.setVisible(false);
         }
+
+        // Update position after content changes
+        this.updatePosition();
     }
 
     public destroy(): void {
+        this.scene.scale.off('resize', this.handleResize, this);
         this.container.destroy();
     }
 } 

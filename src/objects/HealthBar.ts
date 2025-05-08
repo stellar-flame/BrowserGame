@@ -33,32 +33,45 @@ export class HealthBar {
 
     // Position the health bar based on whether it's a player bar or enemy bar
     this.updatePosition();
+
+    // Add resize handler
+    this.scene.scale.on('resize', this.handleResize, this);
   }
 
-  public setHealth(current: number, max: number): void {
-    this.currentHealth = current;
-    this.maxHealth = max;
-    this.draw();
-  }
-
-  public setVisible(visible: boolean): void {
-    this.visible = visible;
-    this.bar.setVisible(visible);
+  private handleResize(gameSize: Phaser.Structs.Size): void {
+    if (this.isPlayerBar) {
+      this.updatePosition();
+    }
   }
 
   private updatePosition(): void {
     if (this.isPlayerBar) {
       // Position the player health bar in the top left corner with padding
-      // Use fixed screen coordinates instead of world coordinates
       this.bar.setScrollFactor(0); // This makes it stay fixed on screen
-      this.bar.setPosition(this.padding, this.padding);
+
+      // Calculate responsive position and size
+      const scale = Math.min(
+        this.scene.scale.width / 800, // Base width
+        this.scene.scale.height / 600  // Base height
+      );
+
+      const scaledWidth = this.width * scale;
+      const scaledHeight = this.height * scale;
+      const scaledPadding = this.padding * scale;
+
+      // Update the bar's position and size
+      this.bar.setPosition(scaledPadding, scaledPadding);
+      this.width = scaledWidth;
+      this.height = scaledHeight;
+
+      // Redraw the health bar with new dimensions
+      this.draw();
     } else {
       // Position enemy health bars above the enemy
       const parentSprite = this.parent as Phaser.GameObjects.Sprite;
       const offsetY = -20; // Offset above the enemy
       this.bar.setPosition(parentSprite.x - this.width / 2, parentSprite.y + offsetY);
     }
-    this.draw();
   }
 
   private draw(): void {
@@ -80,6 +93,17 @@ export class HealthBar {
     this.bar.strokeRect(0, 0, this.width, this.height);
   }
 
+  public setHealth(current: number, max: number): void {
+    this.currentHealth = current;
+    this.maxHealth = max;
+    this.draw();
+  }
+
+  public setVisible(visible: boolean): void {
+    this.visible = visible;
+    this.bar.setVisible(visible);
+  }
+
   public update(): void {
     if (!this.isPlayerBar) {
       // Update enemy health bar position to follow the enemy
@@ -94,6 +118,7 @@ export class HealthBar {
   }
 
   public destroy(): void {
+    this.scene.scale.off('resize', this.handleResize, this);
     this.bar.destroy();
     this.parent = null;
     this.scene = null;
