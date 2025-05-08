@@ -538,6 +538,4 @@ export class MainScene extends Scene {
     this.weaponManager = null;
     this.movementManager = null;
   }
-
-
 }

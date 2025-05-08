@@ -20,13 +20,14 @@ const config: Phaser.Types.Core.GameConfig = {
     width: 800,
     height: 600,
     min: {
-      width: 800,
-      height: 600
+      width: 400,
+      height: 300
     },
     max: {
       width: 1920,
       height: 1080
-    }
+    },
+    fullscreenTarget: 'game'
   },
   pixelArt: true,
   render: {
